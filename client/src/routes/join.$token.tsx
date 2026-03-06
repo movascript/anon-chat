@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { WebSocketService } from '../services/websocket';
 import { CryptoService } from '../services/crypto';
-import { v4 as uuidv4 } from 'uuid';
 
 export const Route = createFileRoute('/join/$token')({
   component: JoinChatPage,
@@ -29,7 +28,7 @@ function JoinChatPage() {
 
         setStatus('joining');
 
-        const userId = uuidv4();
+        const userId = window.crypto.randomUUID();
         ws.send({
           type: 'join_chat',
           payload: {
@@ -38,7 +37,7 @@ function JoinChatPage() {
             publicKey,
           },
           timestamp: Date.now(),
-          nonce: uuidv4(),
+          nonce: window.crypto.randomUUID(),
         });
 
         ws.on('chat_ready', (payload) => {

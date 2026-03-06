@@ -6,7 +6,6 @@ import { ConnectionStatus } from './ConnectionStatus';
 import { WebSocketService } from '../services/websocket';
 import { CryptoService } from '../services/crypto';
 import type { Message } from '../types';
-import { v4 as uuidv4 } from 'uuid';
 
 interface ChatWindowProps {
   chatId: string;
@@ -21,7 +20,7 @@ export function ChatWindow({ chatId, initialUserId, initialPublicKey }: ChatWind
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [ws] = useState(() => new WebSocketService());
   const [crypto] = useState(() => new CryptoService());
-  const [userId] = useState(() => initialUserId || uuidv4());
+  const [userId] = useState(() => initialUserId || window.crypto.randomUUID());
 
   useEffect(() => {
     let mounted = true;
@@ -60,7 +59,7 @@ export function ChatWindow({ chatId, initialUserId, initialPublicKey }: ChatWind
             );
             
             const newMessage: Message = {
-              id: uuidv4(),
+              id: window.crypto.randomUUID(),
               content: decrypted,
               isSent: false,
               timestamp: Date.now(),
@@ -112,7 +111,7 @@ export function ChatWindow({ chatId, initialUserId, initialPublicKey }: ChatWind
 
       // Add to local messages
       const newMessage: Message = {
-        id: uuidv4(),
+        id: window.crypto.randomUUID(),
         content,
         isSent: true,
         timestamp: Date.now(),
@@ -129,7 +128,7 @@ export function ChatWindow({ chatId, initialUserId, initialPublicKey }: ChatWind
           iv,
         },
         timestamp: Date.now(),
-        nonce: uuidv4(),
+        nonce: window.crypto.randomUUID(),
       });
     } catch (error) {
       console.error('Send message error:', error);

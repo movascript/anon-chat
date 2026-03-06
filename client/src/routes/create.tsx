@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { WebSocketService } from '../services/websocket';
 import { CryptoService } from '../services/crypto';
-import { v4 as uuidv4 } from 'uuid';
 
 export const Route = createFileRoute('/create')({
   component: CreateChatPage,
@@ -33,7 +32,7 @@ function CreateChatPage() {
         setStatus('creating');
 
         // Request chat creation
-        const userId = uuidv4();
+        const userId = window.crypto.randomUUID();
         ws.send({
           type: 'create_chat',
           payload: {
@@ -41,7 +40,7 @@ function CreateChatPage() {
             publicKey,
           },
           timestamp: Date.now(),
-          nonce: uuidv4(),
+          nonce: window.crypto.randomUUID(),
         });
 
         // Handle response
