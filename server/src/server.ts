@@ -1,31 +1,119 @@
-import express from 'express';
-import { WebSocketServer } from 'ws';
-import cors from 'cors';
-import { handleConnection } from './websocket/handler';
-import { startCleanupJob } from './utils/cleanup';
+// HTTP + WebSocket server bootstrap.
+//
+// Responsibilities:
+//   - Create Express app for HTTP routes (health, stats)
+//   - Attach WebSocket server to the same HTTP server
+//   - Hand off each new WS connection to relay.ts
+//   - Graceful shutdown on SIGTERM / SIGINT
 
-const app = express();
-const PORT = process.env.PORT || 8080;
+import express from "express"
+import cors from "cors"
+import { createServer } from "http"
+import { WebSocketServer, WebSocket } from "ws"
+import { handleConnection } from "./relay.js"
+import { store } from "./store.js"
 
-app.use(cors());
-app.use(express.json());
+// ─── Config ───────────────────────────────────────────────────────────────────
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
-});
+const PORT        = Number(process.env.PORT)        || 3001
+const CORS_ORIGIN = process.env.CORS_ORIGIN         || "http://localhost:5173"
+const WS_PATH     = process.env.WS_PATH             || "/ws"
 
-const server = app.listen(PORT, () => {
-  console.log(`[Server] HTTP server running on port ${PORT}`);
-});
+// ─── Express App ──────────────────────────────────────────────────────────────
 
-// WebSocket server
-const wss = new WebSocketServer({ server });
+const app = express()
 
-wss.on('connection', handleConnection);
+app.use(cors({
+  origin     : CORS_ORIGIN,
+  credentials: true,
+}))
 
-// Start cleanup job
-startCleanupJob();
+app.use(express.json())
 
-console.log('[Server] WebSocket server ready');
-console.log('[Server] Cleanup job started');
+// ── Health ────────────────────────────────────────────────────────────────────
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status   : "ok",
+    uptime   : Math.floor(process.uptime()),
+    timestamp: Date.now(),
+  })
+})
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+app.get("/stats", (_req, res) => {
+  res.json(store.getStats())
+})
+
+// ── 404 catch-all ─────────────────────────────────────────────────────────────
+
+app.use((_req, res) => {
+  res.status(404).json({ error: "Not found" })
+})
+
+// ─── HTTP Server ──────────────────────────────────────────────────────────────
+
+const httpServer = createServer(app)
+
+// ─── WebSocket Server ─────────────────────────────────────────────────────────
+
+const wss = new WebSocketServer({
+  server: httpServer,
+  path  : WS_PATH,
+})
+
+wss.on("connection", (ws: WebSocket) => {
+  handleConnection(ws)
+})
+
+wss.on("error", (err) => {
+  console.error("[WSS] Server error:", err)
+})
+
+// ─── Startup ──────────────────────────────────────────────────────────────────
+
+httpServer.listen(PORT, () => {
+  console.log(`[server] HTTP listening on port ${PORT}`)
+  console.log(`[server] WebSocket accepting on ws://localhost:${PORT}${WS_PATH}`)
+  console.log(`[server] CORS origin: ${CORS_ORIGIN}`)
+})
+
+// ─── Graceful Shutdown ────────────────────────────────────────────────────────
+//
+// On SIGTERM (container stop) or SIGINT (ctrl+c):
+//   1. Stop accepting new WS connections
+//   2. Close all active sockets
+//   3. Close HTTP server
+//   4. Exit cleanly
+
+function shutdown(signal: string): void {
+  console.log(`\n[server] ${signal} received — shutting down`)
+
+  // Stop accepting new connections
+  wss.close(() => {
+    console.log("[server] WebSocket server closed")
+  })
+
+  // Terminate all active WebSocket connections
+  for (const ws of wss.clients) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.terminate()
+    }
+  }
+
+  // Close HTTP server
+  httpServer.close(() => {
+    console.log("[server] HTTP server closed")
+    process.exit(0)
+  })
+
+  // Force exit after 5s if something hangs
+  setTimeout(() => {
+    console.error("[server] Forced exit after timeout")
+    process.exit(1)
+  }, 5_000)
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"))
+process.on("SIGINT",  () => shutdown("SIGINT"))
