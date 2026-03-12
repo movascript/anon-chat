@@ -10,8 +10,8 @@ import express from "express"
 import cors from "cors"
 import { createServer } from "http"
 import { WebSocketServer, WebSocket } from "ws"
-import { handleConnection } from "./relay.js"
-import { store } from "./store.js"
+import { handleConnection } from "./relay"
+import { store } from "./store"
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 

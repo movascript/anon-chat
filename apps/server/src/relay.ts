@@ -1,6 +1,6 @@
 
-import { store } from "./store.js"
-import { serverCrypto } from "./crypto.js"
+import { store } from "./store"
+import { serverCrypto } from "./crypto"
 import type {
   IncomingFrame,
   AuthFrame,

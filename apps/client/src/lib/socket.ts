@@ -1,7 +1,7 @@
 // frontend/src/lib/socket.ts
 
-import { signNonce } from "./identity.js"
-import type { RuntimeIdentity } from "./identity.js"
+import { signNonce } from "./identity"
+import type { RuntimeIdentity } from "./identity"
 
 // ─── Frame Types (mirrors backend/src/types.ts) ───────────────────────────────
 

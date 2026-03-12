@@ -1,12 +1,12 @@
 
 import { db } from "./db"
 import type { MessageRecord, ConversationRecord } from "./db"
-import type { AnonSocket } from "./socket.js"
+import type { AnonSocket } from "./socket"
 import type {
   MessageFrame,
   MessageAckFrame,
   TypingFrame,
-} from "./socket.js"
+} from "./socket"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
