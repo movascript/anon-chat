@@ -1,3 +1,10 @@
+import type { UUID } from "node:crypto";
+
+type Brand<T, B> = T & { __brand: B };
+
+export type SocketID = Brand<UUID, "SocketID">;
+export type UserID = Brand<UUID, "UserID">;
+
 export type MessageType =
 	| "challenge"
 	| "auth"
@@ -43,7 +50,7 @@ export interface AuthFrame extends WSFrame {
 export interface AuthSuccessFrame extends WSFrame {
 	type: "auth_success";
 	username: string;
-	userID: string;
+	userID: UserID;
 }
 
 export interface AuthErrorFrame extends WSFrame {
@@ -63,7 +70,7 @@ export interface SearchResultFrame extends WSFrame {
 	username: string;
 	found: boolean;
 	online: boolean;
-	userID?: string;
+	userID?: UserID;
 	publicKey?: string;
 }
 
@@ -71,28 +78,28 @@ export interface SearchResultFrame extends WSFrame {
 
 export interface ChatRequestFrame extends WSFrame {
 	type: "chat_request";
-	toUserID: string;
+	toUserID: UserID;
 }
 
 export interface ChatRequestInFrame extends WSFrame {
 	type: "chat_request_in";
-	fromUserID: string;
+	fromUserID: UserID;
 	fromUsername: string;
 }
 
 export interface ChatAcceptFrame extends WSFrame {
 	type: "chat_accept";
-	toUserID: string;
+	toUserID: UserID;
 }
 
 export interface ChatDeclineFrame extends WSFrame {
 	type: "chat_decline";
-	toUserID: string;
+	toUserID: UserID;
 }
 
 export interface ChatResponseFrame extends WSFrame {
 	type: "chat_response";
-	fromUserID: string;
+	fromUserID: UserID;
 	accepted: boolean;
 }
 
@@ -100,14 +107,14 @@ export interface ChatResponseFrame extends WSFrame {
 
 export interface MessageFrame extends WSFrame {
 	type: "message";
-	toUserID: string;
+	toUserID: UserID;
 	content: string;
 	conversationID: string;
 }
 
 export interface MessageInFrame extends WSFrame {
 	type: "message_in";
-	fromUserID: string;
+	fromUserID: UserID;
 	fromUsername: string;
 	content: string;
 	conversationID: string;
@@ -125,7 +132,7 @@ export interface MessageAckFrame extends WSFrame {
 
 export interface PresenceFrame extends WSFrame {
 	type: "presence";
-	userID: string;
+	userID: UserID;
 	username: string;
 	online: boolean;
 }
@@ -134,13 +141,13 @@ export interface PresenceFrame extends WSFrame {
 
 export interface TypingFrame extends WSFrame {
 	type: "typing";
-	toUserID: string;
+	toUserID: UserID;
 	isTyping: boolean;
 }
 
 export interface TypingInFrame extends WSFrame {
 	type: "typing_in";
-	fromUserID: string;
+	fromUserID: UserID;
 	isTyping: boolean;
 }
 
@@ -180,7 +187,7 @@ export type OutgoingFrame =
 // ─── Internal server client record ───────────────────────────────────────────
 
 export interface ConnectedClient {
-	userID: string;
+	userID: UserID;
 	username: string;
 	publicKey: string; // JWK stringified, kept for search results
 	socket: unknown; // typed as unknown here, cast to WebSocket in store

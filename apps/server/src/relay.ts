@@ -7,7 +7,9 @@ import type {
 	MessageFrame,
 	OutgoingFrame,
 	SearchUserFrame,
+	SocketID,
 	TypingFrame,
+	UserID,
 } from "@repo/types";
 import type { WebSocket } from "ws";
 import { serverCrypto } from "./crypto";
@@ -20,7 +22,6 @@ export function handleConnection(ws: WebSocket): void {
 	const socketID = store.registerSocket(ws, nonce);
 
 	// Issue challenge immediately — client must auth before anything else
-	// NOTE: use store.sendToSocket here, not a bare `send()` helper
 	store.sendToSocket(socketID, {
 		type: "challenge",
 		id: crypto.randomUUID(),
@@ -43,7 +44,7 @@ export function handleConnection(ws: WebSocket): void {
 
 // ─── Raw Message Parser ───────────────────────────────────────────────────────
 
-function handleRawMessage(socketID: string, raw: string): void {
+function handleRawMessage(socketID: SocketID, raw: string): void {
 	let frame: IncomingFrame;
 
 	try {
@@ -74,7 +75,7 @@ function handleRawMessage(socketID: string, raw: string): void {
 // Return type is `void | Promise<void>` because handleAuth is async.
 // Callers never await routeFrame — fire-and-forget is intentional here.
 function routeFrame(
-	socketID: string,
+	socketID: SocketID,
 	frame: IncomingFrame,
 ): void | Promise<void> {
 	switch (frame.type) {
@@ -100,7 +101,7 @@ function routeFrame(
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-async function handleAuth(socketID: string, frame: AuthFrame): Promise<void> {
+async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	const client = store.getClientBySocketID(socketID);
 	if (!client) return;
 
@@ -197,7 +198,7 @@ async function handleAuth(socketID: string, frame: AuthFrame): Promise<void> {
 
 // ─── Search ───────────────────────────────────────────────────────────────────
 
-function handleSearchUser(socketID: string, frame: SearchUserFrame): void {
+function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 	const target = store.getClientByUsername(frame.username);
 
 	if (!target || !target.authenticated) {
@@ -226,7 +227,7 @@ function handleSearchUser(socketID: string, frame: SearchUserFrame): void {
 
 // ─── Chat Request ─────────────────────────────────────────────────────────────
 
-function handleChatRequest(socketID: string, frame: ChatRequestFrame): void {
+function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 	const sender = store.getClientBySocketID(socketID);
 	if (!sender) return;
 
@@ -258,7 +259,7 @@ function handleChatRequest(socketID: string, frame: ChatRequestFrame): void {
 
 // ─── Chat Accept / Decline ────────────────────────────────────────────────────
 
-function handleChatAccept(socketID: string, frame: ChatAcceptFrame): void {
+function handleChatAccept(socketID: SocketID, frame: ChatAcceptFrame): void {
 	const acceptor = store.getClientBySocketID(socketID);
 	if (!acceptor) return;
 
@@ -279,7 +280,7 @@ function handleChatAccept(socketID: string, frame: ChatAcceptFrame): void {
 	});
 }
 
-function handleChatDecline(socketID: string, frame: ChatDeclineFrame): void {
+function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
 	const decliner = store.getClientBySocketID(socketID);
 	if (!decliner) return;
 
@@ -294,7 +295,7 @@ function handleChatDecline(socketID: string, frame: ChatDeclineFrame): void {
 
 // ─── Message ──────────────────────────────────────────────────────────────────
 
-function handleMessage(socketID: string, frame: MessageFrame): void {
+function handleMessage(socketID: SocketID, frame: MessageFrame): void {
 	const sender = store.getClientBySocketID(socketID);
 	if (!sender) return;
 
@@ -321,7 +322,7 @@ function handleMessage(socketID: string, frame: MessageFrame): void {
 
 // ─── Typing ───────────────────────────────────────────────────────────────────
 
-function handleTyping(socketID: string, frame: TypingFrame): void {
+function handleTyping(socketID: SocketID, frame: TypingFrame): void {
 	const sender = store.getClientBySocketID(socketID);
 	if (!sender) return;
 
@@ -336,7 +337,7 @@ function handleTyping(socketID: string, frame: TypingFrame): void {
 
 // ─── Disconnect ───────────────────────────────────────────────────────────────
 
-function handleDisconnect(socketID: string): void {
+function handleDisconnect(socketID: SocketID): void {
 	const removed = store.removeClient(socketID);
 	if (!removed || !removed.authenticated) return;
 
@@ -347,7 +348,7 @@ function handleDisconnect(socketID: string): void {
 // ─── Presence Broadcast ───────────────────────────────────────────────────────
 
 function broadcastPresence(
-	userID: string,
+	userID: UserID,
 	username: string,
 	online: boolean,
 ): void {
@@ -379,7 +380,7 @@ function isValidUsername(username: string): boolean {
  * Used for protocol-level mistakes (bad JSON, wrong frame type, not authed).
  * Not the same as domain errors like auth_error — those are sent inline.
  */
-function sendError(socketID: string, reason: string): void {
+function sendError(socketID: SocketID, reason: string): void {
 	store.sendToSocket(socketID, {
 		type: "error",
 		id: crypto.randomUUID(),

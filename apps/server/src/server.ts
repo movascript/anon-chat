@@ -6,9 +6,9 @@
 //   - Hand off each new WS connection to relay.ts
 //   - Graceful shutdown on SIGTERM / SIGINT
 
+import { createServer } from "node:http";
 import cors from "cors";
 import express from "express";
-import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { handleConnection } from "./relay";
 import { store } from "./store";

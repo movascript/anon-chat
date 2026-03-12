@@ -1,4 +1,9 @@
-import type { ConnectedClient, OutgoingFrame } from "@repo/types";
+import type {
+	ConnectedClient,
+	OutgoingFrame,
+	SocketID,
+	UserID,
+} from "@repo/types";
 import type { WebSocket } from "ws";
 
 // ─── In-Memory Registry ───────────────────────────────────────────────────────
@@ -11,14 +16,14 @@ import type { WebSocket } from "ws";
 // Nothing here is persisted. All state is gone on server restart.
 // That is intentional per the AnonChat design.
 
-const socketMap = new Map<string, ConnectedClient>(); // socketID → client
-const usernameMap = new Map<string, string>(); // username → socketID
-const userIDMap = new Map<string, string>(); // userID   → socketID
+const socketMap = new Map<SocketID, ConnectedClient>(); // socketID → client
+const usernameMap = new Map<string, SocketID>(); // username → socketID
+const userIDMap = new Map<UserID, SocketID>(); // userID   → socketID
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function generateSocketID(): string {
-	return crypto.randomUUID();
+function generateSocketID() {
+	return crypto.randomUUID() as SocketID;
 }
 
 // ─── Registration ─────────────────────────────────────────────────────────────
@@ -28,7 +33,7 @@ function generateSocketID(): string {
  * before authentication. Creates an unauthenticated client record
  * and assigns it a socketID.
  */
-function registerSocket(socket: WebSocket, nonce: string): string {
+function registerSocket(socket: WebSocket, nonce: string): SocketID {
 	const socketID = generateSocketID();
 
 	const client: ConnectedClient = {
@@ -54,8 +59,8 @@ function registerSocket(socket: WebSocket, nonce: string): string {
  * authenticated session, true on success.
  */
 function authenticateClient(
-	socketID: string,
-	userID: string,
+	socketID: SocketID,
+	userID: UserID,
 	username: string,
 	publicKey: string,
 ): boolean {
@@ -83,7 +88,7 @@ function authenticateClient(
 
 // ─── Lookup ───────────────────────────────────────────────────────────────────
 
-function getClientBySocketID(socketID: string): ConnectedClient | undefined {
+function getClientBySocketID(socketID: SocketID): ConnectedClient | undefined {
 	return socketMap.get(socketID);
 }
 
@@ -93,17 +98,17 @@ function getClientByUsername(username: string): ConnectedClient | undefined {
 	return socketMap.get(socketID);
 }
 
-function getClientByUserID(userID: string): ConnectedClient | undefined {
+function getClientByUserID(userID: UserID): ConnectedClient | undefined {
 	const socketID = userIDMap.get(userID);
 	if (!socketID) return undefined;
 	return socketMap.get(socketID);
 }
 
-function getSocketIDByUserID(userID: string): string | undefined {
+function getSocketIDByUserID(userID: UserID): SocketID | undefined {
 	return userIDMap.get(userID);
 }
 
-function getSocketIDBySocketID(socketID: string): string | undefined {
+function getSocketIDBySocketID(socketID: SocketID): string | undefined {
 	return socketMap.has(socketID) ? socketID : undefined;
 }
 
@@ -115,7 +120,7 @@ function getSocketIDBySocketID(socketID: string): string | undefined {
  * Returns the removed client record so the caller (relay)
  * can broadcast a presence:offline event.
  */
-function removeClient(socketID: string): ConnectedClient | undefined {
+function removeClient(socketID: SocketID): ConnectedClient | undefined {
 	const client = socketMap.get(socketID);
 	if (!client) return undefined;
 
@@ -135,7 +140,7 @@ function removeClient(socketID: string): ConnectedClient | undefined {
  * Type-safe send helper.
  * Silently drops the message if the socket is not in OPEN state.
  */
-function sendToSocket(socketID: string, frame: OutgoingFrame): boolean {
+function sendToSocket(socketID: SocketID, frame: OutgoingFrame): boolean {
 	const client = socketMap.get(socketID);
 	if (!client) return false;
 
@@ -150,7 +155,7 @@ function sendToSocket(socketID: string, frame: OutgoingFrame): boolean {
  * Send directly to a userID.
  * Returns false if user is not online.
  */
-function sendToUserID(userID: string, frame: OutgoingFrame): boolean {
+function sendToUserID(userID: UserID, frame: OutgoingFrame): boolean {
 	const socketID = userIDMap.get(userID);
 	if (!socketID) return false;
 	return sendToSocket(socketID, frame);
@@ -163,11 +168,11 @@ function sendToUserID(userID: string, frame: OutgoingFrame): boolean {
 //
 // Structure: subscriberMap[targetUserID] = Set<socketID of watchers>
 
-const subscriberMap = new Map<string, Set<string>>();
+const subscriberMap = new Map<UserID, Set<SocketID>>();
 
 function subscribeToPresence(
-	watcherSocketID: string,
-	targetUserID: string,
+	watcherSocketID: SocketID,
+	targetUserID: UserID,
 ): void {
 	if (!subscriberMap.has(targetUserID)) {
 		subscriberMap.set(targetUserID, new Set());
@@ -176,8 +181,8 @@ function subscribeToPresence(
 }
 
 function unsubscribeFromPresence(
-	watcherSocketID: string,
-	targetUserID: string,
+	watcherSocketID: SocketID,
+	targetUserID: UserID,
 ): void {
 	subscriberMap.get(targetUserID)?.delete(watcherSocketID);
 }
@@ -186,14 +191,14 @@ function unsubscribeFromPresence(
  * Remove all presence subscriptions where this socketID is the watcher.
  * Called on disconnect to clean up.
  */
-function removeAllSubscriptions(watcherSocketID: string): void {
+function removeAllSubscriptions(watcherSocketID: SocketID): void {
 	for (const [targetUserID, watchers] of subscriberMap.entries()) {
 		watchers.delete(watcherSocketID);
 		if (watchers.size === 0) subscriberMap.delete(targetUserID);
 	}
 }
 
-function getPresenceSubscribers(targetUserID: string): string[] {
+function getPresenceSubscribers(targetUserID: UserID): SocketID[] {
 	return Array.from(subscriberMap.get(targetUserID) ?? []);
 }
 

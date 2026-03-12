@@ -39,7 +39,8 @@ function generateNonce(): string {
 		.join("");
 }
 
-import type { webcrypto } from "crypto";
+import type { webcrypto } from "node:crypto";
+import type { UserID } from "@repo/types";
 
 // ─── Key Import ───────────────────────────────────────────────────────────────
 
@@ -138,14 +139,14 @@ async function verifySignature(
  *
  * Not a UUID — intentionally shorter and visually distinct.
  */
-async function deriveUserID(jwkString: string): Promise<string> {
+async function deriveUserID(jwkString: string): Promise<UserID> {
 	const encoded = new TextEncoder().encode(jwkString);
 	const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
 	const hashBytes = new Uint8Array(hashBuffer);
 
 	return Array.from(hashBytes.slice(0, 16))
 		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
+		.join("") as UserID;
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
