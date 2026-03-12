@@ -1,12 +1,11 @@
-
-import { db } from "./db"
-import type { MessageRecord, ConversationRecord } from "./db"
-import type { AnonSocket } from "./socket"
+import type { ConversationRecord, MessageRecord } from "./db";
+import { db } from "./db";
 import type {
-  MessageFrame,
-  MessageAckFrame,
-  TypingFrame,
-} from "./socket"
+	AnonSocket,
+	MessageAckFrame,
+	MessageFrame,
+	TypingFrame,
+} from "./socket";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,151 +13,155 @@ import type {
  * What the UI renders in a chat bubble.
  * Mirrors the DB `Message` row exactly — no transformation needed.
  */
-export type { MessageRecord }
+export type { MessageRecord };
 
 /**
  * A page of messages returned by `loadMessages()`.
  * `hasMore` tells the UI whether to show a "Load earlier" button.
  */
 export interface MessagePage {
-  messages : MessageRecord[]
-  hasMore  : boolean
-  /** Opaque cursor — pass back to `loadMessages()` to get the next page. */
-  before   : number | undefined
+	messages: MessageRecord[];
+	hasMore: boolean;
+	/** Opaque cursor — pass back to `loadMessages()` to get the next page. */
+	before: number | undefined;
 }
 
 /**
  * Result of `sendMessage()`.
  */
 export type SendResult =
-  | { ok: true;  message: MessageRecord }
-  | { ok: false; reason: string }
+	| { ok: true; message: MessageRecord }
+	| { ok: false; reason: string };
 
 /**
  * Payload for sending — the caller provides text, we handle everything else.
  */
 export interface SendOptions {
-  conversationID : string   // existing conversation ID
-  toUserID       : string
-  text           : string
+	conversationID: string; // existing conversation ID
+	toUserID: string;
+	text: string;
 }
 
 /**
  * Typing event the UI can react to.
  */
 export interface TypingEvent {
-  conversationID : string
-  fromUserID     : string
-  typing         : boolean
+	conversationID: string;
+	fromUserID: string;
+	typing: boolean;
 }
 
 /** Default page size for `loadMessages()` */
-const PAGE_SIZE = 40
+const PAGE_SIZE = 40;
 
 // ─── MessagingManager ─────────────────────────────────────────────────────────
 
 export class MessagingManager {
-  private socket    : AnonSocket
-  private myUserID  : string
-  private unsubs    : Array<() => void> = []
+	private socket: AnonSocket;
+	private myUserID: string;
+	private unsubs: Array<() => void> = [];
 
-  // UI-facing reactive callbacks
-  private onMessageListeners : Array<(msg: MessageRecord) => void>          = []
-  private onAckListeners     : Array<(ack: MessageAckFrame) => void>  = []
-  private onTypingListeners  : Array<(evt: TypingEvent) => void>      = []
+	// UI-facing reactive callbacks
+	private onMessageListeners: Array<(msg: MessageRecord) => void> = [];
+	private onAckListeners: Array<(ack: MessageAckFrame) => void> = [];
+	private onTypingListeners: Array<(evt: TypingEvent) => void> = [];
 
-  constructor(socket: AnonSocket, myUserID: string) {
-    this.socket   = socket
-    this.myUserID = myUserID
-  }
+	constructor(socket: AnonSocket, myUserID: string) {
+		this.socket = socket;
+		this.myUserID = myUserID;
+	}
 
-  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+	// ─── Lifecycle ─────────────────────────────────────────────────────────────
 
-  /** Attach socket listeners. Call once after socket reaches "authenticated". */
-  init(): void {
-    this.attachSocketListeners()
-  }
+	/** Attach socket listeners. Call once after socket reaches "authenticated". */
+	init(): void {
+		this.attachSocketListeners();
+	}
 
-  /** Detach all socket listeners. Call on logout / account reset. */
-  destroy(): void {
-    for (const unsub of this.unsubs) unsub()
-    this.unsubs = []
-  }
+	/** Detach all socket listeners. Call on logout / account reset. */
+	destroy(): void {
+		for (const unsub of this.unsubs) unsub();
+		this.unsubs = [];
+	}
 
-  // ─── Sending ───────────────────────────────────────────────────────────────
+	// ─── Sending ───────────────────────────────────────────────────────────────
 
-  /**
-   * Send a plaintext message to a contact.
-   *
-   * Flow:
-   * 1. Generate a stable `messageID` (UUID v4).
-   * 2. Persist the message immediately with `status: "sending"`.
-   * 3. Update the conversation's `lastMessage` snapshot.
-   * 4. Emit the message to UI listeners (optimistic render).
-   * 5. Push the `message` frame to the server.
-   * 6. Await `message_ack` — the server calls back via socket event.
-   *    The ack handler updates the DB row to `delivered` or `failed`.
-   */
-  async sendMessage(opts: SendOptions): Promise<SendResult> {
-    const { conversationID, toUserID, text } = opts
+	/**
+	 * Send a plaintext message to a contact.
+	 *
+	 * Flow:
+	 * 1. Generate a stable `messageID` (UUID v4).
+	 * 2. Persist the message immediately with `status: "sending"`.
+	 * 3. Update the conversation's `lastMessage` snapshot.
+	 * 4. Emit the message to UI listeners (optimistic render).
+	 * 5. Push the `message` frame to the server.
+	 * 6. Await `message_ack` — the server calls back via socket event.
+	 *    The ack handler updates the DB row to `delivered` or `failed`.
+	 */
+	async sendMessage(opts: SendOptions): Promise<SendResult> {
+		const { conversationID, toUserID, text } = opts;
 
-    if (!text.trim()) {
-      return { ok: false, reason: "Message text cannot be empty" }
-    }
+		if (!text.trim()) {
+			return { ok: false, reason: "Message text cannot be empty" };
+		}
 
-    const messageID = crypto.randomUUID()
-    const now       = Date.now()
+		const messageID = crypto.randomUUID();
+		const now = Date.now();
 
-    const message: MessageRecord = {
-      id             : messageID,
-      conversationID,
-      senderUserID   : this.myUserID,
-      content        : text.trim(),
-      status         : "sending",
-      ts             : now,
-    }
+		const message: MessageRecord = {
+			id: messageID,
+			conversationID,
+			senderUserID: this.myUserID,
+			content: text.trim(),
+			status: "sending",
+			ts: now,
+		};
 
-    try {
-      // Atomic write: message row + conversation snapshot
-      await db.transaction("rw", db.messages, db.conversations, async () => {
-        await db.messages.put(message)
-        await this.upsertConversationSnapshot(conversationID, toUserID, message)
-      })
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err)
-      console.error("[Messaging] DB write failed:", err)
-      return { ok: false, reason }
-    }
+		try {
+			// Atomic write: message row + conversation snapshot
+			await db.transaction("rw", db.messages, db.conversations, async () => {
+				await db.messages.put(message);
+				await this.upsertConversationSnapshot(
+					conversationID,
+					toUserID,
+					message,
+				);
+			});
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			console.error("[Messaging] DB write failed:", err);
+			return { ok: false, reason };
+		}
 
-    // Optimistic UI update — render before server confirms
-    this.emitMessage(message)
+		// Optimistic UI update — render before server confirms
+		this.emitMessage(message);
 
-    // Push to server
-    this.socket.send({
-      type    : "message",
-      id      : messageID,
-      toUserID,
-      content : message.content,
-      ts      : message.ts,
-    })
+		// Push to server
+		this.socket.send({
+			type: "message",
+			id: messageID,
+			toUserID,
+			content: message.content,
+			ts: message.ts,
+		});
 
-    console.info(`[Messaging] Sent message ${messageID} to ${toUserID}`)
-    return { ok: true, message }
-  }
+		console.info(`[Messaging] Sent message ${messageID} to ${toUserID}`);
+		return { ok: true, message };
+	}
 
-  // ─── Typing Indicator ──────────────────────────────────────────────────────
+	// ─── Typing Indicator ──────────────────────────────────────────────────────
 
-  /**
-   * Send a typing start/stop notification.
-   * Fire-and-forget — no ACK, no DB write.
-   */
-  sendTyping(toUserID: string, typing: boolean): void {
-    this.socket.send({ type: "typing", toUserID, typing })
-  }
+	/**
+	 * Send a typing start/stop notification.
+	 * Fire-and-forget — no ACK, no DB write.
+	 */
+	sendTyping(toUserID: string, typing: boolean): void {
+		this.socket.send({ type: "typing", toUserID, typing });
+	}
 
-  // ─── Pagination ────────────────────────────────────────────────────────────
+	// ─── Pagination ────────────────────────────────────────────────────────────
 
-  /**
+	/**
    * Load a page of messages for a conversation, newest-first.
    *
    * @param conversationID - Which conversation to page through
@@ -181,93 +184,84 @@ export class MessagingManager {
    * 
 */
 
-async loadMessages(opts: {
+	async loadMessages(opts: {
+		conversationID: string;
+		before?: number;
+		limit?: number;
+	}): Promise<MessagePage> {
+		const { conversationID, before, limit = PAGE_SIZE } = opts;
 
-conversationID : string
-before        ?: number
-limit         ?: number
+		// Use the compound index [conversationID+ts] for efficient range scan
+		const upperBound = before ?? Date.now() + 1;
 
-}): Promise<MessagePage> {
+		const rows = await db.messages
+			.where("[conversationID+ts]")
+			.between(
+				[conversationID, 0],
+				[conversationID, upperBound],
+				true, // include lower bound
+				false, // exclude upper bound (strict less-than `before`)
+			)
+			.reverse() // newest first
+			.limit(limit + 1) // fetch one extra to detect hasMore
+			.toArray();
 
-const { conversationID, before, limit = PAGE_SIZE } = opts
+		const hasMore = rows.length > limit;
+		const messages = hasMore ? rows.slice(0, limit) : rows;
 
-// Use the compound index [conversationID+ts] for efficient range scan
-const upperBound = before ?? Date.now() + 1
+		// Cursor is the oldest message's timestamp on this page
+		const oldestTs =
+			messages.length > 0 ? messages[messages.length - 1].ts : undefined;
 
-const rows = await db.messages
-  .where("[conversationID+ts]")
-  .between(
-    [conversationID, 0],
-    [conversationID, upperBound],
-    true,   // include lower bound
-    false,  // exclude upper bound (strict less-than `before`)
-  )
-  .reverse()         // newest first
-  .limit(limit + 1)  // fetch one extra to detect hasMore
-  .toArray()
+		return {
+			messages: messages.reverse(), // return chronological order to UI
+			hasMore,
+			before: oldestTs,
+		};
+	}
 
-const hasMore  = rows.length > limit
-const messages = hasMore ? rows.slice(0, limit) : rows
+	// ─── Conversation List ─────────────────────────────────────────────────────
 
-// Cursor is the oldest message's timestamp on this page
-const oldestTs = messages.length > 0
-  ? messages[messages.length - 1].ts
-  : undefined
-
-return {
-  messages : messages.reverse(), // return chronological order to UI
-  hasMore,
-  before   : oldestTs,
-}
-
-}
-
-// ─── Conversation List ─────────────────────────────────────────────────────
-
-/**
+	/**
 
     Returns all conversations sorted by most recent message,
     for rendering the conversation list / sidebar.
 
 */
 
-async listConversations(): Promise<ConversationRecord[]> {
+	async listConversations(): Promise<ConversationRecord[]> {
+		return db.conversations.orderBy("updatedAt").reverse().toArray();
+	}
 
-return db.conversations.orderBy("updatedAt").reverse().toArray()
-
-}
-
-/**
+	/**
 
     Returns a single conversation by ID, or null if not found.
 
 */
 
-async getConversation(conversationID: string): Promise<ConversationRecord | null> {
+	async getConversation(
+		conversationID: string,
+	): Promise<ConversationRecord | null> {
+		return (await db.conversations.get(conversationID)) ?? null;
+	}
 
-return (await db.conversations.get(conversationID)) ?? null
-
-}
-
-/**
+	/**
 
     Marks all messages in a conversation as read.
     Resets the unreadCount on the conversation row.
 
 */
 
-async markRead(conversationID: string): Promise<void> {
+	async markRead(conversationID: string): Promise<void> {
+		await db.conversations.update(conversationID, {
+			unreadCount: 0,
+			// updatedAt   : Date.now(),
+		});
+	}
 
-await db.conversations.update(conversationID, {
-  unreadCount : 0,
-  // updatedAt   : Date.now(),
-})
+	// ─── Reactive Listeners ────────────────────────────────────────────────────
 
-}
-
-// ─── Reactive Listeners ────────────────────────────────────────────────────
-
-/**
+	/**
 
     Subscribe to incoming (and optimistically sent) messages.
     Fires for both outbound messages (own sends) and inbound messages from peers.
@@ -282,16 +276,14 @@ await db.conversations.update(conversationID, {
 
 */
 
-onMessage(cb: (msg: MessageRecord) => void): () => void {
+	onMessage(cb: (msg: MessageRecord) => void): () => void {
+		this.onMessageListeners.push(cb);
+		return () => {
+			this.onMessageListeners = this.onMessageListeners.filter((f) => f !== cb);
+		};
+	}
 
-this.onMessageListeners.push(cb)
-return () => {
-  this.onMessageListeners = this.onMessageListeners.filter((f) => f !== cb)
-}
-
-}
-
-/**
+	/**
 
     Subscribe to delivery acknowledgements.
     Use this to flip a message’s status indicator (clock → tick → double-tick).
@@ -299,55 +291,46 @@ return () => {
 
 */
 
-onAck(cb: (ack: MessageAckFrame) => void): () => void {
+	onAck(cb: (ack: MessageAckFrame) => void): () => void {
+		this.onAckListeners.push(cb);
+		return () => {
+			this.onAckListeners = this.onAckListeners.filter((f) => f !== cb);
+		};
+	}
 
-this.onAckListeners.push(cb)
-return () => {
-  this.onAckListeners = this.onAckListeners.filter((f) => f !== cb)
-}
-
-}
-
-/**
+	/**
 
     Subscribe to typing events from contacts.
     Returns an unsubscribe function.
 
 */
 
-onTyping(cb: (evt: TypingEvent) => void): () => void {
+	onTyping(cb: (evt: TypingEvent) => void): () => void {
+		this.onTypingListeners.push(cb);
+		return () => {
+			this.onTypingListeners = this.onTypingListeners.filter((f) => f !== cb);
+		};
+	}
 
-this.onTypingListeners.push(cb)
-return () => {
-  this.onTypingListeners = this.onTypingListeners.filter((f) => f !== cb)
-}
+	// ─── Private: Socket Event Handling ───────────────────────────────────────
 
-}
+	private attachSocketListeners(): void {
+		const unsubMsg = this.socket.on("message", (frame) =>
+			this.handleIncomingMessage(frame),
+		);
 
-// ─── Private: Socket Event Handling ───────────────────────────────────────
+		const unsubAck = this.socket.on("message_ack", (frame) =>
+			this.handleAck(frame),
+		);
 
-private attachSocketListeners(): void {
+		const unsubTyping = this.socket.on("typing", (frame) =>
+			this.handleTyping(frame),
+		);
 
-const unsubMsg = this.socket.on(
-  "message",
-  (frame) => this.handleIncomingMessage(frame),
-)
+		this.unsubs.push(unsubMsg, unsubAck, unsubTyping);
+	}
 
-const unsubAck = this.socket.on(
-  "message_ack",
-  (frame) => this.handleAck(frame),
-)
-
-const unsubTyping = this.socket.on(
-  "typing",
-  (frame) => this.handleTyping(frame),
-)
-
-this.unsubs.push(unsubMsg, unsubAck, unsubTyping)
-
-}
-
-/**
+	/**
 
     Handles a message frame arriving from a contact.
     Flow:
@@ -358,47 +341,48 @@ this.unsubs.push(unsubMsg, unsubAck, unsubTyping)
 
 */
 
-private async handleIncomingMessage(frame: MessageFrame): Promise<void> {
+	private async handleIncomingMessage(frame: MessageFrame): Promise<void> {
+		const conversationID = deriveConversationID(
+			this.myUserID,
+			frame.fromUserID,
+		);
+		const now = Date.now();
 
-const conversationID = deriveConversationID(this.myUserID, frame.fromUserID)
-const now            = Date.now()
+		const message: MessageRecord = {
+			id: frame.id,
+			conversationID,
+			senderUserID: frame.fromUserID,
+			content: frame.content,
+			status: "received",
+			ts: frame.ts ?? now,
+		};
 
-const message: MessageRecord = {
-  id      : frame.id,
-  conversationID,
-  senderUserID     : frame.fromUserID,
-  content           : frame.content,
-  status         : "received",
-  ts             : frame.ts ?? now,
-}
+		try {
+			await db.transaction("rw", db.messages, db.conversations, async () => {
+				// Idempotency: ignore duplicates (possible on reconnect)
+				const exists = await db.messages.get(frame.id);
+				if (exists) return;
 
-try {
-  await db.transaction("rw", db.messages, db.conversations, async () => {
-    // Idempotency: ignore duplicates (possible on reconnect)
-    const exists = await db.messages.get(frame.id)
-    if (exists) return
+				await db.messages.put(message);
+				await this.upsertConversationSnapshot(
+					conversationID,
+					frame.fromUserID,
+					message,
+					true, // increment unread
+				);
+			});
+		} catch (err) {
+			console.error("[Messaging] Failed to persist incoming message:", err);
+			return;
+		}
 
-    await db.messages.put(message)
-    await this.upsertConversationSnapshot(
-      conversationID,
-      frame.fromUserID,
-      message,
-      true, // increment unread
-    )
-  })
-} catch (err) {
-  console.error("[Messaging] Failed to persist incoming message:", err)
-  return
-}
+		this.emitMessage(message);
+		console.info(
+			`[Messaging] Received message ${frame.id} from ${frame.fromUserID}`,
+		);
+	}
 
-this.emitMessage(message)
-console.info(
-  `[Messaging] Received message ${frame.id} from ${frame.fromUserID}`,
-)
-
-}
-
-/**
+	/**
 
     Handles message_ack from the server.
     Updates the message row’s status field in IndexedDB
@@ -406,113 +390,109 @@ console.info(
 
 */
 
-private async handleAck(frame: MessageAckFrame): Promise<void> {
+	private async handleAck(frame: MessageAckFrame): Promise<void> {
+		const newStatus = frame.delivered ? "delivered" : "failed";
 
-const newStatus = frame.delivered ? "delivered" : "failed"
+		try {
+			await db.messages.update(frame.id, {
+				status: newStatus,
+			});
+		} catch (err) {
+			console.error("[Messaging] Failed to update ack status:", err);
+		}
 
-try {
-  await db.messages.update(frame.id, {
-    status: newStatus,
-  })
-} catch (err) {
-  console.error("[Messaging] Failed to update ack status:", err)
-}
+		for (const cb of this.onAckListeners) {
+			try {
+				cb(frame);
+			} catch (err) {
+				console.error("[Messaging] onAck listener error:", err);
+			}
+		}
 
-for (const cb of this.onAckListeners) {
-  try { cb(frame) } catch (err) {
-    console.error("[Messaging] onAck listener error:", err)
-  }
-}
+		console.info(`[Messaging] Ack for ${frame.id}: ${newStatus}`);
+	}
 
-console.info(
-  `[Messaging] Ack for ${frame.id}: ${newStatus}`,
-)
-
-}
-
-/**
+	/**
 
     Handles typing frame from a contact.
     No DB write — typing state is ephemeral.
 
 */
 
-private handleTyping(frame: TypingFrame): void {
+	private handleTyping(frame: TypingFrame): void {
+		const conversationID = deriveConversationID(
+			this.myUserID,
+			frame.fromUserID,
+		);
 
-const conversationID = deriveConversationID(this.myUserID, frame.fromUserID)
+		const evt: TypingEvent = {
+			conversationID,
+			fromUserID: frame.fromUserID,
+			typing: frame.typing,
+		};
 
-const evt: TypingEvent = {
-  conversationID,
-  fromUserID : frame.fromUserID,
-  typing     : frame.typing,
-}
+		for (const cb of this.onTypingListeners) {
+			try {
+				cb(evt);
+			} catch (err) {
+				console.error("[Messaging] onTyping listener error:", err);
+			}
+		}
+	}
 
-for (const cb of this.onTypingListeners) {
-  try { cb(evt) } catch (err) {
-    console.error("[Messaging] onTyping listener error:", err)
-  }
-}
+	// ─── Private: Conversation Upsert ─────────────────────────────────────────
 
-}
-
-// ─── Private: Conversation Upsert ─────────────────────────────────────────
-
-/**
+	/**
 
     Create or update the conversation row with a fresh last-message snapshot.
     Must be called inside a Dexie transaction that includes db.conversations.
 
 */
 
-private async upsertConversationSnapshot(
+	private async upsertConversationSnapshot(
+		conversationID: string,
+		peerUserID: string,
+		message: MessageRecord,
+		incrementUnread = false,
+	): Promise<void> {
+		const existing = await db.conversations.get(conversationID);
+		const now = Date.now();
 
-conversationID : string,
-peerUserID     : string,
-message        : MessageRecord,
-incrementUnread = false,
+		if (existing) {
+			await db.conversations.update(conversationID, {
+				lastMessage: message.content,
+				lastMessageAt: message.ts,
+				// updatedAt       : now,
+				unreadCount: incrementUnread
+					? (existing.unreadCount ?? 0) + 1
+					: (existing.unreadCount ?? 0),
+			});
+		} else {
+			const conversation: ConversationRecord = {
+				id: conversationID,
+				peerUserID,
+				peerUsername: "xoxo", // ! should be changed
+				lastMessage: message.content,
+				lastMessageAt: message.ts,
+				unreadCount: incrementUnread ? 1 : 0,
+				createdAt: now,
+				// updatedAt       : now,
+			};
+			await db.conversations.put(conversation);
+		}
+	}
 
-): Promise<void> {
+	// ─── Private: Emit Helpers ─────────────────────────────────────────────────
 
-const existing = await db.conversations.get(conversationID)
-const now      = Date.now()
-
-if (existing) {
-  await db.conversations.update(conversationID, {
-    lastMessage : message.content,
-    lastMessageAt   : message.ts,
-    // updatedAt       : now,
-    unreadCount     : incrementUnread
-      ? (existing.unreadCount ?? 0) + 1
-      : existing.unreadCount ?? 0,
-  })
-} else {
-  const conversation: ConversationRecord = {
-    id:conversationID,
-    peerUserID,
-    peerUsername: "xoxo", // ! should be changed
-    lastMessage : message.content,
-    lastMessageAt   : message.ts,
-    unreadCount     : incrementUnread ? 1 : 0,
-    createdAt       : now,
-    // updatedAt       : now,
-  }
-  await db.conversations.put(conversation)
-}
-
-}
-
-// ─── Private: Emit Helpers ─────────────────────────────────────────────────
-
-private emitMessage(msg: MessageRecord): void {
-
-for (const cb of this.onMessageListeners) {
-  try { cb(msg) } catch (err) {
-    console.error("[Messaging] onMessage listener error:", err)
-  }
-}
-
-}
-
+	private emitMessage(msg: MessageRecord): void {
+		for (const cb of this.onMessageListeners) {
+			try {
+				cb(msg);
+			} catch (err) {
+				console.error("[Messaging] onMessage listener error:", err);
+			}
+		}
+	}
 }
 
 // ─── Conversation ID Derivation ───────────────────────────────────────────────
@@ -531,16 +511,14 @@ for (const cb of this.onMessageListeners) {
 */
 
 export function deriveConversationID(userA: string, userB: string): string {
+	const [lower, higher] = [userA, userB].sort();
 
-const [lower, higher] = [userA, userB].sort()
-
-return `conv_${lower}_${higher}`
-
+	return `conv_${lower}_${higher}`;
 }
 
 // ─── Module-Level Singleton ───────────────────────────────────────────────────
 
-let _instance: MessagingManager | null = null
+let _instance: MessagingManager | null = null;
 
 /**
 
@@ -568,21 +546,15 @@ let _instance: MessagingManager | null = null
 */
 
 export function getMessagingManager(
+	socket: AnonSocket,
 
-socket : AnonSocket,
-
-myUserID : string,
-
+	myUserID: string,
 ): MessagingManager {
+	if (!_instance) {
+		_instance = new MessagingManager(socket, myUserID);
+	}
 
-if (!_instance) {
-
-_instance = new MessagingManager(socket, myUserID)
-
-}
-
-return _instance
-
+	return _instance;
 }
 
 /**
@@ -592,9 +564,7 @@ return _instance
 */
 
 export function destroyMessagingManager(): void {
+	_instance?.destroy();
 
-_instance?.destroy()
-
-_instance = null
-
+	_instance = null;
 }

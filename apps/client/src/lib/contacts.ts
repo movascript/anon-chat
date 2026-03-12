@@ -1,12 +1,11 @@
-
-import { db } from "./db"
-import type { ContactRecord  } from "./db"
-import type { AnonSocket } from "./socket"
+import type { ContactRecord } from "./db";
+import { db } from "./db";
 import type {
-  ChatRequestFrame,
-  ChatRequestResponseFrame,
-  PresenceFrame,
-} from "./socket"
+	AnonSocket,
+	ChatRequestFrame,
+	ChatRequestResponseFrame,
+	PresenceFrame,
+} from "./socket";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,8 +17,8 @@ import type {
 
 /** Result of accepting/declining a chat request */
 export type RequestResolution =
-  | { ok: true;  contact: ContactRecord }
-  | { ok: false; reason: string }
+	| { ok: true; contact: ContactRecord }
+	| { ok: false; reason: string };
 
 // ─── In-Memory Presence Cache ─────────────────────────────────────────────────
 
@@ -28,236 +27,231 @@ export type RequestResolution =
  * Writing presence to disk on every event is wasteful — on reload
  * we re-subscribe and get fresh state from the server anyway.
  */
-const presenceCache = new Map<string, boolean>()
+const presenceCache = new Map<string, boolean>();
 
 // ─── Contacts Manager ─────────────────────────────────────────────────────────
 
 export class ContactsManager {
-  private socket     : AnonSocket
-  private myUserID   : string
-  private unsubs     : Array<() => void> = []
+	private socket: AnonSocket;
+	private myUserID: string;
+	private unsubs: Array<() => void> = [];
 
-  /**
-   * Listeners registered by the UI for reactive updates.
-   * Keyed by userID so the UI can subscribe to a specific contact.
-   */
-  private onPresenceChange : Array<(userID: string, online: boolean) => void> = []
-  private onIncomingRequest: Array<(frame: ChatRequestFrame) => void>         = []
+	/**
+	 * Listeners registered by the UI for reactive updates.
+	 * Keyed by userID so the UI can subscribe to a specific contact.
+	 */
+	private onPresenceChange: Array<(userID: string, online: boolean) => void> =
+		[];
+	private onIncomingRequest: Array<(frame: ChatRequestFrame) => void> = [];
 
-  constructor(socket: AnonSocket, myUserID: string) {
-    this.socket   = socket
-    this.myUserID = myUserID
-  }
+	constructor(socket: AnonSocket, myUserID: string) {
+		this.socket = socket;
+		this.myUserID = myUserID;
+	}
 
-  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+	// ─── Lifecycle ─────────────────────────────────────────────────────────────
 
-  /**
-   * Attach socket event listeners and re-subscribe presence for all
-   * accepted contacts. Call once after `socket` reaches "authenticated".
-   */
-  async init(): Promise<void> {
-    this.attachSocketListeners()
-    await this.resubscribePresence()
-  }
+	/**
+	 * Attach socket event listeners and re-subscribe presence for all
+	 * accepted contacts. Call once after `socket` reaches "authenticated".
+	 */
+	async init(): Promise<void> {
+		this.attachSocketListeners();
+		await this.resubscribePresence();
+	}
 
-  /**
-   * Detach all socket listeners. Call on logout / account reset.
-   */
-  destroy(): void {
-    for (const unsub of this.unsubs) unsub()
-    this.unsubs = []
-  }
+	/**
+	 * Detach all socket listeners. Call on logout / account reset.
+	 */
+	destroy(): void {
+		for (const unsub of this.unsubs) unsub();
+		this.unsubs = [];
+	}
 
-  // ─── Sending a Contact Request ─────────────────────────────────────────────
+	// ─── Sending a Contact Request ─────────────────────────────────────────────
 
-  /**
-   * Initiates a chat request to `toUserID`.
-   *
-   * Flow:
-   * 1. Guard against duplicates.
-   * 2. Write a `pending_out` contact record to IndexedDB.
-   * 3. Send `chat_request` frame to server.
-   * 4. Return the new contact record.
-   */
-  async sendRequest(
-    toUserID : string,
-    username : string,         // display name we know them by (from search result)
-    publicKey: JsonWebKey,
-  ): Promise<ContactRecord> {
-    if (toUserID === this.myUserID) {
-      throw new Error("Cannot send a contact request to yourself")
-    }
+	/**
+	 * Initiates a chat request to `toUserID`.
+	 *
+	 * Flow:
+	 * 1. Guard against duplicates.
+	 * 2. Write a `pending_out` contact record to IndexedDB.
+	 * 3. Send `chat_request` frame to server.
+	 * 4. Return the new contact record.
+	 */
+	async sendRequest(
+		toUserID: string,
+		username: string, // display name we know them by (from search result)
+		publicKey: JsonWebKey,
+	): Promise<ContactRecord> {
+		if (toUserID === this.myUserID) {
+			throw new Error("Cannot send a contact request to yourself");
+		}
 
-    // Idempotency: if a record already exists, return it as-is
-    const existing = await db.contacts.get(toUserID)
-    if (existing) {
-      return existing
-    }
+		// Idempotency: if a record already exists, return it as-is
+		const existing = await db.contacts.get(toUserID);
+		if (existing) {
+			return existing;
+		}
 
-    const requestID = crypto.randomUUID()
+		const requestID = crypto.randomUUID();
 
-    const conversationID = crypto.randomUUID()
-    const now       = Date.now()
+		const conversationID = crypto.randomUUID();
+		const now = Date.now();
 
-    const contact: ContactRecord = {
-  id             : toUserID,
-  username,
-  publicKey,
-  status         : "pending_out",
-  online         : false,
-  conversationID,
-  createdAt      : now,
-  updatedAt      : now,
-}
+		const contact: ContactRecord = {
+			id: toUserID,
+			username,
+			publicKey,
+			status: "pending_out",
+			online: false,
+			conversationID,
+			createdAt: now,
+			updatedAt: now,
+		};
 
-    await db.contacts.put(contact)
+		await db.contacts.put(contact);
 
-    this.socket.send({
-      type    : "chat_request",
-      toUserID,
-      requestID,
-    })
+		this.socket.send({
+			type: "chat_request",
+			toUserID,
+			requestID,
+		});
 
-    console.info(`[Contacts] Sent chat request to ${username} (${toUserID})`)
-    return contact
-  }
+		console.info(`[Contacts] Sent chat request to ${username} (${toUserID})`);
+		return contact;
+	}
 
-  // ─── Accepting / Declining Incoming Requests ───────────────────────────────
+	// ─── Accepting / Declining Incoming Requests ───────────────────────────────
 
-  /**
-   * Accept an incoming `chat_request`.
-   *
-   * Flow:
-   * 1. Upsert contact record with `accepted` status.
-   * 2. Persist their public key for future message verification.
-   * 3. Send positive `chat_request_response` frame.
-   * 4. Subscribe to their presence.
-   * 5. Return enriched contact view.
-   */
-  async acceptRequest(frame: ChatRequestFrame): Promise<RequestResolution> {
-    try {
-      const now = Date.now()
+	/**
+	 * Accept an incoming `chat_request`.
+	 *
+	 * Flow:
+	 * 1. Upsert contact record with `accepted` status.
+	 * 2. Persist their public key for future message verification.
+	 * 3. Send positive `chat_request_response` frame.
+	 * 4. Subscribe to their presence.
+	 * 5. Return enriched contact view.
+	 */
+	async acceptRequest(frame: ChatRequestFrame): Promise<RequestResolution> {
+		try {
+			const now = Date.now();
 
-      const contact: ContactRecord  = {
-        id    : frame.fromUserID,
-        username  : frame.fromUsername,
-        publicKey : frame.fromPublicKey,
-        status    : "accepted",
-        conversationID : frame.requestID,
-        online: false,
-        createdAt : now,
-        updatedAt : now,
-      }
+			const contact: ContactRecord = {
+				id: frame.fromUserID,
+				username: frame.fromUsername,
+				publicKey: frame.fromPublicKey,
+				status: "accepted",
+				conversationID: frame.requestID,
+				online: false,
+				createdAt: now,
+				updatedAt: now,
+			};
 
-      await db.contacts.put(contact)
+			await db.contacts.put(contact);
 
-      this.socket.send({
-        type      : "chat_request_response",
-        requestID : frame.requestID,
-        accepted  : true,
-      })
+			this.socket.send({
+				type: "chat_request_response",
+				requestID: frame.requestID,
+				accepted: true,
+			});
 
-      // Subscribe to their online/offline events
-      this.subscribePresence([frame.fromUserID])
+			// Subscribe to their online/offline events
+			this.subscribePresence([frame.fromUserID]);
 
-      console.info(
-        `[Contacts] Accepted request from ${frame.fromUsername} (${frame.fromUserID})`,
-      )
+			console.info(
+				`[Contacts] Accepted request from ${frame.fromUsername} (${frame.fromUserID})`,
+			);
 
-      return { ok: true, contact: contact }
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err)
-      return { ok: false, reason }
-    }
-  }
+			return { ok: true, contact: contact };
+		} catch (err) {
+			const reason = err instanceof Error ? err.message : String(err);
+			return { ok: false, reason };
+		}
+	}
 
-  /**
-   * Decline an incoming `chat_request`.
-   *
-   * We optionally persist a `blocked` record to prevent the same user
-   * from flooding us with requests.
-   */
-  async declineRequest(
-    frame  : ChatRequestFrame,
-    block  = false,
-  ): Promise<void> {
-    this.socket.send({
-      type      : "chat_request_response",
-      requestID : frame.requestID,
-      accepted  : false,
-    })
+	/**
+	 * Decline an incoming `chat_request`.
+	 *
+	 * We optionally persist a `blocked` record to prevent the same user
+	 * from flooding us with requests.
+	 */
+	async declineRequest(frame: ChatRequestFrame, block = false): Promise<void> {
+		this.socket.send({
+			type: "chat_request_response",
+			requestID: frame.requestID,
+			accepted: false,
+		});
 
-    if (block) {
-      const now = Date.now()
-      await db.contacts.put({
-        id    : frame.fromUserID,
-        username  : frame.fromUsername,
-        publicKey : frame.fromPublicKey,
-        status    : "blocked",
-        conversationID : frame.requestID,
-        online: false,
-        createdAt : now,
-        updatedAt : now,
-      })
-      console.info(`[Contacts] Blocked ${frame.fromUserID}`)
-    } else {
-      console.info(`[Contacts] Declined request from ${frame.fromUserID}`)
-    }
-  }
+		if (block) {
+			const now = Date.now();
+			await db.contacts.put({
+				id: frame.fromUserID,
+				username: frame.fromUsername,
+				publicKey: frame.fromPublicKey,
+				status: "blocked",
+				conversationID: frame.requestID,
+				online: false,
+				createdAt: now,
+				updatedAt: now,
+			});
+			console.info(`[Contacts] Blocked ${frame.fromUserID}`);
+		} else {
+			console.info(`[Contacts] Declined request from ${frame.fromUserID}`);
+		}
+	}
 
-  // ─── Querying Contacts ─────────────────────────────────────────────────────
+	// ─── Querying Contacts ─────────────────────────────────────────────────────
 
-  /** Returns every contact record enriched with live presence. */
-  async listAll(): Promise<ContactRecord[]> {
-    const rows = await db.contacts.toArray()
-    return rows
-  }
+	/** Returns every contact record enriched with live presence. */
+	async listAll(): Promise<ContactRecord[]> {
+		const rows = await db.contacts.toArray();
+		return rows;
+	}
 
-  /** Returns accepted contacts only. */
-  async listAccepted(): Promise<ContactRecord[]> {
-    const rows = await db.contacts
-      .where("status")
-      .equals("accepted")
-      .toArray()
-    return rows
-  }
+	/** Returns accepted contacts only. */
+	async listAccepted(): Promise<ContactRecord[]> {
+		const rows = await db.contacts.where("status").equals("accepted").toArray();
+		return rows;
+	}
 
-  /** Returns a single contact by userID, or `null` if unknown. */
-  async get(userID: string): Promise<ContactRecord | null> {
-    const row = await db.contacts.get(userID)
-    return row ? row : null
-  }
+	/** Returns a single contact by userID, or `null` if unknown. */
+	async get(userID: string): Promise<ContactRecord | null> {
+		const row = await db.contacts.get(userID);
+		return row ? row : null;
+	}
 
-  /** Live presence lookup — does not hit IndexedDB. */
-  isOnline(userID: string): boolean {
-    return presenceCache.get(userID) ?? false
-  }
+	/** Live presence lookup — does not hit IndexedDB. */
+	isOnline(userID: string): boolean {
+		return presenceCache.get(userID) ?? false;
+	}
 
-  // ─── Presence Subscription ─────────────────────────────────────────────────
+	// ─── Presence Subscription ─────────────────────────────────────────────────
 
-  /**
-   * Subscribe to presence events for a set of userIDs.
-   * Sends a `subscribe_presence` frame to the server;
-   * the server will immediately push current status and future changes.
-   */
-  subscribePresence(userIDs: string[]): void {
-    if (userIDs.length === 0) return
-    this.socket.send({ type: "subscribe_presence", userIDs })
-  }
+	/**
+	 * Subscribe to presence events for a set of userIDs.
+	 * Sends a `subscribe_presence` frame to the server;
+	 * the server will immediately push current status and future changes.
+	 */
+	subscribePresence(userIDs: string[]): void {
+		if (userIDs.length === 0) return;
+		this.socket.send({ type: "subscribe_presence", userIDs });
+	}
 
-  /**
-   * Unsubscribe from presence events for a set of userIDs.
-   * Also clears them from the local cache.
-   */
-  unsubscribePresence(userIDs: string[]): void {
-    if (userIDs.length === 0) return
-    this.socket.send({ type: "unsubscribe_presence", userIDs })
-    for (const id of userIDs) presenceCache.delete(id)
-  }
+	/**
+	 * Unsubscribe from presence events for a set of userIDs.
+	 * Also clears them from the local cache.
+	 */
+	unsubscribePresence(userIDs: string[]): void {
+		if (userIDs.length === 0) return;
+		this.socket.send({ type: "unsubscribe_presence", userIDs });
+		for (const id of userIDs) presenceCache.delete(id);
+	}
 
-  // ─── Reactive Listeners (for UI layer) ────────────────────────────────────
+	// ─── Reactive Listeners (for UI layer) ────────────────────────────────────
 
-  /**
+	/**
    * Register a callback that fires whenever a contact's presence changes.
    * Returns an unsubscribe function.
    *
@@ -272,16 +266,14 @@ export class ContactsManager {
    * 
    */
 
-onPresence(cb: (userID: string, online: boolean) => void): () => void {
+	onPresence(cb: (userID: string, online: boolean) => void): () => void {
+		this.onPresenceChange.push(cb);
+		return () => {
+			this.onPresenceChange = this.onPresenceChange.filter((f) => f !== cb);
+		};
+	}
 
-this.onPresenceChange.push(cb)
-return () => {
-  this.onPresenceChange = this.onPresenceChange.filter((f) => f !== cb)
-}
-
-}
-
-/**
+	/**
 
     Register a callback for incoming chat requests.
     Returns an unsubscribe function.
@@ -289,126 +281,111 @@ return () => {
 
 */
 
-onRequest(cb: (frame: ChatRequestFrame) => void): () => void {
+	onRequest(cb: (frame: ChatRequestFrame) => void): () => void {
+		this.onIncomingRequest.push(cb);
+		return () => {
+			this.onIncomingRequest = this.onIncomingRequest.filter((f) => f !== cb);
+		};
+	}
 
-this.onIncomingRequest.push(cb)
-return () => {
-  this.onIncomingRequest = this.onIncomingRequest.filter((f) => f !== cb)
-}
+	// ─── Private: Socket Event Handling ───────────────────────────────────────
 
-}
+	private attachSocketListeners(): void {
+		const unsubPresence = this.socket.on("presence", (frame) =>
+			this.handlePresenceFrame(frame),
+		);
 
-// ─── Private: Socket Event Handling ───────────────────────────────────────
+		const unsubRequest = this.socket.on("chat_request", (frame) =>
+			this.handleChatRequestFrame(frame),
+		);
 
-private attachSocketListeners(): void {
+		const unsubResponse = this.socket.on("chat_request_response", (frame) =>
+			this.handleChatRequestResponseFrame(frame),
+		);
 
-const unsubPresence = this.socket.on(
-  "presence",
-  (frame) => this.handlePresenceFrame(frame),
-)
+		this.unsubs.push(unsubPresence, unsubRequest, unsubResponse);
+	}
 
-const unsubRequest = this.socket.on(
-  "chat_request",
-  (frame) => this.handleChatRequestFrame(frame),
-)
+	private handlePresenceFrame(frame: PresenceFrame): void {
+		presenceCache.set(frame.userID, frame.online);
+		for (const cb of this.onPresenceChange) {
+			try {
+				cb(frame.userID, frame.online);
+			} catch (err) {
+				console.error("[Contacts] onPresence listener error:", err);
+			}
+		}
+	}
 
-const unsubResponse = this.socket.on(
-  "chat_request_response",
-  (frame) => this.handleChatRequestResponseFrame(frame),
-)
+	private async handleChatRequestFrame(frame: ChatRequestFrame): Promise<void> {
+		// Drop request if we've already blocked this user
+		const existing = await db.contacts.get(frame.fromUserID);
+		if (existing?.status === "blocked") {
+			console.info(
+				`[Contacts] Silently dropped request from blocked user ${frame.fromUserID}`,
+			);
+			return;
+		}
 
-this.unsubs.push(unsubPresence, unsubRequest, unsubResponse)
+		// If we already accepted this user, auto-accept (duplicate handshake after reconnect)
+		if (existing?.status === "accepted") {
+			console.info(
+				`[Contacts] Auto-accepting duplicate request from ${frame.fromUserID}`,
+			);
+			this.socket.send({
+				type: "chat_request_response",
+				requestID: frame.requestID,
+				accepted: true,
+			});
+			return;
+		}
 
-}
+		// Notify UI to show the request dialog
+		for (const cb of this.onIncomingRequest) {
+			try {
+				cb(frame);
+			} catch (err) {
+				console.error("[Contacts] onRequest listener error:", err);
+			}
+		}
+	}
 
-private handlePresenceFrame(frame: PresenceFrame): void {
+	private async handleChatRequestResponseFrame(
+		frame: ChatRequestResponseFrame,
+	): Promise<void> {
+		const contact = await db.contacts.get(frame.fromUserID);
 
-presenceCache.set(frame.userID, frame.online)
-for (const cb of this.onPresenceChange) {
-  try {
-    cb(frame.userID, frame.online)
-  } catch (err) {
-    console.error("[Contacts] onPresence listener error:", err)
-  }
-}
+		if (!contact) {
+			console.warn(
+				`[Contacts] Received response for unknown contact ${frame.fromUserID}`,
+			);
+			return;
+		}
 
-}
+		if (contact.status !== "pending_out") {
+			// Already resolved (e.g. duplicate ACK after reconnect) — ignore
+			return;
+		}
 
-private async handleChatRequestFrame(frame: ChatRequestFrame): Promise<void> {
+		const newStatus = frame.accepted ? "accepted" : "declined";
 
-// Drop request if we've already blocked this user
-const existing = await db.contacts.get(frame.fromUserID)
-if (existing?.status === "blocked") {
-  console.info(
-    `[Contacts] Silently dropped request from blocked user ${frame.fromUserID}`,
-  )
-  return
-}
+		await db.contacts.update(frame.fromUserID, {
+			status: newStatus,
+			updatedAt: Date.now(),
+		});
 
-// If we already accepted this user, auto-accept (duplicate handshake after reconnect)
-if (existing?.status === "accepted") {
-  console.info(
-    `[Contacts] Auto-accepting duplicate request from ${frame.fromUserID}`,
-  )
-  this.socket.send({
-    type      : "chat_request_response",
-    requestID : frame.requestID,
-    accepted  : true,
-  })
-  return
-}
+		if (frame.accepted) {
+			// Start watching their presence now that we're connected
+			this.subscribePresence([frame.fromUserID]);
+			console.info(`[Contacts] ${frame.fromUserID} accepted our request`);
+		} else {
+			console.info(`[Contacts] ${frame.fromUserID} declined our request`);
+		}
+	}
 
-// Notify UI to show the request dialog
-for (const cb of this.onIncomingRequest) {
-  try {
-    cb(frame)
-  } catch (err) {
-    console.error("[Contacts] onRequest listener error:", err)
-  }
-}
+	// ─── Private: Re-subscription on Reconnect ────────────────────────────────
 
-}
-
-private async handleChatRequestResponseFrame(
-
-frame: ChatRequestResponseFrame,
-
-): Promise<void> {
-
-const contact = await db.contacts.get(frame.fromUserID)
-
-if (!contact) {
-  console.warn(
-    `[Contacts] Received response for unknown contact ${frame.fromUserID}`,
-  )
-  return
-}
-
-if (contact.status !== "pending_out") {
-  // Already resolved (e.g. duplicate ACK after reconnect) — ignore
-  return
-}
-
-const newStatus = frame.accepted ? "accepted" : "declined"
-
-await db.contacts.update(frame.fromUserID, {
-  status   : newStatus,
-  updatedAt: Date.now(),
-})
-
-if (frame.accepted) {
-  // Start watching their presence now that we're connected
-  this.subscribePresence([frame.fromUserID])
-  console.info(`[Contacts] ${frame.fromUserID} accepted our request`)
-} else {
-  console.info(`[Contacts] ${frame.fromUserID} declined our request`)
-}
-
-}
-
-// ─── Private: Re-subscription on Reconnect ────────────────────────────────
-
-/**
+	/**
 
     After reconnecting, the server has no memory of our presence subscriptions.
     We re-send subscribe_presence for every accepted contact so we get
@@ -416,28 +393,25 @@ if (frame.accepted) {
 
 */
 
-private async resubscribePresence(): Promise<void> {
+	private async resubscribePresence(): Promise<void> {
+		const accepted = await db.contacts
+			.where("status")
+			.equals("accepted")
+			.toArray();
 
-const accepted = await db.contacts
-  .where("status")
-  .equals("accepted")
-  .toArray()
-
-const ids = accepted.map((c) => c.id)
-if (ids.length > 0) {
-  this.subscribePresence(ids)
-  console.info(
-    `[Contacts] Re-subscribed presence for ${ids.length} contact(s)`,
-  )
-}
-
-}
-
+		const ids = accepted.map((c) => c.id);
+		if (ids.length > 0) {
+			this.subscribePresence(ids);
+			console.info(
+				`[Contacts] Re-subscribed presence for ${ids.length} contact(s)`,
+			);
+		}
+	}
 }
 
 // ─── Module-Level Singleton ───────────────────────────────────────────────────
 
-let _instance: ContactsManager | null = null
+let _instance: ContactsManager | null = null;
 
 /**
 
@@ -455,21 +429,15 @@ let _instance: ContactsManager | null = null
 */
 
 export function getContactsManager(
+	socket: AnonSocket,
 
-socket : AnonSocket,
-
-myUserID : string,
-
+	myUserID: string,
 ): ContactsManager {
+	if (!_instance) {
+		_instance = new ContactsManager(socket, myUserID);
+	}
 
-if (!_instance) {
-
-_instance = new ContactsManager(socket, myUserID)
-
-}
-
-return _instance
-
+	return _instance;
 }
 
 /**
@@ -479,9 +447,7 @@ return _instance
 */
 
 export function destroyContactsManager(): void {
+	_instance?.destroy();
 
-_instance?.destroy()
-
-_instance = null
-
+	_instance = null;
 }

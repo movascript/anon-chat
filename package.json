@@ -1,16 +1,22 @@
 {
-  "name": "anon-chat",
-  "private": true,
-  "scripts": {
-    "dev:all": "pnpm -r dev",
-    "client": "pnpm --filter client dev",
-    "server": "pnpm --filter server dev",
-    "build:all": "pnpm -r build"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
-  }
+	"name": "anon-chat",
+	"private": true,
+	"scripts": {
+		"dev:all": "pnpm -r dev",
+		"client": "pnpm --filter client dev",
+		"server": "pnpm --filter server dev",
+		"build:all": "pnpm -r build",
+		"format": "biome format --write",
+		"lint": "biome lint --write",
+		"check": "biome check --write"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"lightningcss"
+		]
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.6"
+	}
 }

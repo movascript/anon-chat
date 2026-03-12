@@ -13,16 +13,16 @@
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ALGORITHM = {
-  name  : "ECDSA",
-  namedCurve: "P-256",
-} as const
+	name: "ECDSA",
+	namedCurve: "P-256",
+} as const;
 
 const VERIFY_PARAMS = {
-  name  : "ECDSA",
-  hash  : { name: "SHA-256" },
-} as const
+	name: "ECDSA",
+	hash: { name: "SHA-256" },
+} as const;
 
-const NONCE_BYTE_LENGTH = 32   // 256 bits of entropy → 64 hex chars
+const NONCE_BYTE_LENGTH = 32; // 256 bits of entropy → 64 hex chars
 
 // ─── Nonce ────────────────────────────────────────────────────────────────────
 
@@ -32,13 +32,15 @@ const NONCE_BYTE_LENGTH = 32   // 256 bits of entropy → 64 hex chars
  * and trivial to encode on the client side before signing.
  */
 function generateNonce(): string {
-  const bytes = new Uint8Array(NONCE_BYTE_LENGTH)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
+	const bytes = new Uint8Array(NONCE_BYTE_LENGTH);
+	crypto.getRandomValues(bytes);
+	return Array.from(bytes)
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("");
 }
-import { webcrypto} from "crypto"
+
+import type { webcrypto } from "crypto";
+
 // ─── Key Import ───────────────────────────────────────────────────────────────
 
 /**
@@ -48,40 +50,40 @@ import { webcrypto} from "crypto"
  * We import as `verify`-only — the server has no need for `sign`.
  */
 async function importPublicKey(jwkString: string): Promise<CryptoKey> {
-  let jwk: webcrypto.JsonWebKey
+	let jwk: webcrypto.JsonWebKey;
 
-  try {
-    jwk = JSON.parse(jwkString) as webcrypto.JsonWebKey
-  } catch {
-    throw new Error("Invalid JWK: failed to parse JSON")
-  }
+	try {
+		jwk = JSON.parse(jwkString) as webcrypto.JsonWebKey;
+	} catch {
+		throw new Error("Invalid JWK: failed to parse JSON");
+	}
 
-  // Basic structural guard before handing to subtle
-  if (jwk.kty !== "EC" || jwk.crv !== "P-256") {
-    throw new Error("Invalid JWK: expected EC P-256 key")
-  }
+	// Basic structural guard before handing to subtle
+	if (jwk.kty !== "EC" || jwk.crv !== "P-256") {
+		throw new Error("Invalid JWK: expected EC P-256 key");
+	}
 
-  if (!jwk.x || !jwk.y) {
-    throw new Error("Invalid JWK: missing x or y coordinates")
-  }
+	if (!jwk.x || !jwk.y) {
+		throw new Error("Invalid JWK: missing x or y coordinates");
+	}
 
-  // d must NOT be present — we only accept public keys
-  if ("d" in jwk) {
-    throw new Error("Invalid JWK: private key material must not be sent")
-  }
+	// d must NOT be present — we only accept public keys
+	if ("d" in jwk) {
+		throw new Error("Invalid JWK: private key material must not be sent");
+	}
 
-  try {
-    const key = await crypto.subtle.importKey(
-      "jwk",
-      jwk,
-      ALGORITHM,
-      true,       // extractable — doesn't matter for verify-only key
-      ["verify"]
-    )
-    return key
-  } catch (err) {
-    throw new Error(`Invalid JWK: subtle.importKey failed — ${String(err)}`)
-  }
+	try {
+		const key = await crypto.subtle.importKey(
+			"jwk",
+			jwk,
+			ALGORITHM,
+			true, // extractable — doesn't matter for verify-only key
+			["verify"],
+		);
+		return key;
+	} catch (err) {
+		throw new Error(`Invalid JWK: subtle.importKey failed — ${String(err)}`);
+	}
 }
 
 // ─── Signature Verification ───────────────────────────────────────────────────
@@ -97,31 +99,31 @@ async function importPublicKey(jwkString: string): Promise<CryptoKey> {
  * Returns false → signature invalid, auth must be rejected
  */
 async function verifySignature(
-  publicKey: CryptoKey,
-  nonce: string,
-  signatureBase64: string
+	publicKey: CryptoKey,
+	nonce: string,
+	signatureBase64: string,
 ): Promise<boolean> {
-  let signatureBytes: ArrayBuffer
+	let signatureBytes: ArrayBuffer;
 
-  try {
-    signatureBytes = base64ToArrayBuffer(signatureBase64)
-  } catch {
-    return false   // malformed base64 → treat as verification failure
-  }
+	try {
+		signatureBytes = base64ToArrayBuffer(signatureBase64);
+	} catch {
+		return false; // malformed base64 → treat as verification failure
+	}
 
-  const nonceBytes = new TextEncoder().encode(nonce)
+	const nonceBytes = new TextEncoder().encode(nonce);
 
-  try {
-    const valid = await crypto.subtle.verify(
-      VERIFY_PARAMS,
-      publicKey,
-      signatureBytes,
-      nonceBytes
-    )
-    return valid
-  } catch {
-    return false   // subtle can throw on malformed signature bytes
-  }
+	try {
+		const valid = await crypto.subtle.verify(
+			VERIFY_PARAMS,
+			publicKey,
+			signatureBytes,
+			nonceBytes,
+		);
+		return valid;
+	} catch {
+		return false; // subtle can throw on malformed signature bytes
+	}
 }
 
 // ─── Derive a stable UserID from a public key ─────────────────────────────────
@@ -137,36 +139,34 @@ async function verifySignature(
  * Not a UUID — intentionally shorter and visually distinct.
  */
 async function deriveUserID(jwkString: string): Promise<string> {
-  const encoded = new TextEncoder().encode(jwkString)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded)
-  const hashBytes = new Uint8Array(hashBuffer)
+	const encoded = new TextEncoder().encode(jwkString);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+	const hashBytes = new Uint8Array(hashBuffer);
 
-  return Array.from(hashBytes.slice(0, 16))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
+	return Array.from(hashBytes.slice(0, 16))
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("");
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  // Handle both standard base64 and URL-safe base64
-  const normalized = base64
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
+	// Handle both standard base64 and URL-safe base64
+	const normalized = base64.replace(/-/g, "+").replace(/_/g, "/");
 
-  const binary = atob(normalized)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
-  }
-  return bytes.buffer
+	const binary = atob(normalized);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+	return bytes.buffer;
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
 export const serverCrypto = {
-  generateNonce,
-  importPublicKey,
-  verifySignature,
-  deriveUserID,
-}
+	generateNonce,
+	importPublicKey,
+	verifySignature,
+	deriveUserID,
+};

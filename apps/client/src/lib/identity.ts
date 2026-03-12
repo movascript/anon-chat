@@ -1,5 +1,4 @@
-
-import { getIdentity, saveIdentity, type IdentityRecord } from "./db"
+import { getIdentity, type IdentityRecord, saveIdentity } from "./db";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -8,14 +7,14 @@ import { getIdentity, saveIdentity, type IdentityRecord } from "./db"
  * SHA-256 is used as the digest during sign/verify.
  */
 const KEY_ALGORITHM: EcKeyGenParams = {
-  name      : "ECDSA",
-  namedCurve: "P-256",
-}
+	name: "ECDSA",
+	namedCurve: "P-256",
+};
 
 const SIGN_ALGORITHM: EcdsaParams = {
-  name: "ECDSA",
-  hash: { name: "SHA-256" },
-}
+	name: "ECDSA",
+	hash: { name: "SHA-256" },
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,11 +23,11 @@ const SIGN_ALGORITHM: EcdsaParams = {
  * Holds live CryptoKey objects alongside the plain record from IndexedDB.
  */
 export interface RuntimeIdentity {
-  userID    : string
-  username  : string
-  publicKey : CryptoKey   // verify + export only
-  privateKey: CryptoKey   // sign only — never exported after initial save
-  publicKeyJwk: JsonWebKey
+	userID: string;
+	username: string;
+	publicKey: CryptoKey; // verify + export only
+	privateKey: CryptoKey; // sign only — never exported after initial save
+	publicKeyJwk: JsonWebKey;
 }
 
 // ─── Key Generation ───────────────────────────────────────────────────────────
@@ -39,41 +38,35 @@ export interface RuntimeIdentity {
  * After the initial export + save, the private key is never re-exported.
  */
 async function generateKeypair(): Promise<CryptoKeyPair> {
-  return crypto.subtle.generateKey(
-    KEY_ALGORITHM,
-    true, // extractable — needed for JWK export to IndexedDB
-    ["sign", "verify"],
-  )
+	return crypto.subtle.generateKey(
+		KEY_ALGORITHM,
+		true, // extractable — needed for JWK export to IndexedDB
+		["sign", "verify"],
+	);
 }
 
 // ─── JWK Serialisation ────────────────────────────────────────────────────────
 
 async function exportPublicKey(key: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey("jwk", key)
+	return crypto.subtle.exportKey("jwk", key);
 }
 
 async function exportPrivateKey(key: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey("jwk", key)
+	return crypto.subtle.exportKey("jwk", key);
 }
 
 async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    KEY_ALGORITHM,
-    true,
-    ["verify"],
-  )
+	return crypto.subtle.importKey("jwk", jwk, KEY_ALGORITHM, true, ["verify"]);
 }
 
 async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    KEY_ALGORITHM,
-    false, // not extractable after import — one-way
-    ["sign"],
-  )
+	return crypto.subtle.importKey(
+		"jwk",
+		jwk,
+		KEY_ALGORITHM,
+		false, // not extractable after import — one-way
+		["sign"],
+	);
 }
 
 // ─── UserID Derivation ────────────────────────────────────────────────────────
@@ -85,13 +78,13 @@ async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
  * Algorithm: SHA-256( canonicalJSON(publicKeyJwk) ) → first 32 hex chars
  */
 export async function deriveUserID(publicKeyJwk: JsonWebKey): Promise<string> {
-  // Canonical form: sort keys alphabetically to guarantee stable stringification
-  const canonical = canonicalJsonStringify(publicKeyJwk)
-  const encoded   = new TextEncoder().encode(canonical)
-  const hashBuf   = await crypto.subtle.digest("SHA-256", encoded)
-  const hashArr   = Array.from(new Uint8Array(hashBuf))
-  const hashHex   = hashArr.map((b) => b.toString(16).padStart(2, "0")).join("")
-  return hashHex.slice(0, 32)
+	// Canonical form: sort keys alphabetically to guarantee stable stringification
+	const canonical = canonicalJsonStringify(publicKeyJwk);
+	const encoded = new TextEncoder().encode(canonical);
+	const hashBuf = await crypto.subtle.digest("SHA-256", encoded);
+	const hashArr = Array.from(new Uint8Array(hashBuf));
+	const hashHex = hashArr.map((b) => b.toString(16).padStart(2, "0")).join("");
+	return hashHex.slice(0, 32);
 }
 
 /**
@@ -99,19 +92,19 @@ export async function deriveUserID(publicKeyJwk: JsonWebKey): Promise<string> {
  * is deterministic regardless of insertion order.
  */
 function canonicalJsonStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return "[" + value.map(canonicalJsonStringify).join(",") + "]"
-  }
-  if (value !== null && typeof value === "object") {
-    const sorted = Object.keys(value as object)
-      .sort()
-      .map((k) => {
-        const v = (value as Record<string, unknown>)[k]
-        return `${JSON.stringify(k)}:${canonicalJsonStringify(v)}`
-      })
-    return "{" + sorted.join(",") + "}"
-  }
-  return JSON.stringify(value)
+	if (Array.isArray(value)) {
+		return "[" + value.map(canonicalJsonStringify).join(",") + "]";
+	}
+	if (value !== null && typeof value === "object") {
+		const sorted = Object.keys(value as object)
+			.sort()
+			.map((k) => {
+				const v = (value as Record<string, unknown>)[k];
+				return `${JSON.stringify(k)}:${canonicalJsonStringify(v)}`;
+			});
+		return "{" + sorted.join(",") + "}";
+	}
+	return JSON.stringify(value);
 }
 
 // ─── Signing ──────────────────────────────────────────────────────────────────
@@ -124,12 +117,16 @@ function canonicalJsonStringify(value: unknown): string {
  * This must mirror what `serverCrypto.verifySignature` expects.
  */
 export async function signNonce(
-  privateKey: CryptoKey,
-  nonce     : string,
+	privateKey: CryptoKey,
+	nonce: string,
 ): Promise<string> {
-  const nonceBytes = hexToBytes(nonce)
-  const sigBuf     = await crypto.subtle.sign(SIGN_ALGORITHM, privateKey, nonceBytes)
-  return bytesToBase64(new Uint8Array(sigBuf))
+	const nonceBytes = hexToBytes(nonce);
+	const sigBuf = await crypto.subtle.sign(
+		SIGN_ALGORITHM,
+		privateKey,
+		nonceBytes,
+	);
+	return bytesToBase64(new Uint8Array(sigBuf));
 }
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
@@ -145,13 +142,13 @@ export async function signNonce(
  * the caller (onboarding flow) must collect a username and call `finaliseIdentity`.
  */
 export async function loadOrCreateIdentity(): Promise<RuntimeIdentity> {
-  const stored = await getIdentity()
+	const stored = await getIdentity();
 
-  if (stored) {
-    return hydrateIdentity(stored)
-  }
+	if (stored) {
+		return hydrateIdentity(stored);
+	}
 
-  return createFreshIdentity()
+	return createFreshIdentity();
 }
 
 /**
@@ -162,34 +159,34 @@ export async function loadOrCreateIdentity(): Promise<RuntimeIdentity> {
  * the username first and only then commit.
  */
 export async function createAndSaveIdentity(
-  username: string,
+	username: string,
 ): Promise<RuntimeIdentity> {
-  const existing = await getIdentity()
-  if (existing) throw new Error("Identity already exists")
+	const existing = await getIdentity();
+	if (existing) throw new Error("Identity already exists");
 
-  const keypair       = await generateKeypair()
-  const publicKeyJwk  = await exportPublicKey(keypair.publicKey)
-  const privateKeyJwk = await exportPrivateKey(keypair.privateKey)
-  const userID        = await deriveUserID(publicKeyJwk)
+	const keypair = await generateKeypair();
+	const publicKeyJwk = await exportPublicKey(keypair.publicKey);
+	const privateKeyJwk = await exportPrivateKey(keypair.privateKey);
+	const userID = await deriveUserID(publicKeyJwk);
 
-  const record: IdentityRecord = {
-    id        : 1,
-    userID,
-    username,
-    publicKey : publicKeyJwk,
-    privateKey: privateKeyJwk,
-    createdAt : Date.now(),
-  }
+	const record: IdentityRecord = {
+		id: 1,
+		userID,
+		username,
+		publicKey: publicKeyJwk,
+		privateKey: privateKeyJwk,
+		createdAt: Date.now(),
+	};
 
-  await saveIdentity(record)
+	await saveIdentity(record);
 
-  return {
-    userID,
-    username,
-    publicKey   : keypair.publicKey,
-    privateKey  : keypair.privateKey,
-    publicKeyJwk,
-  }
+	return {
+		userID,
+		username,
+		publicKey: keypair.publicKey,
+		privateKey: keypair.privateKey,
+		publicKeyJwk,
+	};
 }
 
 // ─── Internal Helpers ─────────────────────────────────────────────────────────
@@ -198,19 +195,21 @@ export async function createAndSaveIdentity(
  * Re-hydrates a stored IdentityRecord back into live CryptoKey objects.
  * Called on every app load after the first.
  */
-async function hydrateIdentity(record: IdentityRecord): Promise<RuntimeIdentity> {
-  const [publicKey, privateKey] = await Promise.all([
-    importPublicKey(record.publicKey),
-    importPrivateKey(record.privateKey),
-  ])
+async function hydrateIdentity(
+	record: IdentityRecord,
+): Promise<RuntimeIdentity> {
+	const [publicKey, privateKey] = await Promise.all([
+		importPublicKey(record.publicKey),
+		importPrivateKey(record.privateKey),
+	]);
 
-  return {
-    userID      : record.userID,
-    username    : record.username,
-    publicKey,
-    privateKey,
-    publicKeyJwk: record.publicKey,
-  }
+	return {
+		userID: record.userID,
+		username: record.username,
+		publicKey,
+		privateKey,
+		publicKeyJwk: record.publicKey,
+	};
 }
 
 /**
@@ -222,35 +221,34 @@ async function hydrateIdentity(record: IdentityRecord): Promise<RuntimeIdentity>
  * `createAndSaveIdentity` once a username is confirmed.
  */
 async function createFreshIdentity(): Promise<RuntimeIdentity> {
-  const keypair      = await generateKeypair()
-  const publicKeyJwk = await exportPublicKey(keypair.publicKey)
-  const userID       = await deriveUserID(publicKeyJwk)
+	const keypair = await generateKeypair();
+	const publicKeyJwk = await exportPublicKey(keypair.publicKey);
+	const userID = await deriveUserID(publicKeyJwk);
 
-  return {
-    userID,
-    username    : "",
-    publicKey   : keypair.publicKey,
-    privateKey  : keypair.privateKey,
-    publicKeyJwk,
-  }
+	return {
+		userID,
+		username: "",
+		publicKey: keypair.publicKey,
+		privateKey: keypair.privateKey,
+		publicKeyJwk,
+	};
 }
 
 // ─── Encoding Utilities ───────────────────────────────────────────────────────
 
 export function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
-  if (hex.length % 2 !== 0) throw new Error("Invalid hex string")
-  const bytes = new Uint8Array(hex.length / 2)
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-  }
-  return bytes
+	if (hex.length % 2 !== 0) throw new Error("Invalid hex string");
+	const bytes = new Uint8Array(hex.length / 2);
+	for (let i = 0; i < bytes.length; i++) {
+		bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+	}
+	return bytes;
 }
 
-
 function bytesToBase64(bytes: Uint8Array): string {
-  let binary = ""
-  for (const b of bytes) {
-    binary += String.fromCharCode(b)
-  }
-  return btoa(binary)
+	let binary = "";
+	for (const b of bytes) {
+		binary += String.fromCharCode(b);
+	}
+	return btoa(binary);
 }
