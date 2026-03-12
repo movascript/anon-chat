@@ -11,7 +11,7 @@ import type {
   MessageFrame,
   TypingFrame,
   OutgoingFrame,
-} from "./types.js"
+} from "@repo/types"
 import type { WebSocket } from "ws"
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────

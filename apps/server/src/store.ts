@@ -1,5 +1,5 @@
 import type { WebSocket } from "ws"
-import type { ConnectedClient, OutgoingFrame } from "./types.js"
+import type { ConnectedClient, OutgoingFrame } from "@repo/types"
 
 // ─── In-Memory Registry ───────────────────────────────────────────────────────
 //

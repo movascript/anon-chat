@@ -1,5 +1,5 @@
 {
-  "name": "anon-chat-server",
+  "name": "server",
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon --exec tsx src/server.ts",
@@ -13,6 +13,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@repo/types": "workspace:*",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.5",
