@@ -3,7 +3,7 @@ import type { UUID } from "node:crypto";
 type Brand<T, B> = T & { __brand: B };
 
 export type SocketID = Brand<UUID, "SocketID">;
-export type UserID = Brand<UUID, "UserID">;
+export type UserID = Brand<string, "UserID">;
 
 export type MessageType =
 	| "challenge"
@@ -193,5 +193,6 @@ export interface ConnectedClient {
 	socket: unknown; // typed as unknown here, cast to WebSocket in store
 	connectedAt: number;
 	pendingNonce: string | null; // cleared after successful auth
+	nonceIssuedAt: number | null; // timestamp when nonce was generated
 	authenticated: boolean;
 }

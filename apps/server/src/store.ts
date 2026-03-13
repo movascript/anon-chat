@@ -37,12 +37,13 @@ function registerSocket(socket: WebSocket, nonce: string): SocketID {
 	const socketID = generateSocketID();
 
 	const client: ConnectedClient = {
-		userID: "",
+		userID: "" as UserID,
 		username: "",
 		publicKey: "",
 		socket: socket as unknown,
 		connectedAt: Date.now(),
 		pendingNonce: nonce,
+		nonceIssuedAt: Date.now(),
 		authenticated: false,
 	};
 
@@ -67,10 +68,19 @@ function authenticateClient(
 	const client = socketMap.get(socketID);
 	if (!client) return false;
 
-	// reject if username already active on another socket
-	const existingSocketID = usernameMap.get(username);
-	if (existingSocketID && existingSocketID !== socketID) {
-		const existing = socketMap.get(existingSocketID);
+	// Reject if username already active on another socket
+	const existingByUsername = usernameMap.get(username);
+	if (existingByUsername && existingByUsername !== socketID) {
+		const existing = socketMap.get(existingByUsername);
+		if (existing?.authenticated) return false;
+	}
+
+	// Reject if the same keypair (userID) is already active on another socket.
+	// This prevents the same identity from holding two sessions simultaneously
+	// or re-registering under a different username.
+	const existingByUserID = userIDMap.get(userID);
+	if (existingByUserID && existingByUserID !== socketID) {
+		const existing = socketMap.get(existingByUserID);
 		if (existing?.authenticated) return false;
 	}
 
@@ -78,6 +88,7 @@ function authenticateClient(
 	client.username = username;
 	client.publicKey = publicKey;
 	client.pendingNonce = null;
+	client.nonceIssuedAt = null; // clear timestamp after use
 	client.authenticated = true;
 
 	usernameMap.set(username, socketID);
@@ -106,10 +117,6 @@ function getClientByUserID(userID: UserID): ConnectedClient | undefined {
 
 function getSocketIDByUserID(userID: UserID): SocketID | undefined {
 	return userIDMap.get(userID);
-}
-
-function getSocketIDBySocketID(socketID: SocketID): string | undefined {
-	return socketMap.has(socketID) ? socketID : undefined;
 }
 
 // ─── Removal ──────────────────────────────────────────────────────────────────

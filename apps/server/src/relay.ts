@@ -15,6 +15,8 @@ import type { WebSocket } from "ws";
 import { serverCrypto } from "./crypto";
 import { store } from "./store";
 
+const MAX_MESSAGE_LENGTH = 2_000; // characters
+
 // ─── Entry Point ──────────────────────────────────────────────────────────────
 
 export function handleConnection(ws: WebSocket): void {
@@ -100,6 +102,7 @@ function routeFrame(
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+const NONCE_TTL_MS = 30_000; // 30 seconds
 
 async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	const client = store.getClientBySocketID(socketID);
@@ -110,8 +113,19 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 		return;
 	}
 
-	if (!client.pendingNonce) {
+	if (!client.pendingNonce || client.nonceIssuedAt === null) {
 		sendError(socketID, "No pending challenge");
+		return;
+	}
+
+	// Reject expired nonces
+	if (Date.now() - client.nonceIssuedAt > NONCE_TTL_MS) {
+		store.sendToSocket(socketID, {
+			type: "auth_error",
+			id: crypto.randomUUID(),
+			ts: Date.now(),
+			reason: "Challenge expired — reconnect to get a fresh nonce",
+		});
 		return;
 	}
 
@@ -284,6 +298,14 @@ function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
 	const decliner = store.getClientBySocketID(socketID);
 	if (!decliner) return;
 
+	// Remove the requester's presence subscription — they were auto-subscribed
+	// in handleChatRequest and should not keep receiving presence events
+	// for someone who declined them.
+	const requesterSocketID = store.getSocketIDByUserID(frame.toUserID);
+	if (requesterSocketID) {
+		store.unsubscribeFromPresence(requesterSocketID, decliner.userID);
+	}
+
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
 		id: crypto.randomUUID(),
@@ -298,6 +320,17 @@ function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
 function handleMessage(socketID: SocketID, frame: MessageFrame): void {
 	const sender = store.getClientBySocketID(socketID);
 	if (!sender) return;
+
+	if (
+		typeof frame.content !== "string" ||
+		frame.content.length > MAX_MESSAGE_LENGTH
+	) {
+		sendError(
+			socketID,
+			`Message content exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
+		);
+		return;
+	}
 
 	const delivered = store.sendToUserID(frame.toUserID, {
 		type: "message_in",
