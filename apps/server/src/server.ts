@@ -23,12 +23,13 @@ const WS_PATH = process.env.WS_PATH || "/ws";
 
 const app = express();
 
-app.use(
-	cors({
-		origin: CORS_ORIGIN,
-		credentials: true,
-	}),
-);
+app.use(cors());
+// app.use(
+// 	cors({
+// 		origin: CORS_ORIGIN,
+// 		credentials: true,
+// 	}),
+// );
 
 app.use(express.json());
 
