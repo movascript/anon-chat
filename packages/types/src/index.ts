@@ -2,31 +2,36 @@ type Brand<T, B> = T & { __brand: B };
 
 export type SocketID = Brand<string, "SocketID">;
 export type UserID = Brand<string, "UserID">;
+export type MessageID = Brand<string, "MessageID">;
 
-export type MessageType =
-	| "challenge"
+export type Client2ServerFrameType =
 	| "auth"
-	| "auth_success"
-	| "auth_error"
+	| "typing"
 	| "search_user"
-	| "search_result"
 	| "chat_request"
-	| "chat_request_in"
 	| "chat_accept"
 	| "chat_decline"
-	| "chat_response"
-	| "message"
+	| "message";
+
+export type Server2ClientFrameType =
+	| "challenge"
+	| "auth_success"
+	| "auth_error"
+	| "search_result"
+	| "presence"
+	| "typing_in"
+	| "chat_request_in"
 	| "message_in"
 	| "message_ack"
-	| "presence"
-	| "typing"
-	| "typing_in"
+	| "chat_response"
 	| "error";
+
+export type FrameType = Client2ServerFrameType | Server2ClientFrameType;
 
 // ─── Base ────────────────────────────────────────────────────────────────────
 
 export interface WSFrame {
-	type: MessageType;
+	type: FrameType;
 	id: string;
 	ts: number;
 }
@@ -106,22 +111,21 @@ export interface ChatResponseFrame extends WSFrame {
 export interface MessageFrame extends WSFrame {
 	type: "message";
 	toUserID: UserID;
+	messageId: MessageID;
 	content: string;
-	conversationID: string;
 }
 
 export interface MessageInFrame extends WSFrame {
 	type: "message_in";
 	fromUserID: UserID;
 	fromUsername: string;
+	messageId: MessageID;
 	content: string;
-	conversationID: string;
-	originalID: string;
 }
 
 export interface MessageAckFrame extends WSFrame {
 	type: "message_ack";
-	originalID: string;
+	messageId: MessageID;
 	delivered: boolean;
 	reason?: "offline" | "not_found";
 }
@@ -156,9 +160,9 @@ export interface ErrorFrame extends WSFrame {
 	reason: string;
 }
 
-// ─── Union of all valid incoming frames (client → server) ────────────────────
+// ─── Union of all valid client → server ────────────────────
 
-export type IncomingFrame =
+export type Client2ServerFrame =
 	| AuthFrame
 	| SearchUserFrame
 	| ChatRequestFrame
@@ -167,9 +171,9 @@ export type IncomingFrame =
 	| MessageFrame
 	| TypingFrame;
 
-// ─── Union of all valid outgoing frames (server → client) ────────────────────
+// ─── Union of all valid server → client ────────────────────
 
-export type OutgoingFrame =
+export type Server2ClientFrame =
 	| ChallengeFrame
 	| AuthSuccessFrame
 	| AuthErrorFrame
@@ -181,6 +185,19 @@ export type OutgoingFrame =
 	| PresenceFrame
 	| TypingInFrame
 	| ErrorFrame;
+
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+	? Omit<T, K>
+	: never;
+
+export type OutgoingClientFrame = DistributiveOmit<
+	Client2ServerFrame,
+	"id" | "ts"
+>;
+export type OutgoingServerFrame = DistributiveOmit<
+	Server2ClientFrame,
+	"id" | "ts"
+>;
 
 // ─── Internal server client record ───────────────────────────────────────────
 

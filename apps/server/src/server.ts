@@ -66,9 +66,7 @@ const wss = new WebSocketServer({
 	path: WS_PATH,
 });
 
-wss.on("connection", (ws: WebSocket) => {
-	handleConnection(ws);
-});
+wss.on("connection", handleConnection);
 
 wss.on("error", (err) => {
 	console.error("[WSS] Server error:", err);

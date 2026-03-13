@@ -3,9 +3,9 @@ import type {
 	ChatAcceptFrame,
 	ChatDeclineFrame,
 	ChatRequestFrame,
-	IncomingFrame,
+	Client2ServerFrame,
 	MessageFrame,
-	OutgoingFrame,
+	OutgoingServerFrame,
 	SearchUserFrame,
 	SocketID,
 	TypingFrame,
@@ -26,8 +26,7 @@ export function handleConnection(ws: WebSocket): void {
 	// Issue challenge immediately — client must auth before anything else
 	store.sendToSocket(socketID, {
 		type: "challenge",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		nonce,
 	});
 
@@ -47,10 +46,10 @@ export function handleConnection(ws: WebSocket): void {
 // ─── Raw Message Parser ───────────────────────────────────────────────────────
 
 function handleRawMessage(socketID: SocketID, raw: string): void {
-	let frame: IncomingFrame;
+	let frame: Client2ServerFrame;
 
 	try {
-		frame = JSON.parse(raw) as IncomingFrame;
+		frame = JSON.parse(raw);
 	} catch {
 		sendError(socketID, "Malformed JSON");
 		return;
@@ -76,10 +75,7 @@ function handleRawMessage(socketID: SocketID, raw: string): void {
 
 // Return type is `void | Promise<void>` because handleAuth is async.
 // Callers never await routeFrame — fire-and-forget is intentional here.
-function routeFrame(
-	socketID: SocketID,
-	frame: IncomingFrame,
-): void | Promise<void> {
+function routeFrame(socketID: SocketID, frame: Client2ServerFrame) {
 	switch (frame.type) {
 		case "auth":
 			return handleAuth(socketID, frame);
@@ -122,8 +118,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (Date.now() - client.nonceIssuedAt > NONCE_TTL_MS) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			reason: "Challenge expired — reconnect to get a fresh nonce",
 		});
 		return;
@@ -136,8 +131,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!isValidUsername(username)) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			reason:
 				"Username must be 3–32 characters, alphanumeric and underscores only",
 		});
@@ -153,8 +147,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	} catch (err) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			reason: `Invalid public key: ${String(err)}`,
 		});
 		return;
@@ -171,8 +164,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!valid) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			reason: "Signature verification failed",
 		});
 		return;
@@ -191,8 +183,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!success) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			reason: "Username already taken",
 		});
 		return;
@@ -200,8 +191,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 
 	store.sendToSocket(socketID, {
 		type: "auth_success",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		username,
 		userID,
 	});
@@ -218,8 +208,7 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 	if (!target || !target.authenticated) {
 		store.sendToSocket(socketID, {
 			type: "search_result",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
+
 			username: frame.username,
 			found: false,
 			online: false,
@@ -229,8 +218,7 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 
 	store.sendToSocket(socketID, {
 		type: "search_result",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		username: target.username,
 		found: true,
 		online: true,
@@ -248,14 +236,7 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 	const target = store.getClientByUserID(frame.toUserID);
 
 	if (!target || !target.authenticated) {
-		store.sendToSocket(socketID, {
-			type: "message_ack",
-			id: crypto.randomUUID(),
-			ts: Date.now(),
-			originalID: frame.id,
-			delivered: false,
-			reason: "offline",
-		});
+		sendError(socketID, "user is offline!");
 		return;
 	}
 
@@ -264,8 +245,7 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_request_in",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		fromUserID: sender.userID,
 		fromUsername: sender.username,
 	});
@@ -287,8 +267,7 @@ function handleChatAccept(socketID: SocketID, frame: ChatAcceptFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		fromUserID: acceptor.userID,
 		accepted: true,
 	});
@@ -308,8 +287,7 @@ function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		fromUserID: decliner.userID,
 		accepted: false,
 	});
@@ -334,20 +312,15 @@ function handleMessage(socketID: SocketID, frame: MessageFrame): void {
 
 	const delivered = store.sendToUserID(frame.toUserID, {
 		type: "message_in",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
 		fromUserID: sender.userID,
 		fromUsername: sender.username,
+		messageId: frame.messageId,
 		content: frame.content,
-		conversationID: frame.conversationID,
-		originalID: frame.id,
 	});
 
 	store.sendToSocket(socketID, {
 		type: "message_ack",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
-		originalID: frame.id,
+		messageId: frame.messageId,
 		delivered,
 		reason: delivered ? undefined : "offline",
 	});
@@ -361,8 +334,7 @@ function handleTyping(socketID: SocketID, frame: TypingFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "typing_in",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		fromUserID: sender.userID,
 		isTyping: frame.isTyping,
 	});
@@ -388,10 +360,8 @@ function broadcastPresence(
 	const subscribers = store.getPresenceSubscribers(userID);
 	if (subscribers.length === 0) return;
 
-	const frame: OutgoingFrame = {
+	const frame: OutgoingServerFrame = {
 		type: "presence",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
 		userID,
 		username,
 		online,
@@ -416,8 +386,7 @@ function isValidUsername(username: string): boolean {
 function sendError(socketID: SocketID, reason: string): void {
 	store.sendToSocket(socketID, {
 		type: "error",
-		id: crypto.randomUUID(),
-		ts: Date.now(),
+
 		reason,
 	});
 }

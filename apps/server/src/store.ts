@@ -1,6 +1,7 @@
 import type {
 	ConnectedClient,
-	OutgoingFrame,
+	OutgoingServerFrame,
+	Server2ClientFrame,
 	SocketID,
 	UserID,
 } from "@repo/types";
@@ -146,15 +147,22 @@ function removeClient(socketID: SocketID): ConnectedClient | undefined {
 /**
  * Type-safe send helper.
  * Silently drops the message if the socket is not in OPEN state.
+ * id, ts properties will append automatically
  */
-function sendToSocket(socketID: SocketID, frame: OutgoingFrame): boolean {
+function sendToSocket(socketID: SocketID, frame: OutgoingServerFrame): boolean {
 	const client = socketMap.get(socketID);
 	if (!client) return false;
 
 	const ws = client.socket as WebSocket;
 	if (ws.readyState !== 1) return false; // 1 = WebSocket.OPEN
 
-	ws.send(JSON.stringify(frame));
+	const fullFrame: Server2ClientFrame = {
+		...frame,
+		id: crypto.randomUUID(),
+		ts: Date.now(),
+	};
+
+	ws.send(JSON.stringify(fullFrame));
 	return true;
 }
 
@@ -162,7 +170,7 @@ function sendToSocket(socketID: SocketID, frame: OutgoingFrame): boolean {
  * Send directly to a userID.
  * Returns false if user is not online.
  */
-function sendToUserID(userID: UserID, frame: OutgoingFrame): boolean {
+function sendToUserID(userID: UserID, frame: OutgoingServerFrame): boolean {
 	const socketID = userIDMap.get(userID);
 	if (!socketID) return false;
 	return sendToSocket(socketID, frame);
