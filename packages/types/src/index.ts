@@ -1,8 +1,6 @@
-import type { UUID } from "node:crypto";
-
 type Brand<T, B> = T & { __brand: B };
 
-export type SocketID = Brand<UUID, "SocketID">;
+export type SocketID = Brand<string, "SocketID">;
 export type UserID = Brand<string, "UserID">;
 
 export type MessageType =
