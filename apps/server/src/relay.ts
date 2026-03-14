@@ -26,7 +26,6 @@ export function handleConnection(ws: WebSocket): void {
 	// Issue challenge immediately — client must auth before anything else
 	store.sendToSocket(socketID, {
 		type: "challenge",
-
 		nonce,
 	});
 
@@ -92,6 +91,7 @@ function routeFrame(socketID: SocketID, frame: Client2ServerFrame) {
 		case "typing":
 			return handleTyping(socketID, frame);
 		default: {
+			frame satisfies never; // ensures no unhandled frame exists
 			sendError(socketID, "Unknown frame type");
 		}
 	}
@@ -118,7 +118,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (Date.now() - client.nonceIssuedAt > NONCE_TTL_MS) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-
 			reason: "Challenge expired — reconnect to get a fresh nonce",
 		});
 		return;
@@ -131,7 +130,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!isValidUsername(username)) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-
 			reason:
 				"Username must be 3–32 characters, alphanumeric and underscores only",
 		});
@@ -147,7 +145,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	} catch (err) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-
 			reason: `Invalid public key: ${String(err)}`,
 		});
 		return;
@@ -164,7 +161,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!valid) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-
 			reason: "Signature verification failed",
 		});
 		return;
@@ -183,7 +179,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 	if (!success) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-
 			reason: "Username already taken",
 		});
 		return;
@@ -191,7 +186,6 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 
 	store.sendToSocket(socketID, {
 		type: "auth_success",
-
 		username,
 		userID,
 	});
@@ -218,7 +212,6 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 
 	store.sendToSocket(socketID, {
 		type: "search_result",
-
 		username: target.username,
 		found: true,
 		online: true,
@@ -245,7 +238,6 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_request_in",
-
 		fromUserID: sender.userID,
 		fromUsername: sender.username,
 	});
@@ -267,7 +259,6 @@ function handleChatAccept(socketID: SocketID, frame: ChatAcceptFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
-
 		fromUserID: acceptor.userID,
 		accepted: true,
 	});
@@ -287,7 +278,6 @@ function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
-
 		fromUserID: decliner.userID,
 		accepted: false,
 	});
@@ -334,7 +324,6 @@ function handleTyping(socketID: SocketID, frame: TypingFrame): void {
 
 	store.sendToUserID(frame.toUserID, {
 		type: "typing_in",
-
 		fromUserID: sender.userID,
 		isTyping: frame.isTyping,
 	});
@@ -386,7 +375,6 @@ function isValidUsername(username: string): boolean {
 function sendError(socketID: SocketID, reason: string): void {
 	store.sendToSocket(socketID, {
 		type: "error",
-
 		reason,
 	});
 }

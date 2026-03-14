@@ -1,8 +1,19 @@
-// frontend/src/lib/socket.ts
-
+import type {
+	AuthFrame,
+	AuthSuccessFrame,
+	ChallengeFrame,
+	ChatRequestInFrame,
+	ChatResponseFrame,
+	Client2ServerFrame,
+	ErrorFrame,
+	MessageAckFrame,
+	MessageInFrame,
+	PresenceFrame,
+	Server2ClientFrame,
+	TypingInFrame,
+} from "@repo/types";
 import type { RuntimeIdentity } from "./identity";
 import { signNonce } from "./identity";
-
 // ─── Frame Types (mirrors backend/src/types.ts) ───────────────────────────────
 
 /**
@@ -10,157 +21,8 @@ import { signNonce } from "./identity";
  * Kept in sync with the server's ServerFrame union manually —
  * a shared package would be cleaner but adds build complexity.
  */
-export type InboundFrameType =
-	| "challenge"
-	| "auth_ok"
-	| "auth_error"
-	| "presence"
-	| "typing"
-	| "chat_request"
-	| "chat_request_response"
-	| "message"
-	| "message_ack"
-	| "error";
-
-export type OutboundFrameType =
-	| "auth"
-	| "typing"
-	| "chat_request"
-	| "chat_request_response"
-	| "message"
-	| "subscribe_presence"
-	| "unsubscribe_presence";
 
 // Inbound frame shapes
-
-export interface ChallengeFrame {
-	type: "challenge";
-	nonce: string; // hex string — we sign this
-}
-
-export interface AuthOkFrame {
-	type: "auth_ok";
-	socketID: string;
-	userID: string;
-}
-
-export interface AuthErrorFrame {
-	type: "auth_error";
-	message: string;
-}
-
-export interface PresenceFrame {
-	type: "presence";
-	userID: string;
-	online: boolean;
-}
-
-export interface TypingFrame {
-	type: "typing";
-	fromUserID: string;
-	typing: boolean;
-}
-
-export interface ChatRequestFrame {
-	type: "chat_request";
-	fromUserID: string;
-	fromUsername: string;
-	fromPublicKey: JsonWebKey;
-	requestID: string;
-}
-
-export interface ChatRequestResponseFrame {
-	type: "chat_request_response";
-	requestID: string;
-	accepted: boolean;
-	fromUserID: string;
-}
-
-export interface MessageFrame {
-	type: "message";
-	id: string;
-	fromUserID: string;
-	content: string;
-	ts: number;
-}
-
-export interface MessageAckFrame {
-	type: "message_ack";
-	id: string;
-	delivered: boolean;
-}
-
-export interface ErrorFrame {
-	type: "error";
-	message: string;
-}
-
-export type InboundFrame =
-	| ChallengeFrame
-	| AuthOkFrame
-	| AuthErrorFrame
-	| PresenceFrame
-	| TypingFrame
-	| ChatRequestFrame
-	| ChatRequestResponseFrame
-	| MessageFrame
-	| MessageAckFrame
-	| ErrorFrame;
-
-// Outbound frame shapes
-
-export interface AuthFrame {
-	type: "auth";
-	userID: string;
-	username: string;
-	publicKey: JsonWebKey;
-	signedNonce: string; // base64 signature of the challenge nonce
-}
-
-export interface SendTypingFrame {
-	type: "typing";
-	toUserID: string;
-	typing: boolean;
-}
-
-export interface SendChatRequestFrame {
-	type: "chat_request";
-	toUserID: string;
-	requestID: string;
-}
-
-export interface SendChatRequestResponseFrame {
-	type: "chat_request_response";
-	requestID: string;
-	accepted: boolean;
-}
-
-export interface SendMessageFrame {
-	type: "message";
-	id: string;
-	toUserID: string;
-	content: string;
-	ts: number;
-}
-
-export interface SubscribePresenceFrame {
-	type: "subscribe_presence";
-	userIDs: string[];
-}
-
-export interface UnsubscribePresenceFrame {
-	type: "unsubscribe_presence";
-	userIDs: string[];
-}
-
-export type OutboundFrame =
-	| AuthFrame
-	| SendTypingFrame
-	| SendChatRequestFrame
-	| SendChatRequestResponseFrame
-	| SendMessageFrame
-	| SubscribePresenceFrame
-	| UnsubscribePresenceFrame;
 
 // ─── Event Map ────────────────────────────────────────────────────────────────
 
@@ -170,17 +32,17 @@ export type OutboundFrame =
  */
 export interface SocketEventMap {
 	connected: []; // TCP open, before auth
-	authenticated: [socketID: string]; // auth_ok received
+	authenticated: [socketID: string]; // auth_success received
 	disconnected: [code: number, reason: string];
 	reconnecting: [attempt: number];
-	frame: [frame: InboundFrame]; // every inbound frame (catch-all)
+	frame: [frame: Server2ClientFrame]; // every inbound frame (catch-all)
 
 	// Convenience per-frame events (subset — add more as needed)
 	presence: [frame: PresenceFrame];
-	typing: [frame: TypingFrame];
-	chat_request: [frame: ChatRequestFrame];
-	chat_request_response: [frame: ChatRequestResponseFrame];
-	message: [frame: MessageFrame];
+	typing_in: [frame: TypingInFrame];
+	chat_request_in: [frame: ChatRequestInFrame];
+	chat_response: [frame: ChatResponseFrame];
+	message_in: [frame: MessageInFrame];
 	message_ack: [frame: MessageAckFrame];
 	error: [frame: ErrorFrame];
 }
@@ -208,7 +70,7 @@ export interface SocketConfig {
 type SocketState =
 	| "idle" // never connected
 	| "connecting" // WebSocket open in progress
-	| "authenticating" // WS open, waiting for challenge → auth_ok
+	| "authenticating" // WS open, waiting for challenge → auth_success
 	| "ready" // authenticated, can send frames
 	| "reconnecting" // closed, backoff timer running
 	| "closed"; // permanently shut down (maxRetries exceeded or manual close)
@@ -226,7 +88,7 @@ export class AnonSocket {
 	private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
 	/** Frames queued while not yet authenticated */
-	private sendQueue: OutboundFrame[] = [];
+	private sendQueue: Client2ServerFrame[] = [];
 
 	/** Typed event listener registry */
 	private listeners: {
@@ -260,7 +122,7 @@ export class AnonSocket {
 	 * If not yet authenticated, the frame is queued and sent once auth completes.
 	 * Throws if the socket is permanently closed.
 	 */
-	send(frame: OutboundFrame): void {
+	send(frame: Client2ServerFrame): void {
 		if (this.state === "closed") {
 			throw new Error(
 				"[AnonSocket] Cannot send — socket is permanently closed",
@@ -352,10 +214,10 @@ export class AnonSocket {
 	}
 
 	private async handleMessage(ev: MessageEvent): Promise<void> {
-		let frame: InboundFrame;
+		let frame: Server2ClientFrame;
 
 		try {
-			frame = JSON.parse(ev.data as string) as InboundFrame;
+			frame = JSON.parse(ev.data);
 		} catch {
 			console.error("[AnonSocket] Received non-JSON message:", ev.data);
 			return;
@@ -367,13 +229,13 @@ export class AnonSocket {
 			return;
 		}
 
-		if (frame.type === "auth_ok") {
-			this.handleAuthOk(frame);
+		if (frame.type === "auth_success") {
+			this.handleAuthSuccess(frame);
 			return;
 		}
 
 		if (frame.type === "auth_error") {
-			console.error("[AnonSocket] Auth rejected:", frame.message);
+			console.error("[AnonSocket] Auth rejected:", frame.reason);
 			// Treat auth failure as permanent — don't retry (it won't fix itself)
 			this.close(4001, "auth_error");
 			return;
@@ -387,17 +249,17 @@ export class AnonSocket {
 			case "presence":
 				this.emit("presence", frame);
 				break;
-			case "typing":
-				this.emit("typing", frame);
+			case "typing_in":
+				this.emit("typing_in", frame);
 				break;
-			case "chat_request":
-				this.emit("chat_request", frame);
+			case "chat_request_in":
+				this.emit("chat_request_in", frame);
 				break;
-			case "chat_request_response":
-				this.emit("chat_request_response", frame);
+			case "chat_response":
+				this.emit("chat_response", frame);
 				break;
-			case "message":
-				this.emit("message", frame);
+			case "message_in":
+				this.emit("message_in", frame);
 				break;
 			case "message_ack":
 				this.emit("message_ack", frame);
@@ -405,6 +267,9 @@ export class AnonSocket {
 			case "error":
 				this.emit("error", frame);
 				break;
+			default:
+				frame satisfies never; // ensures no unhandled frame exists
+				console.error(`Unhandled frame type received: ${frame.type}`);
 		}
 	}
 
@@ -452,7 +317,7 @@ export class AnonSocket {
 		this.transmit(authFrame);
 	}
 
-	private handleAuthOk(frame: AuthOkFrame): void {
+	private handleAuthSuccess(frame: AuthSuccessFrame): void {
 		console.info(`[AnonSocket] Authenticated — socketID: ${frame.socketID}`);
 		this.socketID = frame.socketID;
 		this.retryCount = 0; // reset backoff on successful auth
@@ -506,11 +371,11 @@ export class AnonSocket {
 
 	// ─── Send Helpers ────────────────────────────────────────────────────────────
 
-	private transmit(frame: OutboundFrame | AuthFrame): void {
+	private transmit(frame: Client2ServerFrame): void {
 		if (this.ws?.readyState !== WebSocket.OPEN) {
 			console.warn("[AnonSocket] transmit() called but WS not open — queuing");
 			if (frame.type !== "auth") {
-				this.sendQueue.push(frame as OutboundFrame);
+				this.sendQueue.push(frame);
 			}
 			return;
 		}

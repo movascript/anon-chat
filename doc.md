@@ -11,7 +11,7 @@ connecting
 │ WS open
 ▼
 authenticating ──── auth_error (code 4001) ──► closed (permanent)
-│ auth_ok
+│ auth_success
 ▼
 ready ◄─────────────────────────────────────────────────────┐
 │ WS close (non-auth) │
