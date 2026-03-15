@@ -1,11 +1,13 @@
+import type {
+	MessageAckFrame,
+	MessageID,
+	MessageInFrame,
+	TypingInFrame,
+	UserID,
+} from "@repo/types";
 import type { ConversationRecord, MessageRecord } from "./db";
 import { db } from "./db";
-import type {
-	AnonSocket,
-	MessageAckFrame,
-	MessageFrame,
-	TypingFrame,
-} from "./socket";
+import type { AnonSocket } from "./socket";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ export type SendResult =
  */
 export interface SendOptions {
 	conversationID: string; // existing conversation ID
-	toUserID: string;
+	toUserID: UserID;
 	text: string;
 }
 
@@ -47,7 +49,7 @@ export interface SendOptions {
  */
 export interface TypingEvent {
 	conversationID: string;
-	fromUserID: string;
+	fromUserID: UserID;
 	typing: boolean;
 }
 
@@ -98,23 +100,24 @@ export class MessagingManager {
 	 * 6. Await `message_ack` — the server calls back via socket event.
 	 *    The ack handler updates the DB row to `delivered` or `failed`.
 	 */
-	async sendMessage(opts: SendOptions): Promise<SendResult> {
-		const { conversationID, toUserID, text } = opts;
-
+	async sendMessage({
+		conversationID,
+		toUserID,
+		text,
+	}: SendOptions): Promise<SendResult> {
 		if (!text.trim()) {
 			return { ok: false, reason: "Message text cannot be empty" };
 		}
 
-		const messageID = crypto.randomUUID();
-		const now = Date.now();
+		const messageId = crypto.randomUUID() as MessageID;
 
 		const message: MessageRecord = {
-			id: messageID,
+			id: messageId,
 			conversationID,
 			senderUserID: this.myUserID,
 			content: text.trim(),
 			status: "sending",
-			ts: now,
+			ts: Date.now(),
 		};
 
 		try {
@@ -139,13 +142,13 @@ export class MessagingManager {
 		// Push to server
 		this.socket.send({
 			type: "message",
-			id: messageID,
+			messageId,
 			toUserID,
 			content: message.content,
-			ts: message.ts,
+			// ts: message.ts,
 		});
 
-		console.info(`[Messaging] Sent message ${messageID} to ${toUserID}`);
+		console.info(`[Messaging] Sent message ${messageId} to ${toUserID}`);
 		return { ok: true, message };
 	}
 
@@ -155,8 +158,8 @@ export class MessagingManager {
 	 * Send a typing start/stop notification.
 	 * Fire-and-forget — no ACK, no DB write.
 	 */
-	sendTyping(toUserID: string, typing: boolean): void {
-		this.socket.send({ type: "typing", toUserID, typing });
+	sendTyping(toUserID: UserID, isTyping: boolean): void {
+		this.socket.send({ type: "typing", toUserID, isTyping });
 	}
 
 	// ─── Pagination ────────────────────────────────────────────────────────────
@@ -315,7 +318,7 @@ export class MessagingManager {
 	// ─── Private: Socket Event Handling ───────────────────────────────────────
 
 	private attachSocketListeners(): void {
-		const unsubMsg = this.socket.on("message", (frame) =>
+		const unsubMsg = this.socket.on("message_in", (frame) =>
 			this.handleIncomingMessage(frame),
 		);
 
@@ -323,8 +326,8 @@ export class MessagingManager {
 			this.handleAck(frame),
 		);
 
-		const unsubTyping = this.socket.on("typing", (frame) =>
-			this.handleTyping(frame),
+		const unsubTyping = this.socket.on("typing_in", (frame) =>
+			this.handleTypingIn(frame),
 		);
 
 		this.unsubs.push(unsubMsg, unsubAck, unsubTyping);
@@ -341,7 +344,7 @@ export class MessagingManager {
 
 */
 
-	private async handleIncomingMessage(frame: MessageFrame): Promise<void> {
+	private async handleIncomingMessage(frame: MessageInFrame): Promise<void> {
 		const conversationID = deriveConversationID(
 			this.myUserID,
 			frame.fromUserID,
@@ -419,7 +422,7 @@ export class MessagingManager {
 
 */
 
-	private handleTyping(frame: TypingFrame): void {
+	private handleTypingIn(frame: TypingInFrame): void {
 		const conversationID = deriveConversationID(
 			this.myUserID,
 			frame.fromUserID,
@@ -428,7 +431,7 @@ export class MessagingManager {
 		const evt: TypingEvent = {
 			conversationID,
 			fromUserID: frame.fromUserID,
-			typing: frame.typing,
+			typing: frame.isTyping,
 		};
 
 		for (const cb of this.onTypingListeners) {

@@ -1,11 +1,12 @@
+import type {
+	ChatRequestInFrame,
+	ChatResponseFrame,
+	PresenceFrame,
+	UserID,
+} from "@repo/types";
 import type { ContactRecord } from "./db";
 import { db } from "./db";
-import type {
-	AnonSocket,
-	ChatRequestFrame,
-	ChatRequestResponseFrame,
-	PresenceFrame,
-} from "./socket";
+import type { AnonSocket } from "./socket";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ export class ContactsManager {
 	 */
 	private onPresenceChange: Array<(userID: string, online: boolean) => void> =
 		[];
-	private onIncomingRequest: Array<(frame: ChatRequestFrame) => void> = [];
+	private onIncomingRequest: Array<(frame: ChatRequestInFrame) => void> = [];
 
 	constructor(socket: AnonSocket, myUserID: string) {
 		this.socket = socket;
@@ -80,7 +81,7 @@ export class ContactsManager {
 	 * 4. Return the new contact record.
 	 */
 	async sendRequest(
-		toUserID: string,
+		toUserID: UserID,
 		username: string, // display name we know them by (from search result)
 		publicKey: JsonWebKey,
 	): Promise<ContactRecord> {
@@ -94,9 +95,7 @@ export class ContactsManager {
 			return existing;
 		}
 
-		const requestID = crypto.randomUUID();
-
-		const conversationID = crypto.randomUUID();
+		const conversationID = crypto.randomUUID(); // ! conversation id should be removed
 		const now = Date.now();
 
 		const contact: ContactRecord = {
@@ -115,7 +114,6 @@ export class ContactsManager {
 		this.socket.send({
 			type: "chat_request",
 			toUserID,
-			requestID,
 		});
 
 		console.info(`[Contacts] Sent chat request to ${username} (${toUserID})`);
@@ -134,7 +132,7 @@ export class ContactsManager {
 	 * 4. Subscribe to their presence.
 	 * 5. Return enriched contact view.
 	 */
-	async acceptRequest(frame: ChatRequestFrame): Promise<RequestResolution> {
+	async acceptRequest(frame: ChatRequestInFrame): Promise<RequestResolution> {
 		try {
 			const now = Date.now();
 
@@ -152,9 +150,8 @@ export class ContactsManager {
 			await db.contacts.put(contact);
 
 			this.socket.send({
-				type: "chat_request_response",
-				requestID: frame.requestID,
-				accepted: true,
+				type: "chat_accept",
+				toUserID: frame.fromUserID,
 			});
 
 			// Subscribe to their online/offline events
@@ -177,11 +174,13 @@ export class ContactsManager {
 	 * We optionally persist a `blocked` record to prevent the same user
 	 * from flooding us with requests.
 	 */
-	async declineRequest(frame: ChatRequestFrame, block = false): Promise<void> {
+	async declineRequest(
+		frame: ChatRequestInFrame,
+		block = false,
+	): Promise<void> {
 		this.socket.send({
-			type: "chat_request_response",
-			requestID: frame.requestID,
-			accepted: false,
+			type: "chat_decline",
+			toUserID: frame.fromUserID,
 		});
 
 		if (block) {
@@ -281,7 +280,7 @@ export class ContactsManager {
 
 */
 
-	onRequest(cb: (frame: ChatRequestFrame) => void): () => void {
+	onRequest(cb: (frame: ChatRequestInFrame) => void): () => void {
 		this.onIncomingRequest.push(cb);
 		return () => {
 			this.onIncomingRequest = this.onIncomingRequest.filter((f) => f !== cb);
@@ -295,12 +294,12 @@ export class ContactsManager {
 			this.handlePresenceFrame(frame),
 		);
 
-		const unsubRequest = this.socket.on("chat_request", (frame) =>
-			this.handleChatRequestFrame(frame),
+		const unsubRequest = this.socket.on("chat_request_in", (frame) =>
+			this.handleChatRequestInFrame(frame),
 		);
 
-		const unsubResponse = this.socket.on("chat_request_response", (frame) =>
-			this.handleChatRequestResponseFrame(frame),
+		const unsubResponse = this.socket.on("chat_response", (frame) =>
+			this.handleChatResponseFrame(frame),
 		);
 
 		this.unsubs.push(unsubPresence, unsubRequest, unsubResponse);
@@ -317,7 +316,9 @@ export class ContactsManager {
 		}
 	}
 
-	private async handleChatRequestFrame(frame: ChatRequestFrame): Promise<void> {
+	private async handleChatRequestInFrame(
+		frame: ChatRequestInFrame,
+	): Promise<void> {
 		// Drop request if we've already blocked this user
 		const existing = await db.contacts.get(frame.fromUserID);
 		if (existing?.status === "blocked") {
@@ -333,9 +334,8 @@ export class ContactsManager {
 				`[Contacts] Auto-accepting duplicate request from ${frame.fromUserID}`,
 			);
 			this.socket.send({
-				type: "chat_request_response",
-				requestID: frame.requestID,
-				accepted: true,
+				type: "chat_accept",
+				toUserID: frame.fromUserID,
 			});
 			return;
 		}
@@ -350,8 +350,8 @@ export class ContactsManager {
 		}
 	}
 
-	private async handleChatRequestResponseFrame(
-		frame: ChatRequestResponseFrame,
+	private async handleChatResponseFrame(
+		frame: ChatResponseFrame,
 	): Promise<void> {
 		const contact = await db.contacts.get(frame.fromUserID);
 
