@@ -1,19 +1,13 @@
 import type {
-	AuthFrame,
 	AuthSuccessFrame,
 	ChallengeFrame,
-	ChatRequestInFrame,
-	ChatResponseFrame,
 	Client2ServerFrame,
-	ErrorFrame,
-	MessageAckFrame,
-	MessageInFrame,
-	PresenceFrame,
+	OutgoingClientFrame,
 	Server2ClientFrame,
-	TypingInFrame,
 } from "@repo/types";
 import type { RuntimeIdentity } from "./identity";
 import { signNonce } from "./identity";
+
 // ─── Frame Types (mirrors backend/src/types.ts) ───────────────────────────────
 
 /**
@@ -30,22 +24,24 @@ import { signNonce } from "./identity";
  * All events the socket emits to the rest of the app.
  * Consumers call `socket.on("message", handler)` etc.
  */
-export interface SocketEventMap {
-	connected: []; // TCP open, before auth
-	authenticated: [socketID: string]; // auth_success received
+type BaseSocketEvents = {
+	connected: [];
+	authenticated: [];
 	disconnected: [code: number, reason: string];
 	reconnecting: [attempt: number];
-	frame: [frame: Server2ClientFrame]; // every inbound frame (catch-all)
+	frame: [frame: Server2ClientFrame];
+};
+type SocketEventFrames = Exclude<
+	Server2ClientFrame,
+	{ type: "challenge" | "auth_success" | "auth_error" }
+>;
+type FrameEvents = {
+	[K in SocketEventFrames["type"]]: [
+		frame: Extract<SocketEventFrames, { type: K }>,
+	];
+};
 
-	// Convenience per-frame events (subset — add more as needed)
-	presence: [frame: PresenceFrame];
-	typing_in: [frame: TypingInFrame];
-	chat_request_in: [frame: ChatRequestInFrame];
-	chat_response: [frame: ChatResponseFrame];
-	message_in: [frame: MessageInFrame];
-	message_ack: [frame: MessageAckFrame];
-	error: [frame: ErrorFrame];
-}
+export type SocketEventMap = BaseSocketEvents & FrameEvents;
 
 type EventListener<K extends keyof SocketEventMap> = (
 	...args: SocketEventMap[K]
@@ -82,7 +78,6 @@ export class AnonSocket {
 	private identity: RuntimeIdentity;
 	private config: Required<SocketConfig>;
 	private state: SocketState = "idle";
-	private socketID: string | null = null;
 
 	private retryCount = 0;
 	private retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -122,16 +117,14 @@ export class AnonSocket {
 	 * If not yet authenticated, the frame is queued and sent once auth completes.
 	 * Throws if the socket is permanently closed.
 	 */
-	send(frame: Client2ServerFrame): void {
+	send(frame: OutgoingClientFrame): void {
 		if (this.state === "closed") {
 			throw new Error(
 				"[AnonSocket] Cannot send — socket is permanently closed",
 			);
 		}
-		if (this.state === "ready" && this.ws?.readyState === WebSocket.OPEN) {
+		if (this.state === "ready") {
 			this.transmit(frame);
-		} else {
-			this.sendQueue.push(frame);
 		}
 	}
 
@@ -147,10 +140,6 @@ export class AnonSocket {
 
 	get currentState(): SocketState {
 		return this.state;
-	}
-
-	get currentSocketID(): string | null {
-		return this.socketID;
 	}
 
 	// ─── Event Emitter ───────────────────────────────────────────────────────────
@@ -213,13 +202,13 @@ export class AnonSocket {
 		// Server sends challenge immediately after open — nothing to do here yet
 	}
 
-	private async handleMessage(ev: MessageEvent): Promise<void> {
+	private async handleMessage(e: MessageEvent): Promise<void> {
 		let frame: Server2ClientFrame;
 
 		try {
-			frame = JSON.parse(ev.data);
+			frame = JSON.parse(e.data);
 		} catch {
-			console.error("[AnonSocket] Received non-JSON message:", ev.data);
+			console.error("[AnonSocket] Received non-JSON message:", e.data);
 			return;
 		}
 
@@ -246,6 +235,8 @@ export class AnonSocket {
 
 		// Emit typed convenience events
 		switch (frame.type) {
+			case "search_result":
+				throw new Error("search_result frame not implemented yet");
 			case "presence":
 				this.emit("presence", frame);
 				break;
@@ -269,26 +260,25 @@ export class AnonSocket {
 				break;
 			default:
 				frame satisfies never; // ensures no unhandled frame exists
-				console.error(`Unhandled frame type received: ${frame.type}`);
 		}
 	}
 
-	private handleClose(ev: CloseEvent): void {
+	private handleClose(e: CloseEvent): void {
 		console.info(
-			`[AnonSocket] Closed — code: ${ev.code}, reason: "${ev.reason}"`,
+			`[AnonSocket] Closed — code: ${e.code}, reason: "${e.reason}"`,
 		);
-		this.emit("disconnected", ev.code, ev.reason);
+		this.emit("disconnected", e.code, e.reason);
 
 		if (this.state === "closed") return; // manual close — do not reconnect
-		if (ev.code === 4001) return; // auth failure — do not reconnect
+		if (e.code === 4001) return; // auth failure — do not reconnect
 
 		this.scheduleReconnect();
 	}
 
-	private handleError(ev: Event): void {
+	private handleError(e: Event): void {
 		// WebSocket onerror gives very little info — the onclose fires right after
 		// with the actual code. Just log here.
-		console.error("[AnonSocket] WebSocket error:", ev);
+		console.error("[AnonSocket] WebSocket error:", e);
 	}
 
 	// ─── Auth Handshake ──────────────────────────────────────────────────────────
@@ -296,33 +286,29 @@ export class AnonSocket {
 	private async handleChallenge(frame: ChallengeFrame): Promise<void> {
 		console.info("[AnonSocket] Challenge received — signing nonce");
 
-		let signedNonce: string;
+		let signature: string;
 
 		try {
-			signedNonce = await signNonce(this.identity.privateKey, frame.nonce);
+			signature = await signNonce(this.identity.privateKey, frame.nonce);
 		} catch (err) {
 			console.error("[AnonSocket] Failed to sign nonce:", err);
 			this.close(4002, "sign_failed");
 			return;
 		}
 
-		const authFrame: AuthFrame = {
+		this.transmit({
 			type: "auth",
-			userID: this.identity.userID,
 			username: this.identity.username,
-			publicKey: this.identity.publicKeyJwk,
-			signedNonce,
-		};
-
-		this.transmit(authFrame);
+			publicKey: JSON.stringify(this.identity.publicKeyJwk),
+			signature,
+		});
 	}
 
 	private handleAuthSuccess(frame: AuthSuccessFrame): void {
-		console.info(`[AnonSocket] Authenticated — socketID: ${frame.socketID}`);
-		this.socketID = frame.socketID;
+		console.info(`[AnonSocket] Authenticated — userID: ${frame.userID}`);
 		this.retryCount = 0; // reset backoff on successful auth
 		this.transitionTo("ready");
-		this.emit("authenticated", frame.socketID);
+		this.emit("authenticated");
 		this.flushQueue();
 	}
 
@@ -371,15 +357,21 @@ export class AnonSocket {
 
 	// ─── Send Helpers ────────────────────────────────────────────────────────────
 
-	private transmit(frame: Client2ServerFrame): void {
+	private transmit(frame: OutgoingClientFrame): void {
+		const fullFrame: Client2ServerFrame = {
+			...frame,
+			id: window.crypto.randomUUID(),
+			ts: Date.now(),
+		};
+
 		if (this.ws?.readyState !== WebSocket.OPEN) {
 			console.warn("[AnonSocket] transmit() called but WS not open — queuing");
-			if (frame.type !== "auth") {
-				this.sendQueue.push(frame);
+			if (fullFrame.type !== "auth") {
+				this.sendQueue.push(fullFrame);
 			}
 			return;
 		}
-		this.ws.send(JSON.stringify(frame));
+		this.ws.send(JSON.stringify(fullFrame));
 	}
 
 	/** Drain the queue after auth completes */
@@ -413,7 +405,7 @@ let _instance: AnonSocket | null = null;
  *
 ```ts
  * const socket = getSocket(identity, { url: "wss://..." })
- * socket.on("authenticated", (socketID) => { ... })
+ * socket.on("authenticated", () => { ... })
  * socket.connect()
  * 
 */
