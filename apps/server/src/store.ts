@@ -1,11 +1,21 @@
 import type {
-	ConnectedClient,
 	OutgoingServerFrame,
 	Server2ClientFrame,
 	SocketID,
 	UserID,
 } from "@repo/types";
 import type { WebSocket } from "ws";
+
+interface ConnectedClient {
+	userID: UserID;
+	username: string;
+	publicKey: string; // JWK stringified, kept for search results
+	socket: unknown; // typed as unknown here, cast to WebSocket in store
+	connectedAt: number;
+	pendingNonce: string | null; // cleared after successful auth
+	nonceIssuedAt: number | null; // timestamp when nonce was generated
+	authenticated: boolean;
+}
 
 // ─── In-Memory Registry ───────────────────────────────────────────────────────
 //
