@@ -88,6 +88,7 @@ export interface ChatRequestInFrame extends WSFrame {
 	type: "chat_request_in";
 	fromUserID: UserID;
 	fromUsername: string;
+	fromPublicKey: string;
 }
 
 export interface ChatAcceptFrame extends WSFrame {

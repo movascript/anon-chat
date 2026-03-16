@@ -1,4 +1,6 @@
-import { getIdentity, type IdentityRecord, saveIdentity } from "./db";
+import type { UserID } from "@repo/types";
+import { getIdentity, saveIdentity } from "./db";
+import type { Identity } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -77,14 +79,14 @@ async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
  *
  * Algorithm: SHA-256( canonicalJSON(publicKeyJwk) ) → first 32 hex chars
  */
-export async function deriveUserID(publicKeyJwk: JsonWebKey): Promise<string> {
+export async function deriveUserID(publicKeyJwk: JsonWebKey) {
 	// Canonical form: sort keys alphabetically to guarantee stable stringification
 	const canonical = canonicalJsonStringify(publicKeyJwk);
 	const encoded = new TextEncoder().encode(canonical);
 	const hashBuf = await crypto.subtle.digest("SHA-256", encoded);
 	const hashArr = Array.from(new Uint8Array(hashBuf));
 	const hashHex = hashArr.map((b) => b.toString(16).padStart(2, "0")).join("");
-	return hashHex.slice(0, 32);
+	return hashHex.slice(0, 32) as UserID;
 }
 
 /**
@@ -93,7 +95,7 @@ export async function deriveUserID(publicKeyJwk: JsonWebKey): Promise<string> {
  */
 function canonicalJsonStringify(value: unknown): string {
 	if (Array.isArray(value)) {
-		return "[" + value.map(canonicalJsonStringify).join(",") + "]";
+		return `[${value.map(canonicalJsonStringify).join(",")}]`;
 	}
 	if (value !== null && typeof value === "object") {
 		const sorted = Object.keys(value as object)
@@ -102,7 +104,7 @@ function canonicalJsonStringify(value: unknown): string {
 				const v = (value as Record<string, unknown>)[k];
 				return `${JSON.stringify(k)}:${canonicalJsonStringify(v)}`;
 			});
-		return "{" + sorted.join(",") + "}";
+		return `{${sorted.join(",")}}`;
 	}
 	return JSON.stringify(value);
 }
@@ -169,7 +171,7 @@ export async function createAndSaveIdentity(
 	const privateKeyJwk = await exportPrivateKey(keypair.privateKey);
 	const userID = await deriveUserID(publicKeyJwk);
 
-	const record: IdentityRecord = {
+	const record: Identity = {
 		id: 1,
 		userID,
 		username,
@@ -192,12 +194,10 @@ export async function createAndSaveIdentity(
 // ─── Internal Helpers ─────────────────────────────────────────────────────────
 
 /**
- * Re-hydrates a stored IdentityRecord back into live CryptoKey objects.
+ * Re-hydrates a stored Identity back into live CryptoKey objects.
  * Called on every app load after the first.
  */
-async function hydrateIdentity(
-	record: IdentityRecord,
-): Promise<RuntimeIdentity> {
+async function hydrateIdentity(record: Identity): Promise<RuntimeIdentity> {
 	const [publicKey, privateKey] = await Promise.all([
 		importPublicKey(record.publicKey),
 		importPrivateKey(record.privateKey),

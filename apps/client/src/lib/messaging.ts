@@ -5,72 +5,40 @@ import type {
 	TypingInFrame,
 	UserID,
 } from "@repo/types";
-import type { ConversationRecord, MessageRecord } from "./db";
 import { db } from "./db";
 import type { AnonSocket } from "./socket";
+import type { Contact, Message } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-/**
- * What the UI renders in a chat bubble.
- * Mirrors the DB `Message` row exactly — no transformation needed.
- */
-export type { MessageRecord };
-
-/**
- * A page of messages returned by `loadMessages()`.
- * `hasMore` tells the UI whether to show a "Load earlier" button.
- */
-export interface MessagePage {
-	messages: MessageRecord[];
-	hasMore: boolean;
-	/** Opaque cursor — pass back to `loadMessages()` to get the next page. */
-	before: number | undefined;
-}
 
 /**
  * Result of `sendMessage()`.
  */
 export type SendResult =
-	| { ok: true; message: MessageRecord }
+	| { ok: true; message: Message }
 	| { ok: false; reason: string };
-
-/**
- * Payload for sending — the caller provides text, we handle everything else.
- */
-export interface SendOptions {
-	conversationID: string; // existing conversation ID
-	toUserID: UserID;
-	text: string;
-}
 
 /**
  * Typing event the UI can react to.
  */
 export interface TypingEvent {
-	conversationID: string;
 	fromUserID: UserID;
 	typing: boolean;
 }
-
-/** Default page size for `loadMessages()` */
-const PAGE_SIZE = 40;
 
 // ─── MessagingManager ─────────────────────────────────────────────────────────
 
 export class MessagingManager {
 	private socket: AnonSocket;
-	private myUserID: string;
 	private unsubs: Array<() => void> = [];
 
 	// UI-facing reactive callbacks
-	private onMessageListeners: Array<(msg: MessageRecord) => void> = [];
+	private onMessageListeners: Array<(msg: Message) => void> = [];
 	private onAckListeners: Array<(ack: MessageAckFrame) => void> = [];
 	private onTypingListeners: Array<(evt: TypingEvent) => void> = [];
 
-	constructor(socket: AnonSocket, myUserID: string) {
+	constructor(socket: AnonSocket) {
 		this.socket = socket;
-		this.myUserID = myUserID;
 	}
 
 	// ─── Lifecycle ─────────────────────────────────────────────────────────────
@@ -100,35 +68,27 @@ export class MessagingManager {
 	 * 6. Await `message_ack` — the server calls back via socket event.
 	 *    The ack handler updates the DB row to `delivered` or `failed`.
 	 */
-	async sendMessage({
-		conversationID,
-		toUserID,
-		text,
-	}: SendOptions): Promise<SendResult> {
+	async sendMessage(toUserID: UserID, text: string): Promise<SendResult> {
 		if (!text.trim()) {
 			return { ok: false, reason: "Message text cannot be empty" };
 		}
 
 		const messageId = crypto.randomUUID() as MessageID;
 
-		const message: MessageRecord = {
+		const message: Message = {
 			id: messageId,
-			conversationID,
-			senderUserID: this.myUserID,
+			userID: toUserID,
+			sentByMe: true,
 			content: text.trim(),
 			status: "sending",
 			ts: Date.now(),
 		};
 
 		try {
-			// Atomic write: message row + conversation snapshot
-			await db.transaction("rw", db.messages, db.conversations, async () => {
+			// Atomic write: message row + contact snapshot
+			await db.transaction("rw", db.messages, db.contacts, async () => {
 				await db.messages.put(message);
-				await this.upsertConversationSnapshot(
-					conversationID,
-					toUserID,
-					message,
-				);
+				await this.upsertConversationSnapshot(toUserID, message);
 			});
 		} catch (err) {
 			const reason = err instanceof Error ? err.message : String(err);
@@ -162,92 +122,6 @@ export class MessagingManager {
 		this.socket.send({ type: "typing", toUserID, isTyping });
 	}
 
-	// ─── Pagination ────────────────────────────────────────────────────────────
-
-	/**
-   * Load a page of messages for a conversation, newest-first.
-   *
-   * @param conversationID - Which conversation to page through
-   * @param before         - Timestamp cursor; omit to load the latest page
-   * @param limit          - Messages per page (default 40)
-   *
-   * Usage:
-   *
-```ts
-   * // Initial load
-   * const page = await messaging.loadMessages({ conversationID })
-   *
-   * // Load older messages
-   * if (page.hasMore) {
-   *   const older = await messaging.loadMessages({
-   *     conversationID,
-   *     before: page.before,
-   *   })
-   * }
-   * 
-*/
-
-	async loadMessages(opts: {
-		conversationID: string;
-		before?: number;
-		limit?: number;
-	}): Promise<MessagePage> {
-		const { conversationID, before, limit = PAGE_SIZE } = opts;
-
-		// Use the compound index [conversationID+ts] for efficient range scan
-		const upperBound = before ?? Date.now() + 1;
-
-		const rows = await db.messages
-			.where("[conversationID+ts]")
-			.between(
-				[conversationID, 0],
-				[conversationID, upperBound],
-				true, // include lower bound
-				false, // exclude upper bound (strict less-than `before`)
-			)
-			.reverse() // newest first
-			.limit(limit + 1) // fetch one extra to detect hasMore
-			.toArray();
-
-		const hasMore = rows.length > limit;
-		const messages = hasMore ? rows.slice(0, limit) : rows;
-
-		// Cursor is the oldest message's timestamp on this page
-		const oldestTs =
-			messages.length > 0 ? messages[messages.length - 1].ts : undefined;
-
-		return {
-			messages: messages.reverse(), // return chronological order to UI
-			hasMore,
-			before: oldestTs,
-		};
-	}
-
-	// ─── Conversation List ─────────────────────────────────────────────────────
-
-	/**
-
-    Returns all conversations sorted by most recent message,
-    for rendering the conversation list / sidebar.
-
-*/
-
-	async listConversations(): Promise<ConversationRecord[]> {
-		return db.conversations.orderBy("updatedAt").reverse().toArray();
-	}
-
-	/**
-
-    Returns a single conversation by ID, or null if not found.
-
-*/
-
-	async getConversation(
-		conversationID: string,
-	): Promise<ConversationRecord | null> {
-		return (await db.conversations.get(conversationID)) ?? null;
-	}
-
 	/**
 
     Marks all messages in a conversation as read.
@@ -255,10 +129,9 @@ export class MessagingManager {
 
 */
 
-	async markRead(conversationID: string): Promise<void> {
-		await db.conversations.update(conversationID, {
+	async markRead(userID: UserID): Promise<void> {
+		await db.contacts.update(userID, {
 			unreadCount: 0,
-			// updatedAt   : Date.now(),
 		});
 	}
 
@@ -279,7 +152,7 @@ export class MessagingManager {
 
 */
 
-	onMessage(cb: (msg: MessageRecord) => void): () => void {
+	onMessage(cb: (msg: Message) => void): () => void {
 		this.onMessageListeners.push(cb);
 		return () => {
 			this.onMessageListeners = this.onMessageListeners.filter((f) => f !== cb);
@@ -337,7 +210,6 @@ export class MessagingManager {
 
     Handles a message frame arriving from a contact.
     Flow:
-        Derive the conversationID from the sender’s userID.
         Persist to IndexedDB.
         Bump the conversation’s unread count + last-message snapshot.
         Emit to UI listeners.
@@ -345,30 +217,23 @@ export class MessagingManager {
 */
 
 	private async handleIncomingMessage(frame: MessageInFrame): Promise<void> {
-		const conversationID = deriveConversationID(
-			this.myUserID,
-			frame.fromUserID,
-		);
-		const now = Date.now();
-
-		const message: MessageRecord = {
-			id: frame.id,
-			conversationID,
-			senderUserID: frame.fromUserID,
+		const message: Message = {
+			id: frame.messageId,
+			userID: frame.fromUserID,
+			sentByMe: false,
 			content: frame.content,
 			status: "received",
-			ts: frame.ts ?? now,
+			ts: frame.ts ?? Date.now(),
 		};
 
 		try {
-			await db.transaction("rw", db.messages, db.conversations, async () => {
+			await db.transaction("rw", db.messages, db.contacts, async () => {
 				// Idempotency: ignore duplicates (possible on reconnect)
 				const exists = await db.messages.get(frame.id);
 				if (exists) return;
 
 				await db.messages.put(message);
 				await this.upsertConversationSnapshot(
-					conversationID,
 					frame.fromUserID,
 					message,
 					true, // increment unread
@@ -423,13 +288,7 @@ export class MessagingManager {
 */
 
 	private handleTypingIn(frame: TypingInFrame): void {
-		const conversationID = deriveConversationID(
-			this.myUserID,
-			frame.fromUserID,
-		);
-
 		const evt: TypingEvent = {
-			conversationID,
 			fromUserID: frame.fromUserID,
 			typing: frame.isTyping,
 		};
@@ -446,23 +305,19 @@ export class MessagingManager {
 	// ─── Private: Conversation Upsert ─────────────────────────────────────────
 
 	/**
-
-    Create or update the conversation row with a fresh last-message snapshot.
-    Must be called inside a Dexie transaction that includes db.conversations.
-
-*/
-
+	 * Create or update the conversation row with a fresh last-message snapshot.
+	 * Must be called inside a Dexie transaction that includes db.conversations.
+	 */
 	private async upsertConversationSnapshot(
-		conversationID: string,
-		peerUserID: string,
-		message: MessageRecord,
+		userID: UserID,
+		message: Message,
 		incrementUnread = false,
 	): Promise<void> {
-		const existing = await db.conversations.get(conversationID);
+		const existing = await db.contacts.get(userID);
 		const now = Date.now();
 
 		if (existing) {
-			await db.conversations.update(conversationID, {
+			await db.contacts.update(userID, {
 				lastMessage: message.content,
 				lastMessageAt: message.ts,
 				// updatedAt       : now,
@@ -471,23 +326,29 @@ export class MessagingManager {
 					: (existing.unreadCount ?? 0),
 			});
 		} else {
-			const conversation: ConversationRecord = {
-				id: conversationID,
-				peerUserID,
-				peerUsername: "xoxo", // ! should be changed
+			// ! this is not ok
+			// ! this should not happen at all why is there a message from someone
+			// ! that doesnt exist on my contact list, should be refactored
+			const record: Contact = {
+				id: userID,
+				online: false,
+				publicKey: {},
+				status: "pending_in",
+				username: "xoxo", // ! should be changed
 				lastMessage: message.content,
 				lastMessageAt: message.ts,
 				unreadCount: incrementUnread ? 1 : 0,
 				createdAt: now,
+				updatedAt: now,
 				// updatedAt       : now,
 			};
-			await db.conversations.put(conversation);
+			await db.contacts.put(record);
 		}
 	}
 
 	// ─── Private: Emit Helpers ─────────────────────────────────────────────────
 
-	private emitMessage(msg: MessageRecord): void {
+	private emitMessage(msg: Message): void {
 		for (const cb of this.onMessageListeners) {
 			try {
 				cb(msg);
@@ -496,27 +357,6 @@ export class MessagingManager {
 			}
 		}
 	}
-}
-
-// ─── Conversation ID Derivation ───────────────────────────────────────────────
-
-/**
-
-    Derives a stable, symmetric conversation ID from two userIDs.
-    Sorting ensures that deriveConversationID(A, B) === deriveConversationID(B, A).
-    This means both sides of the chat independently arrive at the same
-    IndexedDB key without any coordination.
-    Format: conv_<lower>_<higher>
-    @example
-    deriveConversationID(“bob123”, “alice456”)
-    // → “conv_alice456_bob123”
-
-*/
-
-export function deriveConversationID(userA: string, userB: string): string {
-	const [lower, higher] = [userA, userB].sort();
-
-	return `conv_${lower}_${higher}`;
 }
 
 // ─── Module-Level Singleton ───────────────────────────────────────────────────
@@ -528,9 +368,8 @@ let _instance: MessagingManager | null = null;
     Returns the app-wide MessagingManager singleton.
     @example
 
-                                                                    ts
  * // After socket reaches "authenticated":
- * const messaging = getMessagingManager(socket, identity.userID)
+ * const messaging = getMessagingManager(socket)
  * messaging.init()
  *
  * // In a React component:
@@ -538,36 +377,29 @@ let _instance: MessagingManager | null = null;
  *
  * useEffect(() => {
  *   const off = messaging.onMessage((msg) => {
- *     if (msg.conversationID === activeConversationID) {
+ *     if (msg.userID === activeuserIDID) {
  *       setMessages(prev => [...prev, msg])
  *     }
  *   })
  *   return off
- * }, [activeConversationID])
+ * }, [activeuserIDID])
  * 
 
 */
 
-export function getMessagingManager(
-	socket: AnonSocket,
-
-	myUserID: string,
-): MessagingManager {
+export function getMessagingManager(socket: AnonSocket): MessagingManager {
 	if (!_instance) {
-		_instance = new MessagingManager(socket, myUserID);
+		_instance = new MessagingManager(socket);
 	}
 
 	return _instance;
 }
 
 /**
-
-    Tears down the singleton — call on logout or account reset.
-
+	Tears down the singleton — call on logout or account reset.
 */
 
 export function destroyMessagingManager(): void {
 	_instance?.destroy();
-
 	_instance = null;
 }

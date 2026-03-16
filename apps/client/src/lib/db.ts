@@ -185,6 +185,7 @@ export async function getMessage(id: MessageID) {
 /**
  * Returns all messages for a given peer in ascending time order.
  * No pagination — entire history is local, fetch is O(n) on IndexedDB only.
+ * ? may need pagination in the future but for now works fine
  */
 export async function getMessages(userID: UserID) {
 	return db.messages

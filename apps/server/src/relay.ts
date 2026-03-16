@@ -240,6 +240,7 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 		type: "chat_request_in",
 		fromUserID: sender.userID,
 		fromUsername: sender.username,
+		fromPublicKey: sender.publicKey,
 	});
 }
 

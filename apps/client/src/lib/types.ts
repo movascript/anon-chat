@@ -39,8 +39,8 @@ export interface Contact {
 	publicKey: JsonWebKey;
 	status: ContactStatus;
 	online: boolean;
-	lastMessage: string; // preview text (empty string before any message)
-	lastMessageAt: number; // ms timestamp (0 before any message)
+	lastMessage: string | null; // preview text (empty string before any message)
+	lastMessageAt: number | null; // ms timestamp (0 before any message)
 	unreadCount: number;
 	createdAt: number;
 	updatedAt: number;

@@ -4,9 +4,9 @@ import type {
 	PresenceFrame,
 	UserID,
 } from "@repo/types";
-import type { ContactRecord } from "./db";
 import { db } from "./db";
 import type { AnonSocket } from "./socket";
+import type { Contact } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ import type { AnonSocket } from "./socket";
 
 /** Result of accepting/declining a chat request */
 export type RequestResolution =
-	| { ok: true; contact: ContactRecord }
+	| { ok: true; contact: Contact }
 	| { ok: false; reason: string };
 
 // ─── In-Memory Presence Cache ─────────────────────────────────────────────────
@@ -84,7 +84,7 @@ export class ContactsManager {
 		toUserID: UserID,
 		username: string, // display name we know them by (from search result)
 		publicKey: JsonWebKey,
-	): Promise<ContactRecord> {
+	): Promise<Contact> {
 		if (toUserID === this.myUserID) {
 			throw new Error("Cannot send a contact request to yourself");
 		}
@@ -95,16 +95,19 @@ export class ContactsManager {
 			return existing;
 		}
 
-		const conversationID = crypto.randomUUID(); // ! conversation id should be removed
 		const now = Date.now();
 
-		const contact: ContactRecord = {
+		const contact: Contact = {
 			id: toUserID,
 			username,
 			publicKey,
 			status: "pending_out",
 			online: false,
-			conversationID,
+
+			lastMessage: null,
+			lastMessageAt: null,
+			unreadCount: 0,
+
 			createdAt: now,
 			updatedAt: now,
 		};
@@ -136,13 +139,17 @@ export class ContactsManager {
 		try {
 			const now = Date.now();
 
-			const contact: ContactRecord = {
+			const contact: Contact = {
 				id: frame.fromUserID,
 				username: frame.fromUsername,
-				publicKey: frame.fromPublicKey,
+				publicKey: JSON.parse(frame.fromPublicKey),
 				status: "accepted",
-				conversationID: frame.requestID,
 				online: false,
+
+				lastMessage: null,
+				lastMessageAt: null,
+				unreadCount: 0,
+
 				createdAt: now,
 				updatedAt: now,
 			};
@@ -188,10 +195,14 @@ export class ContactsManager {
 			await db.contacts.put({
 				id: frame.fromUserID,
 				username: frame.fromUsername,
-				publicKey: frame.fromPublicKey,
+				publicKey: JSON.parse(frame.fromPublicKey),
 				status: "blocked",
-				conversationID: frame.requestID,
 				online: false,
+
+				lastMessage: null,
+				lastMessageAt: null,
+				unreadCount: 0,
+
 				createdAt: now,
 				updatedAt: now,
 			});
@@ -204,19 +215,19 @@ export class ContactsManager {
 	// ─── Querying Contacts ─────────────────────────────────────────────────────
 
 	/** Returns every contact record enriched with live presence. */
-	async listAll(): Promise<ContactRecord[]> {
+	async listAll(): Promise<Contact[]> {
 		const rows = await db.contacts.toArray();
 		return rows;
 	}
 
 	/** Returns accepted contacts only. */
-	async listAccepted(): Promise<ContactRecord[]> {
+	async listAccepted(): Promise<Contact[]> {
 		const rows = await db.contacts.where("status").equals("accepted").toArray();
 		return rows;
 	}
 
 	/** Returns a single contact by userID, or `null` if unknown. */
-	async get(userID: string): Promise<ContactRecord | null> {
+	async get(userID: string): Promise<Contact | null> {
 		const row = await db.contacts.get(userID);
 		return row ? row : null;
 	}
@@ -441,13 +452,10 @@ export function getContactsManager(
 }
 
 /**
-
     Tears down the singleton — call on logout or account reset.
-
 */
 
 export function destroyContactsManager(): void {
 	_instance?.destroy();
-
 	_instance = null;
 }
