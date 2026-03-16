@@ -31,7 +31,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
 				<button
 					type="button"
 					onClick={handleBack}
-					className="p-1.5 -ml-1 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+					className="p-1.5 -ml-1 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 					aria-label="Go back"
 				>
 					<ArrowLeft className="w-5 h-5 text-primary-foreground" />

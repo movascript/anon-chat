@@ -61,11 +61,11 @@ export default function LoginPage() {
 	const isDisabled = isLoading || username.trim().length < 3;
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-(--bg-primary) px-4 relative">
+		<div className="min-h-screen flex flex-col items-center justify-center bg-primary px-4 relative">
 			<button
 				type="button"
 				onClick={toggleTheme}
-				className="absolute top-4 right-4 p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+				className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 				aria-label="Toggle theme"
 			>
 				{isDark ? (

@@ -32,7 +32,7 @@ export default function ContactProfilePage() {
 
 	if (!contact) {
 		return (
-			<div className="flex flex-col h-full bg-(--bg-primary)">
+			<div className="flex flex-col h-full bg-primary">
 				<NavigationHeader title="Contact" showBack />
 				<div className="flex-1 flex items-center justify-center">
 					<p className="text-sm text-secondary-foreground">
@@ -44,12 +44,12 @@ export default function ContactProfilePage() {
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-(--bg-primary)">
+		<div className="flex flex-col h-full bg-primary">
 			<NavigationHeader title="Contact Info" showBack />
 
 			<div className="flex-1 overflow-y-auto">
 				{/* Hero */}
-				<div className="flex flex-col items-center py-8 px-4 bg-(--bg-secondary) border-b border-border">
+				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
 						<Avatar name={contact.name} color={contact.avatarColor} size="xl" />
 						<div className="absolute -bottom-1 -right-1">
@@ -86,7 +86,7 @@ export default function ContactProfilePage() {
 				</div>
 
 				{/* Info */}
-				<div className="mx-4 rounded-xl overflow-hidden border border-border bg-(--bg-primary)">
+				<div className="mx-4 rounded-xl overflow-hidden border border-border bg-primary">
 					<div className="px-4 py-3">
 						<p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
 							Info
@@ -131,7 +131,7 @@ export default function ContactProfilePage() {
 				<div className="mx-4 mt-4 mb-8 space-y-2">
 					{/* Block */}
 					{showBlockConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Block {contact.name}?
@@ -144,7 +144,7 @@ export default function ContactProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowBlockConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
 								>
 									Cancel
 								</button>
@@ -174,7 +174,7 @@ export default function ContactProfilePage() {
 
 					{/* Delete */}
 					{showDeleteConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Delete chat with {contact.name}?
@@ -187,7 +187,7 @@ export default function ContactProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowDeleteConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
 								>
 									Cancel
 								</button>

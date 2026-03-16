@@ -66,7 +66,7 @@ export default function ChatListPage() {
 						<button
 							type="button"
 							onClick={toggleTheme}
-							className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 							aria-label="Toggle theme"
 						>
 							{isDark ? (
@@ -78,7 +78,7 @@ export default function ChatListPage() {
 						<button
 							type="button"
 							onClick={() => navigate("/profile")}
-							className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 							aria-label="Settings"
 						>
 							<Settings className="w-4 h-4 text-secondary-foreground" />

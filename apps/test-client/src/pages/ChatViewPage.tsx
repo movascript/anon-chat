@@ -124,13 +124,13 @@ export function ChatViewPage() {
 			: "Offline";
 
 	return (
-		<div className="flex flex-col h-full bg-(--bg-primary) overflow-hidden">
+		<div className="flex flex-col h-full bg-primary overflow-hidden">
 			{/* Header */}
 			<header className="flex items-center gap-3 px-4 py-3 bg-header-bg border-b border-border shadow-(--shadow) shrink-0 animate-slide-in-from-top-2 animate-duration-200">
 				<button
 					type="button"
 					onClick={() => navigate("/")}
-					className="md:hidden p-1.5 -ml-1 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+					className="md:hidden p-1.5 -ml-1 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 				>
 					<ArrowLeft className="w-5 h-5 text-primary-foreground" />
 				</button>
@@ -166,7 +166,7 @@ export function ChatViewPage() {
 					<button
 						type="button"
 						onClick={() => navigate(`/profile/${contact.id}`)}
-						className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 						aria-label="Info"
 					>
 						<Info
@@ -176,7 +176,7 @@ export function ChatViewPage() {
 					</button>
 					<button
 						type="button"
-						className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 						aria-label="More"
 					>
 						<MoreVertical
@@ -207,7 +207,7 @@ export function ChatViewPage() {
 							if (item.kind === "date") {
 								return (
 									<div className="flex items-center justify-center py-3 px-4">
-										<span className="text-xs text-muted bg-(--bg-secondary) px-3 py-1 rounded-full">
+										<span className="text-xs text-muted bg-secondary px-3 py-1 rounded-full">
 											{item.label}
 										</span>
 									</div>

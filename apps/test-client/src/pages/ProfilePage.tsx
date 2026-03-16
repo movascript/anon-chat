@@ -56,9 +56,7 @@ const SettingRow = ({
 		type="button"
 		onClick={onClick}
 		className={`w-full flex items-center justify-between px-4 py-3.5 transition-all duration-200 text-left ${
-			onClick
-				? "hover:bg-(--bg-secondary) active:bg-tertiary"
-				: "cursor-default"
+			onClick ? "hover:bg-secondary active:bg-tertiary" : "cursor-default"
 		}`}
 	>
 		<div className="min-w-0 flex-1">
@@ -103,7 +101,7 @@ export default function ProfilePage() {
 	};
 
 	return (
-		<div className="flex flex-col h-full bg-(--bg-primary)">
+		<div className="flex flex-col h-full bg-primary">
 			<NavigationHeader
 				title="Profile"
 				showBack
@@ -112,7 +110,7 @@ export default function ProfilePage() {
 					<button
 						type="button"
 						onClick={toggleTheme}
-						className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 						aria-label="Toggle theme"
 					>
 						{isDark ? (
@@ -126,7 +124,7 @@ export default function ProfilePage() {
 
 			<div className="flex-1 overflow-y-auto">
 				{/* Avatar card */}
-				<div className="flex flex-col items-center py-8 px-4 bg-(--bg-secondary) border-b border-border">
+				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
 						<Avatar name={user.name} color={user.avatarColor} size="xl" />
 						<button
@@ -143,7 +141,7 @@ export default function ProfilePage() {
 					<p className="text-sm text-secondary-foreground mt-0.5">
 						@{user.username}
 					</p>
-					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-(--bg-primary) border border-border">
+					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-primary border border-border">
 						<span
 							className="w-2 h-2 rounded-full transition-colors duration-300"
 							style={{
@@ -160,7 +158,7 @@ export default function ProfilePage() {
 
 				{/* Status */}
 				<SectionHeader title="Status" />
-				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Show as Online"
 						sublabel="Let others see when you are active"
@@ -176,7 +174,7 @@ export default function ProfilePage() {
 
 				{/* Notifications */}
 				<SectionHeader title="Notifications" />
-				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Push Notifications"
 						sublabel="Receive message alerts"
@@ -196,7 +194,7 @@ export default function ProfilePage() {
 
 				{/* Privacy */}
 				<SectionHeader title="Privacy" />
-				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Read Receipts"
 						sublabel="Show when you have read messages"
@@ -230,7 +228,7 @@ export default function ProfilePage() {
 
 				{/* Appearance */}
 				<SectionHeader title="Appearance" />
-				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<div className="px-4 py-3.5 flex items-center justify-between">
 						<div>
 							<p className="text-sm font-medium text-primary-foreground">
@@ -249,7 +247,7 @@ export default function ProfilePage() {
 				{/* Logout */}
 				<div className="mx-4 mt-5 mb-8">
 					{showLogoutConfirm ? (
-						<div className="bg-(--bg-primary) rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in animate-duration-150">
+						<div className="bg-primary rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Are you sure you want to logout?
@@ -262,7 +260,7 @@ export default function ProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowLogoutConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
 								>
 									Cancel
 								</button>
