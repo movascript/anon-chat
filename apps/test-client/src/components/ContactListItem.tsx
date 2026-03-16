@@ -1,0 +1,83 @@
+import React from "react";
+import { useNavigate } from "react-router";
+import type { Contact } from "../types";
+import { Avatar } from "./Avatar";
+import { StatusIndicator } from "./StatusIndicator";
+
+interface ContactListItemProps {
+	contact: Contact;
+	isActive?: boolean;
+}
+
+function formatTime(date?: Date): string {
+	if (!date) return "";
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const days = Math.floor(diff / 86400000);
+
+	if (days === 0)
+		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+	if (days === 1) return "Yesterday";
+	if (days < 7) return date.toLocaleDateString([], { weekday: "short" });
+	return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+export const ContactListItem: React.FC<ContactListItemProps> = ({
+	contact,
+	isActive = false,
+}) => {
+	const navigate = useNavigate();
+
+	return (
+		<button
+			type="button"
+			onClick={() => navigate(`/chat/${contact.id}`)}
+			className={`
+        w-full flex items-center gap-3 px-4 py-3 transition-colors duration-150 text-left
+        ${
+					isActive
+						? "bg-[var(--accent-light)]"
+						: "hover:bg-[var(--bg-secondary)] active:bg-[var(--bg-tertiary)]"
+				}
+      `}
+		>
+			{/* Avatar + status */}
+			<div className="relative shrink-0">
+				<Avatar name={contact.name} color={contact.avatarColor} size="md" />
+				<div className="absolute -bottom-0.5 -right-0.5">
+					<StatusIndicator isOnline={contact.isOnline} />
+				</div>
+			</div>
+
+			{/* Content */}
+			<div className="flex-1 min-w-0">
+				<div className="flex items-center justify-between gap-2">
+					<span className="font-medium text-sm text-[var(--text-primary)] truncate">
+						{contact.name}
+					</span>
+					<span className="text-xs text-[var(--text-muted)] shrink-0">
+						{formatTime(contact.lastMessageTime)}
+					</span>
+				</div>
+				<div className="flex items-center justify-between gap-2 mt-0.5">
+					<span
+						className={`text-xs truncate ${
+							contact.isTyping
+								? "text-[var(--accent)] italic"
+								: "text-[var(--text-secondary)]"
+						}`}
+					>
+						{contact.isTyping
+							? "typing…"
+							: (contact.lastMessage ?? "No messages yet")}
+					</span>
+					{contact.unreadCount > 0 && (
+						<span className="shrink-0 min-w-[18px] h-[18px] rounded-full bg-[var(--accent)] text-white text-[10px] font-bold flex items-center justify-center px-1">
+							{contact.unreadCount > 99 ? "99+" : contact.unreadCount}
+						</span>
+					)}
+				</div>
+			</div>
+		</button>
+	);
+};
