@@ -1,13 +1,5 @@
-import {
-	Ban,
-	ChevronRight,
-	Image,
-	MessageCircle,
-	Phone,
-	Trash2,
-	Video,
-} from "lucide-react";
-import React, { useState } from "react";
+import { Ban, MessageCircle, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Avatar } from "../components/Avatar";
 import { NavigationHeader } from "../components/NavigationHeader";
@@ -29,19 +21,6 @@ function formatLastSeen(date?: Date): string {
 	});
 }
 
-// Placeholder shared media colors
-const MEDIA_COLORS = [
-	"#3b82f6",
-	"#ef4444",
-	"#22c55e",
-	"#f97316",
-	"#8b5cf6",
-	"#14b8a6",
-	"#ec4899",
-	"#eab308",
-	"#06b6d4",
-];
-
 export default function ContactProfilePage() {
 	const { contactId } = useParams<{ contactId: string }>();
 	const navigate = useNavigate();
@@ -53,69 +32,36 @@ export default function ContactProfilePage() {
 
 	if (!contact) {
 		return (
-			<div className="flex flex-col h-full bg-[var(--bg-primary)]">
+			<div className="flex flex-col h-full bg-(--bg-primary)">
 				<NavigationHeader title="Contact" showBack />
 				<div className="flex-1 flex items-center justify-center">
-					<p className="text-sm text-[var(--text-secondary)]">
-						Contact not found.
-					</p>
+					<p className="text-sm text-secondary">Contact not found.</p>
 				</div>
 			</div>
 		);
 	}
 
-	const ActionButton = ({
-		icon: Icon,
-		label,
-		color = "default",
-		onClick,
-	}: {
-		icon: React.ElementType;
-		label: string;
-		color?: "default" | "danger";
-		onClick?: () => void;
-	}) => (
-		<button
-			type="button"
-			onClick={onClick}
-			className={`
-        flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl flex-1
-        transition-colors duration-150
-        ${
-					color === "danger"
-						? "bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50"
-						: "bg-[var(--bg-secondary)] text-[var(--accent)] hover:bg-[var(--bg-tertiary)]"
-				}
-      `}
-		>
-			<Icon className="w-5 h-5" strokeWidth={2} />
-			<span className="text-xs font-medium">{label}</span>
-		</button>
-	);
-
 	return (
-		<div className="flex flex-col h-full bg-[var(--bg-primary)]">
+		<div className="flex flex-col h-full bg-(--bg-primary)">
 			<NavigationHeader title="Contact Info" showBack />
 
 			<div className="flex-1 overflow-y-auto">
-				{/* ── Hero ─────────────────────────────────────────────── */}
-				<div className="flex flex-col items-center py-8 px-4 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
+				{/* Hero */}
+				<div className="flex flex-col items-center py-8 px-4 bg-(--bg-secondary) border-b border-border">
 					<div className="relative">
 						<Avatar name={contact.name} color={contact.avatarColor} size="xl" />
 						<div className="absolute -bottom-1 -right-1">
 							<StatusIndicator isOnline={contact.isOnline} size="md" />
 						</div>
 					</div>
-
-					<h2 className="mt-4 text-xl font-bold text-[var(--text-primary)]">
+					<h2 className="mt-4 text-xl font-bold text-primary">
 						{contact.name}
 					</h2>
-					<p className="text-sm text-[var(--text-secondary)] mt-0.5">
-						@{contact.username}
-					</p>
-
+					<p className="text-sm text-secondary mt-0.5">@{contact.username}</p>
 					<p
-						className={`text-xs mt-2 font-medium ${contact.isOnline ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}`}
+						className={`text-xs mt-2 font-medium ${
+							contact.isOnline ? "text-accent" : "text-muted"
+						}`}
 					>
 						{contact.isOnline
 							? "● Online"
@@ -123,118 +69,83 @@ export default function ContactProfilePage() {
 					</p>
 				</div>
 
-				{/* ── Action buttons ───────────────────────────────────── */}
-				<div className="flex gap-2.5 px-4 py-4">
-					<ActionButton
-						icon={MessageCircle}
-						label="Message"
+				{/* Message action */}
+				<div className="px-4 py-4">
+					<button
+						type="button"
 						onClick={() => navigate(`/chat/${contact.id}`)}
-					/>
-					<ActionButton icon={Phone} label="Call" />
-					<ActionButton icon={Video} label="Video" />
+						className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover active:scale-[0.98] text-white transition-all duration-200 shadow-sm"
+					>
+						<MessageCircle className="w-4 h-4" strokeWidth={2} />
+						Send Message
+					</button>
 				</div>
 
-				{/* ── Info ─────────────────────────────────────────────── */}
-				<div className="mx-3 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-primary)]">
-					<div className="px-4 py-3.5">
-						<p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-2">
+				{/* Info */}
+				<div className="mx-4 rounded-xl overflow-hidden border border-border bg-(--bg-primary)">
+					<div className="px-4 py-3">
+						<p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
 							Info
 						</p>
-						<div className="space-y-2.5">
+						<div className="space-y-3">
 							<div className="flex items-center justify-between">
-								<span className="text-xs text-[var(--text-secondary)]">
-									Username
-								</span>
-								<span className="text-sm font-medium text-[var(--text-primary)]">
+								<span className="text-xs text-secondary">Username</span>
+								<span className="text-sm font-medium text-primary">
 									@{contact.username}
 								</span>
 							</div>
+							<div className="h-px bg-border" />
 							<div className="flex items-center justify-between">
-								<span className="text-xs text-[var(--text-secondary)]">
-									Status
-								</span>
-								<span className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+								<span className="text-xs text-secondary">Status</span>
+								<span className="flex items-center gap-1.5 text-sm font-medium text-primary">
 									<StatusIndicator isOnline={contact.isOnline} />
 									{contact.isOnline ? "Online" : "Offline"}
 								</span>
 							</div>
 							{!contact.isOnline && contact.lastSeen && (
-								<div className="flex items-center justify-between">
-									<span className="text-xs text-[var(--text-secondary)]">
-										Last seen
-									</span>
-									<span className="text-sm font-medium text-[var(--text-primary)]">
-										{formatLastSeen(contact.lastSeen)}
-									</span>
-								</div>
+								<>
+									<div className="h-px bg-border" />
+									<div className="flex items-center justify-between">
+										<span className="text-xs text-secondary">Last seen</span>
+										<span className="text-sm font-medium text-primary">
+											{formatLastSeen(contact.lastSeen)}
+										</span>
+									</div>
+								</>
 							)}
 						</div>
 					</div>
 				</div>
 
-				{/* ── Shared media ─────────────────────────────────────── */}
-				<div className="mx-3 mt-4 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-primary)]">
-					<button
-						type="button"
-						className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--bg-secondary)] transition-colors"
-					>
-						<div className="flex items-center gap-2">
-							<Image className="w-4 h-4 text-[var(--accent)]" />
-							<span className="text-sm font-medium text-[var(--text-primary)]">
-								Shared Media
-							</span>
-						</div>
-						<div className="flex items-center gap-1">
-							<span className="text-xs text-[var(--text-muted)]">
-								{MEDIA_COLORS.length} items
-							</span>
-							<ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
-						</div>
-					</button>
-
-					{/* Media grid preview */}
-					<div className="px-3 pb-3 grid grid-cols-3 gap-1.5">
-						{MEDIA_COLORS.map((color, i) => (
-							<div
-								key={i}
-								className="aspect-square rounded-lg flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-								style={{ backgroundColor: color + "33" }}
-							>
-								<Image className="w-5 h-5" style={{ color }} />
-							</div>
-						))}
-					</div>
-				</div>
-
-				{/* ── Danger zone ──────────────────────────────────────── */}
-				<div className="mx-3 mt-4 mb-8 space-y-2.5">
+				{/* Danger zone */}
+				<div className="mx-4 mt-4 mb-8 space-y-2">
 					{/* Block */}
 					{showBlockConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-[var(--bg-primary)]">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-[var(--text-primary)]">
+								<p className="text-sm font-medium text-primary">
 									Block {contact.name}?
 								</p>
-								<p className="text-xs text-[var(--text-secondary)] mt-0.5">
+								<p className="text-xs text-secondary mt-0.5">
 									They will not be able to send you messages.
 								</p>
 							</div>
-							<div className="flex border-t border-[var(--border-color)]">
+							<div className="flex border-t border-border">
 								<button
 									type="button"
 									onClick={() => setShowBlockConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
+									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>
-								<div className="w-px bg-[var(--border-color)]" />
+								<div className="w-px bg-border" />
 								<button
 									type="button"
 									onClick={() => {
 										setShowBlockConfirm(false);
 										navigate("/");
 									}}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
 								>
 									Block
 								</button>
@@ -244,7 +155,7 @@ export default function ContactProfilePage() {
 						<button
 							type="button"
 							onClick={() => setShowBlockConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50 transition-colors"
+							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50 transition-all duration-200"
 						>
 							<Ban className="w-4 h-4" />
 							Block User
@@ -253,31 +164,31 @@ export default function ContactProfilePage() {
 
 					{/* Delete */}
 					{showDeleteConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-[var(--bg-primary)]">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-[var(--text-primary)]">
+								<p className="text-sm font-medium text-primary">
 									Delete chat with {contact.name}?
 								</p>
-								<p className="text-xs text-[var(--text-secondary)] mt-0.5">
+								<p className="text-xs text-secondary mt-0.5">
 									This action cannot be undone.
 								</p>
 							</div>
-							<div className="flex border-t border-[var(--border-color)]">
+							<div className="flex border-t border-border">
 								<button
 									type="button"
 									onClick={() => setShowDeleteConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
+									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>
-								<div className="w-px bg-[var(--border-color)]" />
+								<div className="w-px bg-border" />
 								<button
 									type="button"
 									onClick={() => {
 										setShowDeleteConfirm(false);
 										navigate("/");
 									}}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
 								>
 									Delete
 								</button>
@@ -287,10 +198,10 @@ export default function ContactProfilePage() {
 						<button
 							type="button"
 							onClick={() => setShowDeleteConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
 						>
 							<Trash2 className="w-4 h-4" />
-							Delete Delete Chat
+							Delete Chat
 						</button>
 					)}
 				</div>

@@ -19,18 +19,56 @@ const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label }) => (
 		aria-checked={checked}
 		aria-label={label}
 		onClick={onChange}
-		className={`
-      relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0
-      ${checked ? "bg-[var(--accent)]" : "bg-[var(--bg-tertiary)]"}
-    `}
+		className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ${
+			checked ? "bg-accent" : "bg-tertiary"
+		}`}
 	>
 		<span
-			className={`
-        absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
-        transition-transform duration-200
-        ${checked ? "translate-x-5" : "translate-x-0"}
-      `}
+			className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+				checked ? "translate-x-5" : "translate-x-0"
+			}`}
 		/>
+	</button>
+);
+
+const Divider = () => <div className="h-px bg-border mx-4" />;
+
+const SectionHeader = ({ title }: { title: string }) => (
+	<div className="px-4 pt-5 pb-1.5">
+		<p className="text-xs font-semibold text-accent uppercase tracking-wider">
+			{title}
+		</p>
+	</div>
+);
+
+const SettingRow = ({
+	label,
+	sublabel,
+	right,
+	onClick,
+}: {
+	label: string;
+	sublabel?: string;
+	right?: React.ReactNode;
+	onClick?: () => void;
+}) => (
+	<button
+		type="button"
+		onClick={onClick}
+		className={`w-full flex items-center justify-between px-4 py-3.5 transition-all duration-200 text-left ${
+			onClick
+				? "hover:bg-(--bg-secondary) active:bg-tertiary"
+				: "cursor-default"
+		}`}
+	>
+		<div className="min-w-0 flex-1">
+			<p className="text-sm font-medium text-primary">{label}</p>
+			{sublabel && <p className="text-xs text-secondary mt-0.5">{sublabel}</p>}
+		</div>
+		{right ??
+			(onClick ? (
+				<ChevronRight className="w-4 h-4 text-muted shrink-0" />
+			) : null)}
 	</button>
 );
 
@@ -62,56 +100,8 @@ export default function ProfilePage() {
 		navigate("/login", { replace: true });
 	};
 
-	const SettingRow = ({
-		label,
-		sublabel,
-		right,
-		onClick,
-	}: {
-		label: string;
-		sublabel?: string;
-		right?: React.ReactNode;
-		onClick?: () => void;
-	}) => (
-		<button
-			type="button"
-			onClick={onClick}
-			className={`
-        w-full flex items-center justify-between px-4 py-3.5
-        hover:bg-[var(--bg-secondary)] active:bg-[var(--bg-tertiary)]
-        transition-colors text-left
-        ${!onClick ? "cursor-default" : ""}
-      `}
-		>
-			<div>
-				<p className="text-sm font-medium text-[var(--text-primary)]">
-					{label}
-				</p>
-				{sublabel && (
-					<p className="text-xs text-[var(--text-secondary)] mt-0.5">
-						{sublabel}
-					</p>
-				)}
-			</div>
-			{right ??
-				(onClick ? (
-					<ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
-				) : null)}
-		</button>
-	);
-
-	const SectionHeader = ({ title }: { title: string }) => (
-		<div className="px-4 pt-5 pb-1">
-			<p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">
-				{title}
-			</p>
-		</div>
-	);
-
-	const Divider = () => <div className="h-px bg-[var(--border-color)] mx-4" />;
-
 	return (
-		<div className="flex flex-col h-full bg-[var(--bg-primary)]">
+		<div className="flex flex-col h-full bg-(--bg-primary)">
 			<NavigationHeader
 				title="Profile"
 				showBack
@@ -120,60 +110,51 @@ export default function ProfilePage() {
 					<button
 						type="button"
 						onClick={toggleTheme}
-						className="p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors"
+						className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
+						aria-label="Toggle theme"
 					>
 						{isDark ? (
-							<Sun className="w-4 h-4 text-[var(--text-secondary)]" />
+							<Sun className="w-4 h-4 text-secondary" />
 						) : (
-							<Moon className="w-4 h-4 text-[var(--text-secondary)]" />
+							<Moon className="w-4 h-4 text-secondary" />
 						)}
 					</button>
 				}
 			/>
 
 			<div className="flex-1 overflow-y-auto">
-				{/* ── Avatar card ────────────────────────────────────── */}
-				<div className="flex flex-col items-center py-8 px-4 bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
+				{/* Avatar card */}
+				<div className="flex flex-col items-center py-8 px-4 bg-(--bg-secondary) border-b border-border">
 					<div className="relative">
 						<Avatar name={user.name} color={user.avatarColor} size="xl" />
 						<button
 							type="button"
-							className="
-                absolute bottom-0 right-0 w-8 h-8 rounded-full
-                bg-[var(--accent)] text-white flex items-center justify-center
-                shadow-md hover:bg-[var(--accent-hover)] transition-colors
-              "
+							className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center shadow-md hover:bg-accent-hover active:scale-95 transition-all duration-200"
 							aria-label="Change avatar"
 						>
 							<Camera className="w-4 h-4" strokeWidth={2.5} />
 						</button>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-[var(--text-primary)]">
-						{user.name}
-					</h2>
-					<p className="text-sm text-[var(--text-secondary)] mt-0.5">
-						@{user.username}
-					</p>
-
-					{/* Online status pill */}
-					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)]">
+					<h2 className="mt-4 text-xl font-bold text-primary">{user.name}</h2>
+					<p className="text-sm text-secondary mt-0.5">@{user.username}</p>
+					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-(--bg-primary) border border-border">
 						<span
-							className="w-2 h-2 rounded-full"
+							className="w-2 h-2 rounded-full transition-colors duration-300"
 							style={{
 								backgroundColor: isOnline
 									? "var(--online-color)"
 									: "var(--text-muted)",
 							}}
 						/>
-						<span className="text-xs font-medium text-[var(--text-secondary)]">
+						<span className="text-xs font-medium text-secondary">
 							{isOnline ? "Online" : "Offline"}
 						</span>
 					</div>
 				</div>
 
-				{/* ── Online status ───────────────────────────────────── */}
+				{/* Status */}
 				<SectionHeader title="Status" />
-				<div className="bg-[var(--bg-primary)] rounded-xl mx-3 overflow-hidden border border-[var(--border-color)]">
+				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Show as Online"
 						sublabel="Let others see when you are active"
@@ -187,9 +168,9 @@ export default function ProfilePage() {
 					/>
 				</div>
 
-				{/* ── Notifications ──────────────────────────────────── */}
+				{/* Notifications */}
 				<SectionHeader title="Notifications" />
-				<div className="bg-[var(--bg-primary)] rounded-xl mx-3 overflow-hidden border border-[var(--border-color)]">
+				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Push Notifications"
 						sublabel="Receive message alerts"
@@ -207,9 +188,9 @@ export default function ProfilePage() {
 					<SettingRow label="Do Not Disturb" onClick={() => {}} />
 				</div>
 
-				{/* ── Privacy ────────────────────────────────────────── */}
+				{/* Privacy */}
 				<SectionHeader title="Privacy" />
-				<div className="bg-[var(--bg-primary)] rounded-xl mx-3 overflow-hidden border border-[var(--border-color)]">
+				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Read Receipts"
 						sublabel="Show when you have read messages"
@@ -241,51 +222,47 @@ export default function ProfilePage() {
 					/>
 				</div>
 
-				{/* ── Theme ──────────────────────────────────────────── */}
+				{/* Appearance */}
 				<SectionHeader title="Appearance" />
-				<div className="bg-[var(--bg-primary)] rounded-xl mx-3 overflow-hidden border border-[var(--border-color)]">
+				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
 					<div className="px-4 py-3.5 flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-[var(--text-primary)]">
-								Dark Mode
-							</p>
-							<p className="text-xs text-[var(--text-secondary)] mt-0.5">
+							<p className="text-sm font-medium text-primary">Dark Mode</p>
+							<p className="text-xs text-secondary mt-0.5">
 								Switch interface theme
 							</p>
 						</div>
 						<Toggle checked={isDark} onChange={toggleTheme} label="Dark mode" />
 					</div>
 					<Divider />
-					<SettingRow label="Chat Wallpaper" onClick={() => {}} />
-					<Divider />
 					<SettingRow label="Font Size" sublabel="Medium" onClick={() => {}} />
 				</div>
 
-				{/* ── Logout ─────────────────────────────────────────── */}
-				<div className="mx-3 mt-6 mb-8">
+				{/* Logout */}
+				<div className="mx-4 mt-5 mb-8">
 					{showLogoutConfirm ? (
-						<div className="bg-[var(--bg-primary)] rounded-xl border border-red-200 dark:border-red-900 overflow-hidden">
+						<div className="bg-(--bg-primary) rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-[var(--text-primary)]">
+								<p className="text-sm font-medium text-primary">
 									Are you sure you want to logout?
 								</p>
-								<p className="text-xs text-[var(--text-secondary)] mt-0.5">
+								<p className="text-xs text-secondary mt-0.5">
 									You will need to choose a new username to sign back in.
 								</p>
 							</div>
-							<div className="flex border-t border-[var(--border-color)]">
+							<div className="flex border-t border-border">
 								<button
 									type="button"
 									onClick={() => setShowLogoutConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
+									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>
-								<div className="w-px bg-[var(--border-color)]" />
+								<div className="w-px bg-border" />
 								<button
 									type="button"
 									onClick={handleLogout}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
 								>
 									Logout
 								</button>
@@ -295,7 +272,7 @@ export default function ProfilePage() {
 						<button
 							type="button"
 							onClick={() => setShowLogoutConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60 transition-colors"
+							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60 active:scale-[0.98] transition-all duration-200"
 						>
 							<LogOut className="w-4 h-4" />
 							Logout

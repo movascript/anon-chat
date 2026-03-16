@@ -30,33 +30,33 @@ export default function ChatListPage() {
 	};
 
 	return (
-		<div className="flex h-full w-full overflow-hidden bg-[var(--bg-primary)]">
-			{/* ─── Sidebar ─────────────────────────────────────────────── */}
+		<div className="flex h-full w-full overflow-hidden bg-primary">
+			{/* Sidebar */}
 			<aside
 				className={`
-          flex flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)]
+          flex flex-col bg-sidebar-bg border-r border-border
           ${contactId ? "hidden md:flex" : "flex"}
           w-full md:w-80 lg:w-96 shrink-0
         `}
 			>
 				{/* Header */}
-				<div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-color)]">
+				<div className="flex items-center gap-3 px-4 py-3 border-b border-border">
 					<button
 						type="button"
 						onClick={() => navigate("/profile")}
-						className="relative shrink-0"
+						className="relative shrink-0 transition-opacity duration-200 hover:opacity-80"
 						aria-label="Profile"
 					>
 						<Avatar name={user.name} color={user.avatarColor} size="md" />
-						<span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--online-color)] border-2 border-[var(--sidebar-bg)]" />
+						<span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-online border-2 border-sidebar-bg" />
 					</button>
 
 					<div className="flex-1 min-w-0">
-						<h1 className="font-bold text-base text-[var(--text-primary)] truncate leading-tight">
+						<h1 className="font-bold text-base text-primary truncate leading-tight">
 							AnonChat
 						</h1>
 						{totalUnread > 0 && (
-							<p className="text-xs text-[var(--text-secondary)]">
+							<p className="text-xs text-secondary animate-fade-in">
 								{totalUnread} unread message{totalUnread > 1 ? "s" : ""}
 							</p>
 						)}
@@ -66,28 +66,28 @@ export default function ChatListPage() {
 						<button
 							type="button"
 							onClick={toggleTheme}
-							className="p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors"
+							className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 							aria-label="Toggle theme"
 						>
 							{isDark ? (
-								<Sun className="w-4 h-4 text-[var(--text-secondary)]" />
+								<Sun className="w-4 h-4 text-secondary" />
 							) : (
-								<Moon className="w-4 h-4 text-[var(--text-secondary)]" />
+								<Moon className="w-4 h-4 text-secondary" />
 							)}
 						</button>
 						<button
 							type="button"
 							onClick={() => navigate("/profile")}
-							className="p-2 rounded-full hover:bg-[var(--bg-secondary)] transition-colors"
+							className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 							aria-label="Settings"
 						>
-							<Settings className="w-4 h-4 text-[var(--text-secondary)]" />
+							<Settings className="w-4 h-4 text-secondary" />
 						</button>
 					</div>
 				</div>
 
 				{/* Search */}
-				<div className="px-3 py-2">
+				<div className="px-4 py-3 border-b border-border">
 					<SearchInput
 						value={searchQuery}
 						onChange={setSearchQuery}
@@ -95,12 +95,12 @@ export default function ChatListPage() {
 					/>
 				</div>
 
-				{/* New Chat button */}
-				<div className="px-3 pb-2">
+				{/* New Chat */}
+				<div className="px-4 py-2">
 					<button
 						type="button"
 						onClick={() => setShowNewChat(!showNewChat)}
-						className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)] transition-colors"
+						className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-accent hover:bg-accent-light active:bg-accent-light transition-all duration-200"
 					>
 						<Edit className="w-4 h-4" />
 						New Chat
@@ -110,9 +110,9 @@ export default function ChatListPage() {
 				{/* Contact list */}
 				<div className="flex-1 overflow-y-auto">
 					{filtered.length === 0 ? (
-						<div className="flex flex-col items-center justify-center h-40 gap-3 text-center px-4">
-							<Users className="w-10 h-10 text-[var(--text-muted)] opacity-50" />
-							<p className="text-sm text-[var(--text-secondary)]">
+						<div className="flex flex-col items-center justify-center h-40 gap-3 text-center px-4 animate-fade-in">
+							<Users className="w-10 h-10 text-muted opacity-40" />
+							<p className="text-sm text-secondary">
 								{searchQuery ? "No contacts found." : "No contacts yet."}
 							</p>
 						</div>
@@ -128,20 +128,22 @@ export default function ChatListPage() {
 				</div>
 			</aside>
 
-			{/* ─── Main panel ──────────────────────────────────────────── */}
+			{/* Main panel */}
 			<main
-				className={`flex-1 flex flex-col overflow-hidden ${!contactId ? "hidden md:flex" : "flex"}`}
+				className={`flex-1 flex flex-col overflow-hidden ${
+					!contactId ? "hidden md:flex" : "flex"
+				}`}
 			>
 				{contactId ? (
 					<ChatViewPage />
 				) : (
-					<div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4">
-						<MessageCircle className="w-16 h-16 text-[var(--text-muted)] opacity-30" />
+					<div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-4 animate-fade-in">
+						<MessageCircle className="w-14 h-14 text-muted opacity-25" />
 						<div>
-							<h2 className="text-lg font-semibold text-[var(--text-primary)]">
+							<h2 className="text-base font-semibold text-primary">
 								Select a conversation
 							</h2>
-							<p className="text-sm text-[var(--text-secondary)] mt-1">
+							<p className="text-sm text-secondary mt-1">
 								Choose a contact from the list to start chatting.
 							</p>
 						</div>

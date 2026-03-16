@@ -26,30 +26,24 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
 	};
 
 	return (
-		<header
-			className="
-        flex items-center gap-3 px-4 py-3
-        bg-[var(--header-bg)] border-b border-[var(--border-color)]
-        shadow-[var(--shadow)] z-10 shrink-0
-      "
-		>
+		<header className="flex items-center gap-3 px-4 py-3 bg-header-bg border-b border-border shadow-(--shadow) z-10 shrink-0">
 			{showBack && (
 				<button
 					type="button"
 					onClick={handleBack}
-					className="p-1.5 -ml-1 rounded-full hover:bg-[var(--bg-secondary)] transition-colors"
+					className="p-1.5 -ml-1 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 					aria-label="Go back"
 				>
-					<ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
+					<ArrowLeft className="w-5 h-5 text-primary" />
 				</button>
 			)}
 			{leftSlot}
 			<div className="flex-1 min-w-0">
-				<h1 className="font-semibold text-base text-[var(--text-primary)] truncate leading-tight">
+				<h1 className="font-semibold text-base text-primary truncate leading-tight">
 					{title}
 				</h1>
 				{subtitle && (
-					<p className="text-xs text-[var(--text-secondary)] truncate leading-tight">
+					<p className="text-xs text-secondary truncate leading-tight mt-0.5">
 						{subtitle}
 					</p>
 				)}
