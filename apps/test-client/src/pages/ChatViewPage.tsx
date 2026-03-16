@@ -112,7 +112,7 @@ export function ChatViewPage() {
 	if (!contact) {
 		return (
 			<div className="flex-1 flex items-center justify-center">
-				<p className="text-secondary text-sm">Contact not found.</p>
+				<p className="text-secondary-foreground text-sm">Contact not found.</p>
 			</div>
 		);
 	}
@@ -132,7 +132,7 @@ export function ChatViewPage() {
 					onClick={() => navigate("/")}
 					className="md:hidden p-1.5 -ml-1 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 				>
-					<ArrowLeft className="w-5 h-5 text-primary" />
+					<ArrowLeft className="w-5 h-5 text-primary-foreground" />
 				</button>
 
 				<button
@@ -147,12 +147,14 @@ export function ChatViewPage() {
 						</div>
 					</div>
 					<div className="min-w-0 text-left">
-						<p className="font-semibold text-sm text-primary truncate leading-tight">
+						<p className="font-semibold text-sm text-primary-foreground truncate leading-tight">
 							{contact.name}
 						</p>
 						<p
 							className={`text-xs truncate leading-tight transition-colors duration-200 ${
-								contact.isOnline || isTyping ? "text-accent" : "text-secondary"
+								contact.isOnline || isTyping
+									? "text-accent"
+									: "text-secondary-foreground"
 							}`}
 						>
 							{isTyping ? "typing…" : subtitle}
@@ -167,7 +169,10 @@ export function ChatViewPage() {
 						className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 						aria-label="Info"
 					>
-						<Info className="w-4.5 h-4.5 text-secondary" strokeWidth={2} />
+						<Info
+							className="w-4.5 h-4.5 text-secondary-foreground"
+							strokeWidth={2}
+						/>
 					</button>
 					<button
 						type="button"
@@ -175,7 +180,7 @@ export function ChatViewPage() {
 						aria-label="More"
 					>
 						<MoreVertical
-							className="w-4.5 h-4.5 text-secondary"
+							className="w-4.5 h-4.5 text-secondary-foreground"
 							strokeWidth={2}
 						/>
 					</button>
@@ -186,7 +191,7 @@ export function ChatViewPage() {
 			<div className="flex-1 overflow-hidden">
 				{listItems.length === 0 ? (
 					<div className="flex-1 flex items-center justify-center h-full animate-fade-in">
-						<p className="text-sm text-secondary">
+						<p className="text-sm text-secondary-foreground">
 							No messages yet. Say hi! 👋
 						</p>
 					</div>
@@ -236,7 +241,7 @@ export function ChatViewPage() {
 							onChange={(e) => setInputText(e.target.value)}
 							onKeyDown={handleKey}
 							placeholder="Message…"
-							className="flex-1 bg-transparent text-sm text-primary placeholder:text-muted focus:outline-none"
+							className="flex-1 bg-transparent text-sm text-primary-foreground placeholder:text-muted focus:outline-none"
 						/>
 					</div>
 

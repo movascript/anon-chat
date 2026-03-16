@@ -69,9 +69,9 @@ export default function LoginPage() {
 				aria-label="Toggle theme"
 			>
 				{isDark ? (
-					<Sun className="w-5 h-5 text-secondary" />
+					<Sun className="w-5 h-5 text-secondary-foreground" />
 				) : (
-					<Moon className="w-5 h-5 text-secondary" />
+					<Moon className="w-5 h-5 text-secondary-foreground" />
 				)}
 			</button>
 
@@ -81,8 +81,10 @@ export default function LoginPage() {
 					<div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4 shadow-lg">
 						<MessageCircle className="w-8 h-8 text-white" strokeWidth={2.5} />
 					</div>
-					<h1 className="text-2xl font-bold text-primary">AnonChat</h1>
-					<p className="text-sm text-secondary mt-1">
+					<h1 className="text-2xl font-bold text-primary-foreground">
+						AnonChat
+					</h1>
+					<p className="text-sm text-secondary-foreground mt-1">
 						No sign‑up. Just pick a username.
 					</p>
 				</div>
@@ -92,7 +94,7 @@ export default function LoginPage() {
 					<div>
 						<label
 							htmlFor="username"
-							className="block text-sm font-medium text-primary mb-1.5"
+							className="block text-sm font-medium text-primary-foreground mb-1.5"
 						>
 							Choose a username
 						</label>
@@ -114,7 +116,7 @@ export default function LoginPage() {
 								maxLength={32}
 								className={`
                   w-full pl-8 pr-4 py-3 rounded-xl text-sm
-                  bg-input-bg text-primary
+                  bg-input-bg text-primary-foreground
                   placeholder:text-muted
                   border-2 transition-all duration-200
                   focus:outline-none

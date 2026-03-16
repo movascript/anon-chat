@@ -20,7 +20,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 			placeholder={placeholder}
 			className="
         w-full pl-9 pr-8 py-2 rounded-xl text-sm
-        bg-input-bg text-primary
+        bg-input-bg text-primary-foreground
         placeholder:text-muted
         border border-transparent
         focus:outline-none focus:border-accent

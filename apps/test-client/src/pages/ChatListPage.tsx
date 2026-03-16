@@ -52,11 +52,11 @@ export default function ChatListPage() {
 					</button>
 
 					<div className="flex-1 min-w-0">
-						<h1 className="font-bold text-base text-primary truncate leading-tight">
+						<h1 className="font-bold text-base text-primary-foreground truncate leading-tight">
 							AnonChat
 						</h1>
 						{totalUnread > 0 && (
-							<p className="text-xs text-secondary animate-fade-in">
+							<p className="text-xs text-secondary-foreground animate-fade-in">
 								{totalUnread} unread message{totalUnread > 1 ? "s" : ""}
 							</p>
 						)}
@@ -70,9 +70,9 @@ export default function ChatListPage() {
 							aria-label="Toggle theme"
 						>
 							{isDark ? (
-								<Sun className="w-4 h-4 text-secondary" />
+								<Sun className="w-4 h-4 text-secondary-foreground" />
 							) : (
-								<Moon className="w-4 h-4 text-secondary" />
+								<Moon className="w-4 h-4 text-secondary-foreground" />
 							)}
 						</button>
 						<button
@@ -81,7 +81,7 @@ export default function ChatListPage() {
 							className="p-2 rounded-full hover:bg-(--bg-secondary) active:bg-tertiary transition-all duration-200"
 							aria-label="Settings"
 						>
-							<Settings className="w-4 h-4 text-secondary" />
+							<Settings className="w-4 h-4 text-secondary-foreground" />
 						</button>
 					</div>
 				</div>
@@ -112,7 +112,7 @@ export default function ChatListPage() {
 					{filtered.length === 0 ? (
 						<div className="flex flex-col items-center justify-center h-40 gap-3 text-center px-4 animate-fade-in">
 							<Users className="w-10 h-10 text-muted opacity-40" />
-							<p className="text-sm text-secondary">
+							<p className="text-sm text-secondary-foreground">
 								{searchQuery ? "No contacts found." : "No contacts yet."}
 							</p>
 						</div>
@@ -140,10 +140,10 @@ export default function ChatListPage() {
 					<div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-4 animate-fade-in">
 						<MessageCircle className="w-14 h-14 text-muted opacity-25" />
 						<div>
-							<h2 className="text-base font-semibold text-primary">
+							<h2 className="text-base font-semibold text-primary-foreground">
 								Select a conversation
 							</h2>
-							<p className="text-sm text-secondary mt-1">
+							<p className="text-sm text-secondary-foreground mt-1">
 								Choose a contact from the list to start chatting.
 							</p>
 						</div>

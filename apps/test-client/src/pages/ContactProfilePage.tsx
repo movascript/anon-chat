@@ -35,7 +35,9 @@ export default function ContactProfilePage() {
 			<div className="flex flex-col h-full bg-(--bg-primary)">
 				<NavigationHeader title="Contact" showBack />
 				<div className="flex-1 flex items-center justify-center">
-					<p className="text-sm text-secondary">Contact not found.</p>
+					<p className="text-sm text-secondary-foreground">
+						Contact not found.
+					</p>
 				</div>
 			</div>
 		);
@@ -54,10 +56,12 @@ export default function ContactProfilePage() {
 							<StatusIndicator isOnline={contact.isOnline} size="md" />
 						</div>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary">
+					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
 						{contact.name}
 					</h2>
-					<p className="text-sm text-secondary mt-0.5">@{contact.username}</p>
+					<p className="text-sm text-secondary-foreground mt-0.5">
+						@{contact.username}
+					</p>
 					<p
 						className={`text-xs mt-2 font-medium ${
 							contact.isOnline ? "text-accent" : "text-muted"
@@ -89,15 +93,19 @@ export default function ContactProfilePage() {
 						</p>
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
-								<span className="text-xs text-secondary">Username</span>
-								<span className="text-sm font-medium text-primary">
+								<span className="text-xs text-secondary-foreground">
+									Username
+								</span>
+								<span className="text-sm font-medium text-primary-foreground">
 									@{contact.username}
 								</span>
 							</div>
 							<div className="h-px bg-border" />
 							<div className="flex items-center justify-between">
-								<span className="text-xs text-secondary">Status</span>
-								<span className="flex items-center gap-1.5 text-sm font-medium text-primary">
+								<span className="text-xs text-secondary-foreground">
+									Status
+								</span>
+								<span className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground">
 									<StatusIndicator isOnline={contact.isOnline} />
 									{contact.isOnline ? "Online" : "Offline"}
 								</span>
@@ -106,8 +114,10 @@ export default function ContactProfilePage() {
 								<>
 									<div className="h-px bg-border" />
 									<div className="flex items-center justify-between">
-										<span className="text-xs text-secondary">Last seen</span>
-										<span className="text-sm font-medium text-primary">
+										<span className="text-xs text-secondary-foreground">
+											Last seen
+										</span>
+										<span className="text-sm font-medium text-primary-foreground">
 											{formatLastSeen(contact.lastSeen)}
 										</span>
 									</div>
@@ -123,10 +133,10 @@ export default function ContactProfilePage() {
 					{showBlockConfirm ? (
 						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary">
+								<p className="text-sm font-medium text-primary-foreground">
 									Block {contact.name}?
 								</p>
-								<p className="text-xs text-secondary mt-0.5">
+								<p className="text-xs text-secondary-foreground mt-0.5">
 									They will not be able to send you messages.
 								</p>
 							</div>
@@ -134,7 +144,7 @@ export default function ContactProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowBlockConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>
@@ -166,10 +176,10 @@ export default function ContactProfilePage() {
 					{showDeleteConfirm ? (
 						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-(--bg-primary) animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary">
+								<p className="text-sm font-medium text-primary-foreground">
 									Delete chat with {contact.name}?
 								</p>
-								<p className="text-xs text-secondary mt-0.5">
+								<p className="text-xs text-secondary-foreground mt-0.5">
 									This action cannot be undone.
 								</p>
 							</div>
@@ -177,7 +187,7 @@ export default function ContactProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowDeleteConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>

@@ -50,7 +50,7 @@ export const ContactListItem: React.FC<ContactListItemProps> = ({
 
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center justify-between gap-2">
-					<span className="font-medium text-sm text-primary truncate">
+					<span className="font-medium text-sm text-primary-foreground truncate">
 						{contact.name}
 					</span>
 					<span className="text-xs text-muted shrink-0">
@@ -60,7 +60,9 @@ export const ContactListItem: React.FC<ContactListItemProps> = ({
 				<div className="flex items-center justify-between gap-2 mt-0.5">
 					<span
 						className={`text-xs truncate ${
-							contact.isTyping ? "text-accent italic" : "text-secondary"
+							contact.isTyping
+								? "text-accent italic"
+								: "text-secondary-foreground"
 						}`}
 					>
 						{contact.isTyping

@@ -62,8 +62,10 @@ const SettingRow = ({
 		}`}
 	>
 		<div className="min-w-0 flex-1">
-			<p className="text-sm font-medium text-primary">{label}</p>
-			{sublabel && <p className="text-xs text-secondary mt-0.5">{sublabel}</p>}
+			<p className="text-sm font-medium text-primary-foreground">{label}</p>
+			{sublabel && (
+				<p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>
+			)}
 		</div>
 		{right ??
 			(onClick ? (
@@ -114,9 +116,9 @@ export default function ProfilePage() {
 						aria-label="Toggle theme"
 					>
 						{isDark ? (
-							<Sun className="w-4 h-4 text-secondary" />
+							<Sun className="w-4 h-4 text-secondary-foreground" />
 						) : (
-							<Moon className="w-4 h-4 text-secondary" />
+							<Moon className="w-4 h-4 text-secondary-foreground" />
 						)}
 					</button>
 				}
@@ -135,8 +137,12 @@ export default function ProfilePage() {
 							<Camera className="w-4 h-4" strokeWidth={2.5} />
 						</button>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary">{user.name}</h2>
-					<p className="text-sm text-secondary mt-0.5">@{user.username}</p>
+					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
+						{user.name}
+					</h2>
+					<p className="text-sm text-secondary-foreground mt-0.5">
+						@{user.username}
+					</p>
 					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-(--bg-primary) border border-border">
 						<span
 							className="w-2 h-2 rounded-full transition-colors duration-300"
@@ -146,7 +152,7 @@ export default function ProfilePage() {
 									: "var(--text-muted)",
 							}}
 						/>
-						<span className="text-xs font-medium text-secondary">
+						<span className="text-xs font-medium text-secondary-foreground">
 							{isOnline ? "Online" : "Offline"}
 						</span>
 					</div>
@@ -227,8 +233,10 @@ export default function ProfilePage() {
 				<div className="bg-(--bg-primary) rounded-xl mx-4 overflow-hidden border border-border">
 					<div className="px-4 py-3.5 flex items-center justify-between">
 						<div>
-							<p className="text-sm font-medium text-primary">Dark Mode</p>
-							<p className="text-xs text-secondary mt-0.5">
+							<p className="text-sm font-medium text-primary-foreground">
+								Dark Mode
+							</p>
+							<p className="text-xs text-secondary-foreground mt-0.5">
 								Switch interface theme
 							</p>
 						</div>
@@ -243,10 +251,10 @@ export default function ProfilePage() {
 					{showLogoutConfirm ? (
 						<div className="bg-(--bg-primary) rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in animate-duration-150">
 							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary">
+								<p className="text-sm font-medium text-primary-foreground">
 									Are you sure you want to logout?
 								</p>
-								<p className="text-xs text-secondary mt-0.5">
+								<p className="text-xs text-secondary-foreground mt-0.5">
 									You will need to choose a new username to sign back in.
 								</p>
 							</div>
@@ -254,7 +262,7 @@ export default function ProfilePage() {
 								<button
 									type="button"
 									onClick={() => setShowLogoutConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary hover:bg-(--bg-secondary) transition-all duration-200"
+									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-(--bg-secondary) transition-all duration-200"
 								>
 									Cancel
 								</button>
