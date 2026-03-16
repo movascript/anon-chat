@@ -41,7 +41,7 @@ type FrameEvents = {
 	];
 };
 
-export type SocketEventMap = BaseSocketEvents & FrameEvents;
+type SocketEventMap = BaseSocketEvents & FrameEvents;
 
 type EventListener<K extends keyof SocketEventMap> = (
 	...args: SocketEventMap[K]
@@ -49,7 +49,7 @@ type EventListener<K extends keyof SocketEventMap> = (
 
 // ─── Reconnect Config ─────────────────────────────────────────────────────────
 
-export interface SocketConfig {
+interface SocketConfig {
 	url: string;
 	/** Max reconnection attempts before giving up. Default: Infinity */
 	maxRetries?: number;
