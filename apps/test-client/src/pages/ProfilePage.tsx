@@ -101,7 +101,7 @@ export default function ProfilePage() {
 	};
 
 	return (
-		<div className="flex flex-col h-full bg-primary">
+		<div className="flex flex-col h-full animate-fade-in bg-primary">
 			<NavigationHeader
 				title="Profile"
 				showBack
@@ -247,7 +247,7 @@ export default function ProfilePage() {
 				{/* Logout */}
 				<div className="mx-4 mt-5 mb-8">
 					{showLogoutConfirm ? (
-						<div className="bg-primary rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in animate-duration-150">
+						<div className="bg-primary rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Are you sure you want to logout?

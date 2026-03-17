@@ -30,11 +30,11 @@ export default function ChatListPage() {
 	};
 
 	return (
-		<div className="flex h-full w-full overflow-hidden bg-primary">
+		<div className="flex h-full w-fulloverflow-hidden bg-primary">
 			{/* Sidebar */}
 			<aside
 				className={`
-          flex flex-col bg-sidebar-bg border-r border-border
+          flex flex-col bg-sidebar-bg border-r border-border animate-fade-in 
           ${contactId ? "hidden md:flex" : "flex"}
           w-full md:w-80 lg:w-96 shrink-0
         `}

@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, MoreVertical, Send } from "lucide-react";
+import { ArrowLeft, Info, MoreVertical, Send, X } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
@@ -124,9 +124,9 @@ export function ChatViewPage() {
 			: "Offline";
 
 	return (
-		<div className="flex flex-col h-full bg-primary overflow-hidden">
+		<div className="flex flex-col h-full animate-fade-in bg-primary overflow-hidden">
 			{/* Header */}
-			<header className="flex items-center gap-3 px-4 py-3 bg-header-bg border-b border-border shadow-(--shadow) shrink-0 animate-slide-in-from-top-2 animate-duration-200">
+			<header className="flex items-center gap-3 px-4 py-3 bg-header-bg border-b border-border shadow-(--shadow) shrink-0 animate-slide-in-from-top-2">
 				<button
 					type="button"
 					onClick={() => navigate("/")}
@@ -165,21 +165,11 @@ export function ChatViewPage() {
 				<div className="flex items-center gap-0.5 shrink-0">
 					<button
 						type="button"
-						onClick={() => navigate(`/profile/${contact.id}`)}
+						onClick={() => navigate("/")}
 						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
-						aria-label="Info"
+						aria-label="Close"
 					>
-						<Info
-							className="w-4.5 h-4.5 text-secondary-foreground"
-							strokeWidth={2}
-						/>
-					</button>
-					<button
-						type="button"
-						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
-						aria-label="More"
-					>
-						<MoreVertical
+						<X
 							className="w-4.5 h-4.5 text-secondary-foreground"
 							strokeWidth={2}
 						/>

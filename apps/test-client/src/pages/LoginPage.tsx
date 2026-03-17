@@ -61,7 +61,7 @@ export default function LoginPage() {
 	const isDisabled = isLoading || username.trim().length < 3;
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-primary px-4 relative">
+		<div className="min-h-screen flex flex-col items-center justify-center bg-primary px-6 relative">
 			<button
 				type="button"
 				onClick={toggleTheme}
@@ -75,7 +75,7 @@ export default function LoginPage() {
 				)}
 			</button>
 
-			<div className="w-full max-w-sm animate-fade-in animate-duration-300">
+			<div className="w-full max-w-sm animate-fade-in">
 				{/* Logo */}
 				<div className="flex flex-col items-center mb-10">
 					<div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4 shadow-lg">
@@ -133,7 +133,7 @@ export default function LoginPage() {
 
 						{(errorMsg || state === "free") && (
 							<div
-								className={`flex items-center gap-1.5 mt-2 text-xs font-medium animate-fade-in animate-duration-150 ${
+								className={`flex items-center gap-1.5 mt-2 text-xs font-medium animate-fade-in ${
 									errorMsg ? "text-red-500" : "text-green-500"
 								}`}
 							>
@@ -178,7 +178,7 @@ export default function LoginPage() {
 				</form>
 
 				<p className="text-center text-xs text-muted mt-8">
-					Your identity is anonymous. No email or phone required.
+					Your identity is anonymous. No login required.
 				</p>
 			</div>
 		</div>

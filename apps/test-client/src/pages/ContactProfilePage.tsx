@@ -44,7 +44,7 @@ export default function ContactProfilePage() {
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-primary">
+		<div className="flex flex-col animate-fade-in h-full bg-primary">
 			<NavigationHeader title="Contact Info" showBack />
 
 			<div className="flex-1 overflow-y-auto">
@@ -85,53 +85,11 @@ export default function ContactProfilePage() {
 					</button>
 				</div>
 
-				{/* Info */}
-				<div className="mx-4 rounded-xl overflow-hidden border border-border bg-primary">
-					<div className="px-4 py-3">
-						<p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
-							Info
-						</p>
-						<div className="space-y-3">
-							<div className="flex items-center justify-between">
-								<span className="text-xs text-secondary-foreground">
-									Username
-								</span>
-								<span className="text-sm font-medium text-primary-foreground">
-									@{contact.username}
-								</span>
-							</div>
-							<div className="h-px bg-border" />
-							<div className="flex items-center justify-between">
-								<span className="text-xs text-secondary-foreground">
-									Status
-								</span>
-								<span className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground">
-									<StatusIndicator isOnline={contact.isOnline} />
-									{contact.isOnline ? "Online" : "Offline"}
-								</span>
-							</div>
-							{!contact.isOnline && contact.lastSeen && (
-								<>
-									<div className="h-px bg-border" />
-									<div className="flex items-center justify-between">
-										<span className="text-xs text-secondary-foreground">
-											Last seen
-										</span>
-										<span className="text-sm font-medium text-primary-foreground">
-											{formatLastSeen(contact.lastSeen)}
-										</span>
-									</div>
-								</>
-							)}
-						</div>
-					</div>
-				</div>
-
 				{/* Danger zone */}
 				<div className="mx-4 mt-4 mb-8 space-y-2">
 					{/* Block */}
 					{showBlockConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in animate-duration-150">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Block {contact.name}?
@@ -174,7 +132,7 @@ export default function ContactProfilePage() {
 
 					{/* Delete */}
 					{showDeleteConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in animate-duration-150">
+						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in">
 							<div className="px-4 py-3.5">
 								<p className="text-sm font-medium text-primary-foreground">
 									Delete chat with {contact.name}?
