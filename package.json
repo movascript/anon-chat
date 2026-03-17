@@ -4,6 +4,7 @@
 	"scripts": {
 		"dev:all": "pnpm -r dev",
 		"client": "pnpm --filter client dev",
+		"test-client": "pnpm --filter test-client dev",
 		"server": "pnpm --filter server dev",
 		"build:all": "pnpm -r build",
 		"format": "biome format --write",
