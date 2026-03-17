@@ -11,3 +11,6 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# just a temp file where is store notes and prompts
+prompt.prompt

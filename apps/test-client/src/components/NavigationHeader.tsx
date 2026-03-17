@@ -10,14 +10,14 @@ interface NavigationHeaderProps {
 	leftSlot?: React.ReactNode;
 }
 
-export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
+export function NavigationHeader({
 	title,
 	subtitle,
 	showBack = false,
 	backTo,
 	rightSlot,
 	leftSlot,
-}) => {
+}: NavigationHeaderProps) {
 	const navigate = useNavigate();
 
 	const handleBack = () => {
@@ -51,4 +51,4 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
 			{rightSlot && <div className="flex items-center gap-1">{rightSlot}</div>}
 		</header>
 	);
-};
+}

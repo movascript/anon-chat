@@ -1,5 +1,5 @@
-import type React from "react";
 import { useNavigate } from "react-router";
+import { cn } from "@/lib/utils";
 import type { Contact } from "../types";
 import { Avatar } from "./Avatar";
 import { StatusIndicator } from "./StatusIndicator";
@@ -21,23 +21,20 @@ function formatTime(date?: Date): string {
 	return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export const ContactListItem: React.FC<ContactListItemProps> = ({
+export function ContactListItem({
 	contact,
 	isActive = false,
-}) => {
+}: ContactListItemProps) {
 	const navigate = useNavigate();
 
 	return (
 		<button
 			type="button"
 			onClick={() => navigate(`/chat/${contact.id}`)}
-			className={`
-        w-full flex items-center gap-3 px-4 py-3 text-left
-        transition-all duration-200
-        ${
-					isActive ? "bg-accent-light" : "hover:bg-secondary active:bg-tertiary"
-				}
-      `}
+			className={cn(
+				"w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200",
+				isActive ? "bg-accent-light" : "hover:bg-secondary active:bg-tertiary",
+			)}
 		>
 			<div className="relative shrink-0">
 				<Avatar name={contact.name} color={contact.avatarColor} size="md" />
@@ -57,11 +54,12 @@ export const ContactListItem: React.FC<ContactListItemProps> = ({
 				</div>
 				<div className="flex items-center justify-between gap-2 mt-0.5">
 					<span
-						className={`text-xs truncate ${
+						className={cn(
+							"text-xs truncate",
 							contact.isTyping
 								? "text-accent italic"
-								: "text-secondary-foreground"
-						}`}
+								: "text-secondary-foreground",
+						)}
 					>
 						{contact.isTyping
 							? "typing…"
@@ -76,4 +74,4 @@ export const ContactListItem: React.FC<ContactListItemProps> = ({
 			</div>
 		</button>
 	);
-};
+}
