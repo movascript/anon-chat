@@ -2,7 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import ChatListPage from "./pages/ChatListPage";
 import ContactProfilePage from "./pages/ContactProfilePage";
 import LoginPage from "./pages/LoginPage";
-import ProfilePage from "./pages/ProfilePage";
+import PrivacyPage from "./pages/PrivacyPage";
+import SettingsPage from "./pages/SettingsPage";
 import { useAppStore } from "./store/appStore";
 
 function Protected({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export default function App() {
 					path="/login"
 					element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />}
 				/>
+				<Route path="/privacy" element={<PrivacyPage />} />
 
 				<Route
 					path="/"
@@ -41,10 +43,10 @@ export default function App() {
 				/>
 
 				<Route
-					path="/profile"
+					path="/settings"
 					element={
 						<Protected>
-							<ProfilePage />
+							<SettingsPage />
 						</Protected>
 					}
 				/>

@@ -16,7 +16,7 @@ interface AppState {
 	searchQuery: string;
 
 	// Actions
-	login: (username: string) => void;
+	login: (username: string, name: string) => void;
 	logout: () => void;
 	toggleTheme: () => void;
 	setSearchQuery: (q: string) => void;
@@ -39,11 +39,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 	theme: savedTheme,
 	searchQuery: "",
 
-	login: (username: string) => {
+	login: (username, name) => {
 		const user: User = {
 			...mockUser,
 			username,
-			name: username,
+			name,
 		};
 		sessionStorage.setItem("anonchat_user", JSON.stringify(user));
 		set({ currentUser: user, isLoggedIn: true });

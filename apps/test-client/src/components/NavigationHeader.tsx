@@ -39,7 +39,7 @@ export function NavigationHeader({
 			)}
 			{leftSlot}
 			<div className="flex-1 min-w-0">
-				<h1 className="font-semibold text-base text-primary-foreground truncate leading-tight">
+				<h1 className="font-semibold text-base text-primary-foreground truncate leading-tight py-1">
 					{title}
 				</h1>
 				{subtitle && (

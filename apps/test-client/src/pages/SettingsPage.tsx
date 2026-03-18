@@ -1,78 +1,56 @@
 import { Camera, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { Avatar } from "../components/Avatar";
+import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
 import { NavigationHeader } from "../components/NavigationHeader";
+import { Toggle } from "../components/Toggle";
 import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../store/appStore";
 
-interface ToggleProps {
-	checked: boolean;
-	onChange: () => void;
-	label: string;
+function Divider() {
+	return <div className="h-px bg-border mx-4" />;
 }
 
-const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label }) => (
-	<button
-		type="button"
-		role="switch"
-		aria-checked={checked}
-		aria-label={label}
-		onClick={onChange}
-		className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ${
-			checked ? "bg-accent" : "bg-tertiary"
-		}`}
-	>
-		<span
-			className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-				checked ? "translate-x-5" : "translate-x-0"
-			}`}
-		/>
-	</button>
-);
+function SectionHeader({ title }: { title: string }) {
+	return (
+		<div className="px-4 pt-5 pb-1.5">
+			<p className="text-xs font-semibold text-accent uppercase tracking-wider">
+				{title}
+			</p>
+		</div>
+	);
+}
 
-const Divider = () => <div className="h-px bg-border mx-4" />;
-
-const SectionHeader = ({ title }: { title: string }) => (
-	<div className="px-4 pt-5 pb-1.5">
-		<p className="text-xs font-semibold text-accent uppercase tracking-wider">
-			{title}
-		</p>
-	</div>
-);
-
-const SettingRow = ({
-	label,
-	sublabel,
-	right,
-	onClick,
-}: {
+interface SettingRowProps {
 	label: string;
 	sublabel?: string;
 	right?: React.ReactNode;
 	onClick?: () => void;
-}) => (
-	<button
-		type="button"
-		onClick={onClick}
-		className={`w-full flex items-center justify-between px-4 py-3.5 transition-all duration-200 text-left ${
-			onClick ? "hover:bg-secondary active:bg-tertiary" : "cursor-default"
-		}`}
-	>
-		<div className="min-w-0 flex-1">
-			<p className="text-sm font-medium text-primary-foreground">{label}</p>
-			{sublabel && (
-				<p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>
-			)}
-		</div>
-		{right ??
-			(onClick ? (
-				<ChevronRight className="w-4 h-4 text-muted shrink-0" />
-			) : null)}
-	</button>
-);
+}
 
-export default function ProfilePage() {
+function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			disabled={!onClick}
+			className="w-full flex items-center justify-between px-4 py-3.5 transition-all duration-200 text-left disabled:cursor-default hover:bg-secondary active:bg-tertiary"
+		>
+			<div className="min-w-0 flex-1">
+				<p className="text-sm font-medium text-primary-foreground">{label}</p>
+				{sublabel && (
+					<p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>
+				)}
+			</div>
+			{right ??
+				(onClick && <ChevronRight className="w-4 h-4 text-muted shrink-0" />)}
+		</button>
+	);
+}
+
+export default function SettingsPage() {
 	const { currentUser, logout, updateUserOnlineStatus } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
@@ -100,10 +78,20 @@ export default function ProfilePage() {
 		navigate("/login", { replace: true });
 	};
 
+	useKeyboardShortcut({
+		shortcut: "esc",
+		callback: () => navigate("/"),
+	});
+
+	useKeyboardShortcut({
+		shortcut: "ctrl+shift+t",
+		callback: toggleTheme,
+	});
+
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary">
 			<NavigationHeader
-				title="Profile"
+				title="Settings"
 				showBack
 				backTo="/"
 				rightSlot={
@@ -123,14 +111,14 @@ export default function ProfilePage() {
 			/>
 
 			<div className="flex-1 overflow-y-auto">
-				{/* Avatar card */}
 				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
 						<Avatar name={user.name} color={user.avatarColor} size="xl" />
 						<button
 							type="button"
+							onClick={() => navigate("/settings/edit-profile")}
 							className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center shadow-md hover:bg-accent-hover active:scale-95 transition-all duration-200"
-							aria-label="Change avatar"
+							aria-label="Edit profile"
 						>
 							<Camera className="w-4 h-4" strokeWidth={2.5} />
 						</button>
@@ -145,9 +133,7 @@ export default function ProfilePage() {
 						<span
 							className="w-2 h-2 rounded-full transition-colors duration-300"
 							style={{
-								backgroundColor: isOnline
-									? "var(--online-color)"
-									: "var(--text-muted)",
+								backgroundColor: isOnline ? "#22c55e" : "#6b7280",
 							}}
 						/>
 						<span className="text-xs font-medium text-secondary-foreground">
@@ -156,33 +142,35 @@ export default function ProfilePage() {
 					</div>
 				</div>
 
-				{/* Status */}
 				<SectionHeader title="Status" />
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Show as Online"
 						sublabel="Let others see when you are active"
+						onClick={handleOnlineToggle}
 						right={
 							<Toggle
 								checked={isOnline}
 								onChange={handleOnlineToggle}
 								label="Online status"
+								size="md"
 							/>
 						}
 					/>
 				</div>
 
-				{/* Notifications */}
 				<SectionHeader title="Notifications" />
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Push Notifications"
 						sublabel="Receive message alerts"
+						onClick={() => setNotifications(!notifications)}
 						right={
 							<Toggle
 								checked={notifications}
 								onChange={() => setNotifications(!notifications)}
 								label="Notifications"
+								size="md"
 							/>
 						}
 					/>
@@ -192,89 +180,81 @@ export default function ProfilePage() {
 					<SettingRow label="Do Not Disturb" onClick={() => {}} />
 				</div>
 
-				{/* Privacy */}
 				<SectionHeader title="Privacy" />
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Read Receipts"
 						sublabel="Show when you have read messages"
+						onClick={() => setReadReceipts(!readReceipts)}
 						right={
 							<Toggle
 								checked={readReceipts}
 								onChange={() => setReadReceipts(!readReceipts)}
 								label="Read receipts"
+								size="md"
 							/>
 						}
 					/>
 					<Divider />
 					<SettingRow
-						label="Last Seen"
-						sublabel="Show last seen timestamp"
+						label="Last Seen Visibility"
+						sublabel="Show last seen timestamp to contacts"
+						onClick={() => setLastSeenVisible(!lastSeenVisible)}
 						right={
 							<Toggle
 								checked={lastSeenVisible}
 								onChange={() => setLastSeenVisible(!lastSeenVisible)}
-								label="Last seen"
+								label="Last seen visibility"
+								size="md"
 							/>
 						}
 					/>
 					<Divider />
 					<SettingRow
 						label="Blocked Users"
-						sublabel="0 blocked"
+						sublabel="Manage blocked contacts"
 						onClick={() => {}}
 					/>
 				</div>
 
-				{/* Appearance */}
 				<SectionHeader title="Appearance" />
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
-					<div className="px-4 py-3.5 flex items-center justify-between">
-						<div>
-							<p className="text-sm font-medium text-primary-foreground">
-								Dark Mode
-							</p>
-							<p className="text-xs text-secondary-foreground mt-0.5">
-								Switch interface theme
-							</p>
-						</div>
-						<Toggle checked={isDark} onChange={toggleTheme} label="Dark mode" />
-					</div>
-					<Divider />
-					<SettingRow label="Font Size" sublabel="Medium" onClick={() => {}} />
+					<SettingRow
+						label="Dark Mode"
+						sublabel="Switch between light and dark themes"
+						onClick={toggleTheme}
+						right={
+							<Toggle
+								checked={isDark}
+								onChange={toggleTheme}
+								label="Dark mode"
+								size="md"
+							/>
+						}
+					/>
 				</div>
 
-				{/* Logout */}
+				<SectionHeader title="About" />
+				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+					<SettingRow
+						label="Privacy Policy"
+						onClick={() => navigate("/privacy")}
+					/>
+				</div>
+
 				<div className="mx-4 mt-5 mb-8">
-					{showLogoutConfirm ? (
-						<div className="bg-primary rounded-xl border border-red-200 dark:border-red-900 overflow-hidden animate-fade-in">
-							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary-foreground">
-									Are you sure you want to logout?
-								</p>
-								<p className="text-xs text-secondary-foreground mt-0.5">
-									You will need to choose a new username to sign back in.
-								</p>
-							</div>
-							<div className="flex border-t border-border">
-								<button
-									type="button"
-									onClick={() => setShowLogoutConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
-								>
-									Cancel
-								</button>
-								<div className="w-px bg-border" />
-								<button
-									type="button"
-									onClick={handleLogout}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
-								>
-									Logout
-								</button>
-							</div>
-						</div>
-					) : (
+					<InlineConfirmDialog
+						show={showLogoutConfirm}
+						title="Are you sure you want to logout?"
+						description="You cant log back in and you  will loose your identity!"
+						confirmText="Logout"
+						cancelText="Cancel"
+						onConfirm={handleLogout}
+						onCancel={() => setShowLogoutConfirm(false)}
+						variant="danger"
+					/>
+
+					{!showLogoutConfirm && (
 						<button
 							type="button"
 							onClick={() => setShowLogoutConfirm(true)}
@@ -284,6 +264,17 @@ export default function ProfilePage() {
 							Logout
 						</button>
 					)}
+				</div>
+
+				<div className="px-4 pb-8">
+					<p className="text-xs text-center text-muted">Version 1.0.0</p>
+					<button
+						type="button"
+						onClick={() => navigate("/privacy")}
+						className="w-full text-xs text-center text-muted hover:text-secondary-foreground transition-colors duration-200 mt-1"
+					>
+						Privacy Policy
+					</button>
 				</div>
 			</div>
 		</div>

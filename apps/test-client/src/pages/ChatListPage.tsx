@@ -1,19 +1,19 @@
-import { Edit, MessageCircle, Moon, Settings, Sun, Users } from "lucide-react";
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Moon, Settings, Sun } from "lucide-react";
+import { Outlet, useNavigate, useParams } from "react-router";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
+import { cn } from "@/lib/utils";
 import { Avatar } from "../components/Avatar";
 import { ContactListItem } from "../components/ContactListItem";
+import { NetworkStatus } from "../components/NetworkStatus";
 import { SearchInput } from "../components/SearchInput";
 import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../store/appStore";
-import { ChatViewPage } from "./ChatViewPage";
 
 export default function ChatListPage() {
 	const { contacts, searchQuery, setSearchQuery, currentUser } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const { contactId } = useParams<{ contactId?: string }>();
-	const [showNewChat, setShowNewChat] = useState(false);
 
 	const filtered = contacts.filter(
 		(c) =>
@@ -29,21 +29,30 @@ export default function ChatListPage() {
 		avatarColor: "#3b82f6",
 	};
 
+	useKeyboardShortcut({
+		shortcut: "esc",
+		callback: () => {
+			if (contactId) navigate("/");
+		},
+	});
+	useKeyboardShortcut({
+		shortcut: "ctrl+shift+t",
+		callback: toggleTheme,
+	});
+
 	return (
-		<div className="flex h-full w-fulloverflow-hidden bg-primary">
-			{/* Sidebar */}
+		<div className="flex h-full w-full overflow-hidden bg-primary">
 			<aside
-				className={`
-          flex flex-col bg-sidebar-bg border-r border-border animate-fade-in 
-          ${contactId ? "hidden md:flex" : "flex"}
-          w-full md:w-80 lg:w-96 shrink-0
-        `}
+				className={cn(
+					"flex flex-col bg-sidebar-bg border-r border-border animate-fade-in shrink-0",
+					contactId ? "hidden md:flex" : "flex",
+					"w-full md:w-80 lg:w-96",
+				)}
 			>
-				{/* Header */}
 				<div className="flex items-center gap-3 px-4 py-3 border-b border-border">
 					<button
 						type="button"
-						onClick={() => navigate("/profile")}
+						onClick={() => navigate("/settings")}
 						className="relative shrink-0 transition-opacity duration-200 hover:opacity-80"
 						aria-label="Profile"
 					>
@@ -57,12 +66,13 @@ export default function ChatListPage() {
 						</h1>
 						{totalUnread > 0 && (
 							<p className="text-xs text-secondary-foreground animate-fade-in">
-								{totalUnread} unread message{totalUnread > 1 ? "s" : ""}
+								{totalUnread} unread
 							</p>
 						)}
 					</div>
 
 					<div className="flex items-center gap-1">
+						<NetworkStatus />
 						<button
 							type="button"
 							onClick={toggleTheme}
@@ -77,7 +87,7 @@ export default function ChatListPage() {
 						</button>
 						<button
 							type="button"
-							onClick={() => navigate("/profile")}
+							onClick={() => navigate("/settings")}
 							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 							aria-label="Settings"
 						>
@@ -86,69 +96,41 @@ export default function ChatListPage() {
 					</div>
 				</div>
 
-				{/* Search */}
 				<div className="px-4 py-3 border-b border-border">
 					<SearchInput
 						value={searchQuery}
 						onChange={setSearchQuery}
-						placeholder="Search contacts…"
+						placeholder="Search or start new chat…"
 					/>
 				</div>
 
-				{/* New Chat */}
-				<div className="px-4 py-2">
-					<button
-						type="button"
-						onClick={() => setShowNewChat(!showNewChat)}
-						className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-accent hover:bg-accent-light active:bg-accent-light transition-all duration-200"
-					>
-						<Edit className="w-4 h-4" />
-						New Chat
-					</button>
-				</div>
-
-				{/* Contact list */}
 				<div className="flex-1 overflow-y-auto">
-					{filtered.length === 0 ? (
-						<div className="flex flex-col items-center justify-center h-40 gap-3 text-center px-4 animate-fade-in">
-							<Users className="w-10 h-10 text-muted opacity-40" />
+					{filtered.length === 0 && (
+						<div className="flex flex-col items-center justify-center h-40 gap-2 text-center px-4 animate-fade-in">
 							<p className="text-sm text-secondary-foreground">
-								{searchQuery ? "No contacts found." : "No contacts yet."}
+								{searchQuery
+									? "No contacts found. Enter full username to send request."
+									: "No contacts yet."}
 							</p>
 						</div>
-					) : (
-						filtered.map((contact) => (
-							<ContactListItem
-								key={contact.id}
-								contact={contact}
-								isActive={contact.id === contactId}
-							/>
-						))
 					)}
+					{filtered.map((contact) => (
+						<ContactListItem
+							key={contact.id}
+							contact={contact}
+							isActive={contact.id === contactId}
+						/>
+					))}
 				</div>
 			</aside>
 
-			{/* Main panel */}
 			<main
-				className={`flex-1 flex flex-col overflow-hidden ${
-					!contactId ? "hidden md:flex" : "flex"
-				}`}
-			>
-				{contactId ? (
-					<ChatViewPage />
-				) : (
-					<div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-4 animate-fade-in">
-						<MessageCircle className="w-14 h-14 text-muted opacity-25" />
-						<div>
-							<h2 className="text-base font-semibold text-primary-foreground">
-								Select a conversation
-							</h2>
-							<p className="text-sm text-secondary-foreground mt-1">
-								Choose a contact from the list to start chatting.
-							</p>
-						</div>
-					</div>
+				className={cn(
+					"flex-1 flex flex-col overflow-hidden",
+					!contactId ? "hidden md:flex" : "flex",
 				)}
+			>
+				<Outlet />
 			</main>
 		</div>
 	);
