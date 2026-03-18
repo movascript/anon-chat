@@ -1,4 +1,4 @@
-import { Camera, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
@@ -90,25 +90,7 @@ export default function SettingsPage() {
 
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary">
-			<NavigationHeader
-				title="Settings"
-				showBack
-				backTo="/"
-				rightSlot={
-					<button
-						type="button"
-						onClick={toggleTheme}
-						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
-						aria-label="Toggle theme"
-					>
-						{isDark ? (
-							<Sun className="w-4 h-4 text-secondary-foreground" />
-						) : (
-							<Moon className="w-4 h-4 text-secondary-foreground" />
-						)}
-					</button>
-				}
-			/>
+			<NavigationHeader title="Settings" showBack backTo="/" />
 
 			<div className="flex-1 overflow-y-auto">
 				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">

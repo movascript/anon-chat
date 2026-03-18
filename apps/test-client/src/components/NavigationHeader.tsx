@@ -26,7 +26,7 @@ export function NavigationHeader({
 	};
 
 	return (
-		<header className="flex items-center gap-3 px-4 py-3 bg-header-bg border-b border-border shadow-(--shadow) z-10 shrink-0">
+		<header className="flex items-center gap-3 px-4 h-16 bg-header-bg border-b border-border z-10 shrink-0">
 			{showBack && (
 				<button
 					type="button"

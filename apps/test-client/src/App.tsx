@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import ChatListPage from "./pages/ChatListPage";
+import { ChatViewPage } from "./pages/ChatViewPage";
 import ContactProfilePage from "./pages/ContactProfilePage";
 import LoginPage from "./pages/LoginPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -31,34 +32,11 @@ export default function App() {
 							<ChatListPage />
 						</Protected>
 					}
-				/>
-
-				<Route
-					path="/chat/:contactId"
-					element={
-						<Protected>
-							<ChatListPage />
-						</Protected>
-					}
-				/>
-
-				<Route
-					path="/settings"
-					element={
-						<Protected>
-							<SettingsPage />
-						</Protected>
-					}
-				/>
-
-				<Route
-					path="/profile/:contactId"
-					element={
-						<Protected>
-							<ContactProfilePage />
-						</Protected>
-					}
-				/>
+				>
+					<Route path="chat/:contactId" element={<ChatViewPage />} />
+					<Route path="settings" element={<SettingsPage />} />
+					<Route path="profile/:contactId" element={<ContactProfilePage />} />
+				</Route>
 
 				<Route
 					path="*"

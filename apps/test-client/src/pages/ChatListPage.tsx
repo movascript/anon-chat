@@ -1,5 +1,5 @@
 import { Moon, Settings, Sun } from "lucide-react";
-import { Outlet, useNavigate, useParams } from "react-router";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { Avatar } from "../components/Avatar";
@@ -14,6 +14,7 @@ export default function ChatListPage() {
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const { contactId } = useParams<{ contactId?: string }>();
+	const location = useLocation();
 
 	const filtered = contacts.filter(
 		(c) =>
@@ -29,10 +30,12 @@ export default function ChatListPage() {
 		avatarColor: "#3b82f6",
 	};
 
+	const hasOutlet = location.pathname !== "/";
+
 	useKeyboardShortcut({
 		shortcut: "esc",
 		callback: () => {
-			if (contactId) navigate("/");
+			if (hasOutlet) navigate("/");
 		},
 	});
 	useKeyboardShortcut({
@@ -45,30 +48,15 @@ export default function ChatListPage() {
 			<aside
 				className={cn(
 					"flex flex-col bg-sidebar-bg border-r border-border animate-fade-in shrink-0",
-					contactId ? "hidden md:flex" : "flex",
+					hasOutlet ? "hidden md:flex" : "flex",
 					"w-full md:w-80 lg:w-96",
 				)}
 			>
-				<div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-					<button
-						type="button"
-						onClick={() => navigate("/settings")}
-						className="relative shrink-0 transition-opacity duration-200 hover:opacity-80"
-						aria-label="Profile"
-					>
-						<Avatar name={user.name} color={user.avatarColor} size="md" />
-						<span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-online border-2 border-sidebar-bg" />
-					</button>
-
+				<div className="flex h-16 items-center gap-3 px-5  border-b border-border">
 					<div className="flex-1 min-w-0">
-						<h1 className="font-bold text-base text-primary-foreground truncate leading-tight">
+						<h1 className="font-bold text-xl text-primary-foreground truncate leading-tight">
 							AnonChat
 						</h1>
-						{totalUnread > 0 && (
-							<p className="text-xs text-secondary-foreground animate-fade-in">
-								{totalUnread} unread
-							</p>
-						)}
 					</div>
 
 					<div className="flex items-center gap-1">
@@ -127,7 +115,7 @@ export default function ChatListPage() {
 			<main
 				className={cn(
 					"flex-1 flex flex-col overflow-hidden",
-					!contactId ? "hidden md:flex" : "flex",
+					!hasOutlet ? "hidden md:flex" : "flex",
 				)}
 			>
 				<Outlet />
