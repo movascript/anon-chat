@@ -1,6 +1,7 @@
 import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { AppInfo } from "@/components/AppInfo";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { Avatar } from "../components/Avatar";
 import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
@@ -248,16 +249,7 @@ export default function SettingsPage() {
 					)}
 				</div>
 
-				<div className="px-4 pb-8">
-					<p className="text-xs text-center text-muted">Version 1.0.0</p>
-					<button
-						type="button"
-						onClick={() => navigate("/privacy")}
-						className="w-full text-xs text-center text-muted hover:text-secondary-foreground transition-colors duration-200 mt-1"
-					>
-						Privacy Policy
-					</button>
-				</div>
+				<AppInfo />
 			</div>
 		</div>
 	);

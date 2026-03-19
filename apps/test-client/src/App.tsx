@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import NoActiveView from "./components/NoActiveView";
 import ChatListPage from "./pages/ChatListPage";
 import { ChatViewPage } from "./pages/ChatViewPage";
 import ContactProfilePage from "./pages/ContactProfilePage";
@@ -33,6 +34,7 @@ export default function App() {
 						</Protected>
 					}
 				>
+					<Route path="/" element={<NoActiveView />} />
 					<Route path="chat/:contactId" element={<ChatViewPage />} />
 					<Route path="settings" element={<SettingsPage />} />
 					<Route path="profile/:contactId" element={<ContactProfilePage />} />

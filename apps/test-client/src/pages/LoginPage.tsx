@@ -121,7 +121,7 @@ export default function LoginPage() {
 							Choose a username
 						</label>
 						<div className="relative">
-							<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-sm font-medium select-none">
+							<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-sm font-medium">
 								@
 							</span>
 							<input

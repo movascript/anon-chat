@@ -1,25 +1,12 @@
 import { Ban, MessageCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { formatLastSeen } from "@/utils/date";
 import { Avatar } from "../components/Avatar";
+import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
 import { NavigationHeader } from "../components/NavigationHeader";
 import { StatusIndicator } from "../components/StatusIndicator";
 import { useAppStore } from "../store/appStore";
-
-function formatLastSeen(date?: Date): string {
-	if (!date) return "a long time ago";
-	const diff = Date.now() - date.getTime();
-	const mins = Math.floor(diff / 60000);
-	if (mins < 1) return "just now";
-	if (mins < 60) return `${mins} minutes ago`;
-	const hrs = Math.floor(mins / 60);
-	if (hrs < 24) return `${hrs} hours ago`;
-	return date.toLocaleDateString([], {
-		weekday: "long",
-		month: "long",
-		day: "numeric",
-	});
-}
 
 export default function ContactProfilePage() {
 	const { contactId } = useParams<{ contactId: string }>();
@@ -88,38 +75,7 @@ export default function ContactProfilePage() {
 				{/* Danger zone */}
 				<div className="mx-4 mt-4 mb-8 space-y-2">
 					{/* Block */}
-					{showBlockConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in">
-							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary-foreground">
-									Block {contact.name}?
-								</p>
-								<p className="text-xs text-secondary-foreground mt-0.5">
-									They will not be able to send you messages.
-								</p>
-							</div>
-							<div className="flex border-t border-border">
-								<button
-									type="button"
-									onClick={() => setShowBlockConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
-								>
-									Cancel
-								</button>
-								<div className="w-px bg-border" />
-								<button
-									type="button"
-									onClick={() => {
-										setShowBlockConfirm(false);
-										navigate("/");
-									}}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
-								>
-									Block
-								</button>
-							</div>
-						</div>
-					) : (
+					{!showBlockConfirm && (
 						<button
 							type="button"
 							onClick={() => setShowBlockConfirm(true)}
@@ -129,40 +85,21 @@ export default function ContactProfilePage() {
 							Block User
 						</button>
 					)}
+					<InlineConfirmDialog
+						show={showBlockConfirm}
+						variant="danger"
+						title={`Block ${contact.name}?`}
+						description="They will not be able to send you messages."
+						confirmText="Block"
+						onCancel={() => setShowBlockConfirm(false)}
+						onConfirm={() => {
+							setShowBlockConfirm(false);
+							navigate("/");
+						}}
+					/>
 
 					{/* Delete */}
-					{showDeleteConfirm ? (
-						<div className="rounded-xl border border-red-200 dark:border-red-900 overflow-hidden bg-primary animate-fade-in">
-							<div className="px-4 py-3.5">
-								<p className="text-sm font-medium text-primary-foreground">
-									Delete chat with {contact.name}?
-								</p>
-								<p className="text-xs text-secondary-foreground mt-0.5">
-									This action cannot be undone.
-								</p>
-							</div>
-							<div className="flex border-t border-border">
-								<button
-									type="button"
-									onClick={() => setShowDeleteConfirm(false)}
-									className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
-								>
-									Cancel
-								</button>
-								<div className="w-px bg-border" />
-								<button
-									type="button"
-									onClick={() => {
-										setShowDeleteConfirm(false);
-										navigate("/");
-									}}
-									className="flex-1 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
-								>
-									Delete
-								</button>
-							</div>
-						</div>
-					) : (
+					{!showDeleteConfirm && (
 						<button
 							type="button"
 							onClick={() => setShowDeleteConfirm(true)}
@@ -172,6 +109,18 @@ export default function ContactProfilePage() {
 							Delete Chat
 						</button>
 					)}
+					<InlineConfirmDialog
+						show={showDeleteConfirm}
+						variant="danger"
+						title={`Delete chat with ${contact.name}?`}
+						description="This action cannot be undone."
+						confirmText="Delete"
+						onCancel={() => setShowDeleteConfirm(false)}
+						onConfirm={() => {
+							setShowDeleteConfirm(false);
+							navigate("/");
+						}}
+					/>
 				</div>
 			</div>
 		</div>

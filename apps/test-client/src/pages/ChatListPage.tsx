@@ -1,8 +1,7 @@
-import { Moon, Settings, Sun } from "lucide-react";
+import { Moon, Settings, Sun, UsersRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
-import { Avatar } from "../components/Avatar";
 import { ContactListItem } from "../components/ContactListItem";
 import { NetworkStatus } from "../components/NetworkStatus";
 import { SearchInput } from "../components/SearchInput";
@@ -10,7 +9,7 @@ import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../store/appStore";
 
 export default function ChatListPage() {
-	const { contacts, searchQuery, setSearchQuery, currentUser } = useAppStore();
+	const { contacts, searchQuery, setSearchQuery } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const { contactId } = useParams<{ contactId?: string }>();
@@ -21,14 +20,6 @@ export default function ChatListPage() {
 			c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			c.username.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
-
-	const totalUnread = contacts.reduce((acc, c) => acc + c.unreadCount, 0);
-
-	const user = currentUser ?? {
-		name: "User",
-		username: "user",
-		avatarColor: "#3b82f6",
-	};
 
 	const hasOutlet = location.pathname !== "/";
 
@@ -94,12 +85,10 @@ export default function ChatListPage() {
 
 				<div className="flex-1 overflow-y-auto">
 					{filtered.length === 0 && (
-						<div className="flex flex-col items-center justify-center h-40 gap-2 text-center px-4 animate-fade-in">
-							<p className="text-sm text-secondary-foreground">
-								{searchQuery
-									? "No contacts found. Enter full username to send request."
-									: "No contacts yet."}
-							</p>
+						<div className="flex flex-col items-center justify-center text-secondary-foreground text-sm h-80 gap-2 text-center px-4 animate-fade-in">
+							<UsersRound size={30} className="mb-2" />
+							<p>{searchQuery ? "No contacts found." : "No contacts yet."}</p>
+							<p>Enter full username to send request.</p>
 						</div>
 					)}
 					{filtered.map((contact) => (
