@@ -1,6 +1,5 @@
 import { Moon, Settings, Sun, UsersRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router";
-import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { ContactListItem } from "../components/ContactListItem";
 import { NetworkStatus } from "../components/NetworkStatus";
@@ -22,17 +21,6 @@ export default function ChatListPage() {
 	);
 
 	const hasOutlet = location.pathname !== "/";
-
-	useKeyboardShortcut({
-		shortcut: "esc",
-		callback: () => {
-			if (hasOutlet) navigate("/");
-		},
-	});
-	useKeyboardShortcut({
-		shortcut: "ctrl+shift+t",
-		callback: toggleTheme,
-	});
 
 	return (
 		<div className="flex h-full w-full overflow-hidden bg-primary">

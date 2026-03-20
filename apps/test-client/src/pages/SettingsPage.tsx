@@ -2,7 +2,6 @@ import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { AppInfo } from "@/components/AppInfo";
-import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { Avatar } from "../components/Avatar";
 import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
 import { NavigationHeader } from "../components/NavigationHeader";
@@ -78,16 +77,6 @@ export default function SettingsPage() {
 		logout();
 		navigate("/login", { replace: true });
 	};
-
-	useKeyboardShortcut({
-		shortcut: "esc",
-		callback: () => navigate("/"),
-	});
-
-	useKeyboardShortcut({
-		shortcut: "ctrl+shift+t",
-		callback: toggleTheme,
-	});
 
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary">
