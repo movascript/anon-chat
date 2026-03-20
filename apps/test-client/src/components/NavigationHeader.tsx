@@ -1,11 +1,11 @@
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router";
 
 interface NavigationHeaderProps {
 	title: string;
 	subtitle?: string;
 	showBack?: boolean;
-	backTo?: string;
+	backTo?: string; // ! backTo should be typesage not a string
 	rightSlot?: React.ReactNode;
 	leftSlot?: React.ReactNode;
 }
@@ -21,8 +21,8 @@ export function NavigationHeader({
 	const navigate = useNavigate();
 
 	const handleBack = () => {
-		if (backTo) navigate(backTo);
-		else navigate(-1);
+		if (backTo) navigate({ to: backTo });
+		else navigate({ to: ".." });
 	};
 
 	return (

@@ -1,6 +1,6 @@
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MoreVertical } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router";
 import { Virtuoso } from "react-virtuoso";
 import InputBox from "@/components/InputBox";
 import { formatDateSeparator, formatLastSeen, isSameDay } from "@/utils/date";
@@ -17,7 +17,7 @@ type ListItem =
 	| { kind: "msg"; message: Message };
 
 export function ChatViewPage() {
-	const { contactId } = useParams<{ contactId: string }>();
+	const { contactId } = useParams({ from: "/_app/chat/$contactId/" });
 	const navigate = useNavigate();
 	const { getContact, getContactMessages, markAsRead } = useAppStore();
 
@@ -80,7 +80,7 @@ export function ChatViewPage() {
 			<header className="flex items-center gap-3 px-4 h-16 bg-header-bg border-b border-border shadow-(--shadow) shrink-0 animate-slide-in-from-top-2">
 				<button
 					type="button"
-					onClick={() => navigate("/")}
+					onClick={() => navigate({ to: "/" })}
 					className="p-1.5 -ml-1 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 				>
 					<ArrowLeft className="w-5 h-5 text-primary-foreground" />
@@ -88,7 +88,12 @@ export function ChatViewPage() {
 
 				<button
 					type="button"
-					onClick={() => navigate(`/profile/${contact.id}`)}
+					onClick={() =>
+						navigate({
+							to: "/chat/$contactId/profile",
+							params: { contactId: contact.id },
+						})
+					}
 					className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity duration-200"
 				>
 					<div className="relative shrink-0">
@@ -173,5 +178,3 @@ export function ChatViewPage() {
 		</div>
 	);
 }
-
-export default ChatViewPage;

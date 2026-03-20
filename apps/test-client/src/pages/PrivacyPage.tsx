@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router";
 
 export default function PrivacyPage() {
 	const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function PrivacyPage() {
 			<div className="container mx-auto px-6 py-8 max-w-4xl">
 				<button
 					type="button"
-					onClick={() => navigate(-1)}
+					onClick={() => navigate({ to: ".." })}
 					className="flex items-center gap-2 text-secondary-foreground hover:text-primary-foreground mb-8 transition-colors"
 				>
 					<ArrowLeft className="w-5 h-5" />

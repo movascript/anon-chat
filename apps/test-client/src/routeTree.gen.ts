@@ -9,27 +9,184 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppChatContactIdIndexRouteImport } from './routes/_app/chat/$contactId/index'
+import { Route as AppChatContactIdProfileRouteImport } from './routes/_app/chat/$contactId/profile'
 
-export interface FileRoutesByFullPath {}
-export interface FileRoutesByTo {}
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChatContactIdIndexRoute = AppChatContactIdIndexRouteImport.update({
+  id: '/chat/$contactId/',
+  path: '/chat/$contactId/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChatContactIdProfileRoute = AppChatContactIdProfileRouteImport.update({
+  id: '/chat/$contactId/profile',
+  path: '/chat/$contactId/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+
+export interface FileRoutesByFullPath {
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/settings': typeof AppSettingsRoute
+  '/chat/$contactId/profile': typeof AppChatContactIdProfileRoute
+  '/chat/$contactId/': typeof AppChatContactIdIndexRoute
+}
+export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/settings': typeof AppSettingsRoute
+  '/': typeof AppIndexRoute
+  '/chat/$contactId/profile': typeof AppChatContactIdProfileRoute
+  '/chat/$contactId': typeof AppChatContactIdIndexRoute
+}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/chat/$contactId/profile': typeof AppChatContactIdProfileRoute
+  '/_app/chat/$contactId/': typeof AppChatContactIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: never
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/privacy'
+    | '/settings'
+    | '/chat/$contactId/profile'
+    | '/chat/$contactId/'
   fileRoutesByTo: FileRoutesByTo
-  to: never
-  id: '__root__'
+  to:
+    | '/login'
+    | '/privacy'
+    | '/settings'
+    | '/'
+    | '/chat/$contactId/profile'
+    | '/chat/$contactId'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/privacy'
+    | '/_app/settings'
+    | '/_app/'
+    | '/_app/chat/$contactId/profile'
+    | '/_app/chat/$contactId/'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {}
+export interface RootRouteChildren {
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
 }
 
-const rootRouteChildren: RootRouteChildren = {}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chat/$contactId/': {
+      id: '/_app/chat/$contactId/'
+      path: '/chat/$contactId'
+      fullPath: '/chat/$contactId/'
+      preLoaderRoute: typeof AppChatContactIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chat/$contactId/profile': {
+      id: '/_app/chat/$contactId/profile'
+      path: '/chat/$contactId/profile'
+      fullPath: '/chat/$contactId/profile'
+      preLoaderRoute: typeof AppChatContactIdProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+  }
+}
+
+interface AppRouteChildren {
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppChatContactIdProfileRoute: typeof AppChatContactIdProfileRoute
+  AppChatContactIdIndexRoute: typeof AppChatContactIdIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppSettingsRoute: AppSettingsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppChatContactIdProfileRoute: AppChatContactIdProfileRoute,
+  AppChatContactIdIndexRoute: AppChatContactIdIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()

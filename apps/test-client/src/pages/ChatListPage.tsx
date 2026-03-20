@@ -1,5 +1,5 @@
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Moon, Settings, Sun, UsersRound } from "lucide-react";
-import { Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { cn } from "@/lib/utils";
 import { ContactListItem } from "../components/ContactListItem";
 import { NetworkStatus } from "../components/NetworkStatus";
@@ -11,7 +11,6 @@ export default function ChatListPage() {
 	const { contacts, searchQuery, setSearchQuery } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
-	const { contactId } = useParams<{ contactId?: string }>();
 	const location = useLocation();
 
 	const filtered = contacts.filter(
@@ -54,7 +53,7 @@ export default function ChatListPage() {
 						</button>
 						<button
 							type="button"
-							onClick={() => navigate("/settings")}
+							onClick={() => navigate({ to: "/settings" })}
 							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
 							aria-label="Settings"
 						>
@@ -80,11 +79,7 @@ export default function ChatListPage() {
 						</div>
 					)}
 					{filtered.map((contact) => (
-						<ContactListItem
-							key={contact.id}
-							contact={contact}
-							isActive={contact.id === contactId}
-						/>
+						<ContactListItem key={contact.id} contact={contact} />
 					))}
 				</div>
 			</aside>

@@ -1,6 +1,6 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { AppInfo } from "@/components/AppInfo";
 import { Avatar } from "../components/Avatar";
 import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
 	const handleLogout = () => {
 		logout();
-		navigate("/login", { replace: true });
+		navigate({ to: "/login", replace: true });
 	};
 
 	return (
@@ -88,7 +88,7 @@ export default function SettingsPage() {
 						<Avatar name={user.name} color={user.avatarColor} size="xl" />
 						<button
 							type="button"
-							onClick={() => navigate("/settings/edit-profile")}
+							onClick={() => navigate({ to: "/settings/edit-profile" })}
 							className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center shadow-md hover:bg-accent-hover active:scale-95 transition-all duration-200"
 							aria-label="Edit profile"
 						>
@@ -210,7 +210,7 @@ export default function SettingsPage() {
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
 					<SettingRow
 						label="Privacy Policy"
-						onClick={() => navigate("/privacy")}
+						onClick={() => navigate({ to: "/privacy" })}
 					/>
 				</div>
 

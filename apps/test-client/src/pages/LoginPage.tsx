@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	ArrowRight,
@@ -8,7 +9,6 @@ import {
 	Sun,
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../store/appStore";
@@ -58,7 +58,7 @@ export default function LoginPage() {
 		setState("free");
 		await new Promise((r) => setTimeout(r, 400));
 		login(trimmedUsername, trimmedName);
-		navigate("/", { replace: true });
+		navigate({ to: "/", replace: true });
 	};
 
 	const isLoading = state === "checking";

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import type { Contact } from "../types";
 import { Avatar } from "./Avatar";
@@ -6,7 +6,6 @@ import { StatusIndicator } from "./StatusIndicator";
 
 interface ContactListItemProps {
 	contact: Contact;
-	isActive?: boolean;
 }
 
 function formatTime(date?: Date): string {
@@ -21,20 +20,14 @@ function formatTime(date?: Date): string {
 	return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export function ContactListItem({
-	contact,
-	isActive = false,
-}: ContactListItemProps) {
-	const navigate = useNavigate();
-
+export function ContactListItem({ contact }: ContactListItemProps) {
 	return (
-		<button
-			type="button"
-			onClick={() => navigate(`/chat/${contact.id}`)}
-			className={cn(
-				"w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200",
-				isActive ? "bg-accent-light" : "hover:bg-secondary active:bg-tertiary",
-			)}
+		<Link
+			to="/chat/$contactId"
+			params={{ contactId: contact.id }}
+			className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200"
+			activeProps={{ className: "bg-accent-light" }}
+			inactiveProps={{ className: "hover:bg-secondary active:bg-tertiary" }}
 		>
 			<div className="relative shrink-0">
 				<Avatar name={contact.name} color={contact.avatarColor} size="md" />
@@ -72,6 +65,6 @@ export function ContactListItem({
 					)}
 				</div>
 			</div>
-		</button>
+		</Link>
 	);
 }

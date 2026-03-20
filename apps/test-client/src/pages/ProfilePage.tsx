@@ -1,6 +1,6 @@
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { Ban, MessageCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router";
 import { formatLastSeen } from "@/utils/date";
 import { Avatar } from "../components/Avatar";
 import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
@@ -8,8 +8,8 @@ import { NavigationHeader } from "../components/NavigationHeader";
 import { StatusIndicator } from "../components/StatusIndicator";
 import { useAppStore } from "../store/appStore";
 
-export default function ContactProfilePage() {
-	const { contactId } = useParams<{ contactId: string }>();
+export default function ProfilePage() {
+	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
 	const navigate = useNavigate();
 	const { getContact } = useAppStore();
 	const contact = getContact(contactId ?? "");
@@ -64,7 +64,12 @@ export default function ContactProfilePage() {
 				<div className="px-4 py-4">
 					<button
 						type="button"
-						onClick={() => navigate(`/chat/${contact.id}`)}
+						onClick={() =>
+							navigate({
+								to: "/chat/$contactId",
+								params: { contactId: contact.id },
+							})
+						}
 						className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover active:scale-[0.98] text-white transition-all duration-200 shadow-sm"
 					>
 						<MessageCircle className="w-4 h-4" strokeWidth={2} />
@@ -94,7 +99,7 @@ export default function ContactProfilePage() {
 						onCancel={() => setShowBlockConfirm(false)}
 						onConfirm={() => {
 							setShowBlockConfirm(false);
-							navigate("/");
+							navigate({ to: "/" });
 						}}
 					/>
 
@@ -118,7 +123,7 @@ export default function ContactProfilePage() {
 						onCancel={() => setShowDeleteConfirm(false)}
 						onConfirm={() => {
 							setShowDeleteConfirm(false);
-							navigate("/");
+							navigate({ to: "/" });
 						}}
 					/>
 				</div>
