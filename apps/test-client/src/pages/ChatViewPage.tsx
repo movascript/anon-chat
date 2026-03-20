@@ -1,7 +1,8 @@
-import { ArrowLeft, MoreVertical, Send } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, MoreVertical } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso } from "react-virtuoso";
+import InputBox from "@/components/InputBox";
 import { formatDateSeparator, formatLastSeen, isSameDay } from "@/utils/date";
 import { Avatar } from "../components/Avatar";
 import { MessageBubble } from "../components/MessageBubble";
@@ -18,28 +19,16 @@ type ListItem =
 export function ChatViewPage() {
 	const { contactId } = useParams<{ contactId: string }>();
 	const navigate = useNavigate();
-	const { getContact, getContactMessages, sendMessage, markAsRead } =
-		useAppStore();
+	const { getContact, getContactMessages, markAsRead } = useAppStore();
 
 	const contact = getContact(contactId ?? "");
 	const rawMessages = getContactMessages(contactId ?? "");
-
-	const [inputText, setInputText] = useState("");
-	const virtuosoRef = useRef<VirtuosoHandle>(null);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const isTyping = useTypingIndicator(contactId ?? "");
 
 	useEffect(() => {
 		if (contactId) markAsRead(contactId);
 	}, [contactId, markAsRead]);
-
-	useEffect(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "auto";
-			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-		}
-	}, [inputText]);
 
 	const listItems: ListItem[] = useMemo(() => {
 		const items: ListItem[] = [];
@@ -71,25 +60,7 @@ export function ChatViewPage() {
 		return items;
 	}, [rawMessages, isTyping, contactId]);
 
-	const handleSend = useCallback(() => {
-		const text = inputText.trim();
-		if (!text || !contactId) return;
-		sendMessage(contactId, text);
-		setInputText("");
-		setTimeout(() => {
-			virtuosoRef.current?.scrollToIndex({ index: "LAST", behavior: "smooth" });
-		}, 50);
-		textareaRef.current?.focus();
-	}, [inputText, contactId, sendMessage]);
-
-	const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSend();
-		}
-	};
-
-	if (!contact) {
+	if (!contactId || !contact) {
 		return (
 			<div className="flex-1 flex items-center justify-center">
 				<p className="text-secondary-foreground text-sm">Contact not found.</p>
@@ -167,12 +138,10 @@ export function ChatViewPage() {
 					</div>
 				) : (
 					<Virtuoso
-						ref={virtuosoRef}
 						data={listItems}
 						initialTopMostItemIndex={listItems.length - 1}
 						followOutput="smooth"
 						className="h-full"
-						style={{ padding: "8px 0" }}
 						itemContent={(_index, item) => {
 							if (item.kind === "date") {
 								return (
@@ -200,39 +169,7 @@ export function ChatViewPage() {
 				)}
 			</div>
 
-			{/* Input */}
-			<div className="shrink-0 px-4 py-3 bg-header-bg border-t border-border">
-				<div className="flex items-end gap-2">
-					<div className="flex-1 flex items-center bg-input-bg rounded-full px-4 py-2.5 transition-all duration-200 focus-within:ring-1 focus-within:ring-accent">
-						<textarea
-							ref={textareaRef}
-							value={inputText}
-							onChange={(e) => setInputText(e.target.value)}
-							onKeyDown={handleKey}
-							placeholder="Message…"
-							rows={1}
-							className="flex-1 bg-transparent text-sm text-primary-foreground placeholder:text-muted focus:outline-none resize-none max-h-32 overflow-y-auto"
-						/>
-					</div>
-
-					<button
-						type="button"
-						onClick={handleSend}
-						disabled={!inputText.trim()}
-						aria-label="Send"
-						className={`
-              p-2.5 rounded-full transition-all duration-200 shrink-0 text-sm font-semibold
-              ${
-								inputText.trim()
-									? "bg-accent hover:bg-accent-hover active:scale-95 text-white shadow-sm"
-									: "bg-tertiary text-muted cursor-not-allowed"
-							}
-            `}
-					>
-						<Send className="w-4.5 h-4.5" strokeWidth={2.5} />
-					</button>
-				</div>
-			</div>
+			<InputBox contactId={contactId} />
 		</div>
 	);
 }
