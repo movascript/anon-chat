@@ -32,7 +32,6 @@ export const mockContacts: Contact[] = [
 		lastMessageTime: new Date(Date.now() - 2 * 60 * 1000),
 		unreadCount: 3,
 		isTyping: false,
-		sharedMedia: [],
 	},
 	{
 		id: "c2",
@@ -44,7 +43,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Sure, let me check and get back to you.",
 		lastMessageTime: new Date(Date.now() - 45 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 	{
 		id: "c3",
@@ -56,7 +54,6 @@ export const mockContacts: Contact[] = [
 		lastMessageTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
 		unreadCount: 1,
 		isTyping: true,
-		sharedMedia: [],
 	},
 	{
 		id: "c4",
@@ -68,7 +65,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Sounds good! Talk soon.",
 		lastMessageTime: new Date(Date.now() - 3 * 60 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 	{
 		id: "c5",
@@ -79,7 +75,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Can you send me those files?",
 		lastMessageTime: new Date(Date.now() - 5 * 60 * 60 * 1000),
 		unreadCount: 7,
-		sharedMedia: [],
 	},
 	{
 		id: "c6",
@@ -91,7 +86,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Happy birthday! 🎂🎉",
 		lastMessageTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 	{
 		id: "c7",
@@ -102,7 +96,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "I just finished the report!",
 		lastMessageTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
 		unreadCount: 2,
-		sharedMedia: [],
 	},
 	{
 		id: "c8",
@@ -114,7 +107,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Did you try the new restaurant downtown?",
 		lastMessageTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 	{
 		id: "c9",
@@ -125,7 +117,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "The project looks amazing 🔥",
 		lastMessageTime: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 	{
 		id: "c10",
@@ -137,7 +128,6 @@ export const mockContacts: Contact[] = [
 		lastMessage: "Let me know when you are free.",
 		lastMessageTime: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
 		unreadCount: 0,
-		sharedMedia: [],
 	},
 ];
 

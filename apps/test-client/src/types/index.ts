@@ -10,7 +10,6 @@ export interface Contact {
 	lastMessageTime?: Date;
 	unreadCount: number;
 	isTyping?: boolean;
-	sharedMedia?: string[];
 }
 
 export interface Message {
