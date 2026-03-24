@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/className";
 
 const avatarVariants = cva(
 	"rounded-full flex items-center justify-center font-semibold text-white shrink-0",

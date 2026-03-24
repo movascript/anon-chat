@@ -1,4 +1,4 @@
-import type { Contact, Message, User } from "../types";
+import type { Contact, Message, User } from "@/types";
 
 export const AVATAR_COLORS = [
 	"#ef4444",

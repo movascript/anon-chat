@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { mockContacts, mockMessages, mockUser } from "../data/mockData";
-import type { Contact, Message, Theme, User } from "../types";
+import { mockContacts, mockMessages, mockUser } from "@/data/mockData";
+import type { Contact, Message, Theme, User } from "@/types";
 
 interface AppState {
 	// Auth

@@ -1,5 +1,5 @@
 import { Drawer } from "vaul";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/className";
 
 interface ConfirmDialogProps {
 	open: boolean;

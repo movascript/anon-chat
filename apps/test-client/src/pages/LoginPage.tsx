@@ -9,9 +9,9 @@ import {
 	Sun,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { useTheme } from "../hooks/useTheme";
-import { useAppStore } from "../store/appStore";
+import { useTheme } from "@/hooks/useTheme";
+import { useAppStore } from "@/store/appStore";
+import { cn } from "@/utils/className";
 
 const TAKEN_USERNAMES = ["admin", "root", "system", "anon", "test"];
 

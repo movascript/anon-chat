@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/className";
 
 const toggleVariants = cva(
 	"relative rounded-full transition-colors duration-200 shrink-0",

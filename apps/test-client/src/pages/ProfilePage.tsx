@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Ban, MessageCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { Avatar } from "@/components/Avatar";
+import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
+import { NavigationHeader } from "@/components/NavigationHeader";
+import { StatusIndicator } from "@/components/StatusIndicator";
+import { useAppStore } from "@/store/appStore";
 import { formatLastSeen } from "@/utils/date";
-import { Avatar } from "../components/Avatar";
-import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
-import { NavigationHeader } from "../components/NavigationHeader";
-import { StatusIndicator } from "../components/StatusIndicator";
-import { useAppStore } from "../store/appStore";
 
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });

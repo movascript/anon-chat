@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/className";
 
 const statusVariants = cva(
 	"rounded-full border-2 border-primary inline-block transition-colors duration-300",

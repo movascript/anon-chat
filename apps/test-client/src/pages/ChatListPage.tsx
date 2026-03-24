@@ -1,11 +1,11 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Moon, Settings, Sun, UsersRound } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ContactListItem } from "../components/ContactListItem";
-import { NetworkStatus } from "../components/NetworkStatus";
-import { SearchInput } from "../components/SearchInput";
-import { useTheme } from "../hooks/useTheme";
-import { useAppStore } from "../store/appStore";
+import { ContactListItem } from "@/components/ContactListItem";
+import { NetworkStatus } from "@/components/NetworkStatus";
+import { SearchInput } from "@/components/SearchInput";
+import { useTheme } from "@/hooks/useTheme";
+import { useAppStore } from "@/store/appStore";
+import { cn } from "@/utils/className";
 
 export default function ChatListPage() {
 	const { contacts, searchQuery, setSearchQuery } = useAppStore();

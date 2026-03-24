@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import type { Contact } from "../types";
+import type { Contact } from "@/types";
+import { cn } from "@/utils/className";
 import { Avatar } from "./Avatar";
 import { StatusIndicator } from "./StatusIndicator";
 

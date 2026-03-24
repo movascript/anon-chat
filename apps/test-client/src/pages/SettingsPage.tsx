@@ -2,12 +2,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
 import { AppInfo } from "@/components/AppInfo";
-import { Avatar } from "../components/Avatar";
-import { InlineConfirmDialog } from "../components/InlineConfirmDialog";
-import { NavigationHeader } from "../components/NavigationHeader";
-import { Toggle } from "../components/Toggle";
-import { useTheme } from "../hooks/useTheme";
-import { useAppStore } from "../store/appStore";
+import { Avatar } from "@/components/Avatar";
+import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
+import { NavigationHeader } from "@/components/NavigationHeader";
+import { Toggle } from "@/components/Toggle";
+import { useTheme } from "@/hooks/useTheme";
+import { useAppStore } from "@/store/appStore";
 
 function Divider() {
 	return <div className="h-px bg-border mx-4" />;

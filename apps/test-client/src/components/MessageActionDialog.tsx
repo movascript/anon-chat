@@ -1,7 +1,6 @@
-// src/components/MessageActionDialog.tsx
 import { Copy, Reply } from "lucide-react";
 import { Drawer } from "vaul";
-import type { Message } from "../types";
+import type { Message } from "@/types";
 
 interface MessageActionDialogProps {
 	message: Message;

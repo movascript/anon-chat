@@ -1,6 +1,6 @@
 import { AlertCircle, Check, CheckCheck, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { Message } from "../types";
+import type { Message } from "@/types";
+import { cn } from "@/utils/className";
 
 interface MessageBubbleProps {
 	message: Message;

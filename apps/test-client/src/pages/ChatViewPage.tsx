@@ -2,15 +2,15 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MoreVertical } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
+import { Avatar } from "@/components/Avatar";
 import InputBox from "@/components/InputBox";
+import { MessageBubble } from "@/components/MessageBubble";
+import { StatusIndicator } from "@/components/StatusIndicator";
+import { TypingIndicator } from "@/components/TypingIndicator";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { useAppStore } from "@/store/appStore";
+import type { Message } from "@/types";
 import { formatDateSeparator, formatLastSeen, isSameDay } from "@/utils/date";
-import { Avatar } from "../components/Avatar";
-import { MessageBubble } from "../components/MessageBubble";
-import { StatusIndicator } from "../components/StatusIndicator";
-import { TypingIndicator } from "../components/TypingIndicator";
-import { useTypingIndicator } from "../hooks/useTypingIndicator";
-import { useAppStore } from "../store/appStore";
-import type { Message } from "../types";
 
 type ListItem =
 	| { kind: "date"; label: string; key: string }
