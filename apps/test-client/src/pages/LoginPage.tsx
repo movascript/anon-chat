@@ -10,12 +10,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
+import { createIdentity } from "@/lib/identity";
+import { getOrInitializeSocket } from "@/lib/socket";
 import { useAppStore } from "@/store/appStore";
 import { cn } from "@/utils/className";
 
-const TAKEN_USERNAMES = ["admin", "root", "system", "anon", "test"];
-
-type State = "idle" | "checking" | "taken" | "free" | "error";
+type State = "idle" | "loading" | "success" | "error";
 
 export default function LoginPage() {
 	const [username, setUsername] = useState("");
@@ -26,6 +26,7 @@ export default function LoginPage() {
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 
+	// ! should make sure the submit handler is disabled when socket is on pending
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const trimmedUsername = username.trim().toLowerCase();
@@ -44,29 +45,38 @@ export default function LoginPage() {
 			return;
 		}
 
-		setState("checking");
+		setState("loading");
 		setErrorMsg("");
-
-		await new Promise((r) => setTimeout(r, 1200));
-
-		if (TAKEN_USERNAMES.includes(trimmedUsername)) {
-			setState("taken");
-			setErrorMsg("This username is already taken. Try another one.");
-			return;
-		}
-
-		setState("free");
 		await new Promise((r) => setTimeout(r, 400));
-		login(trimmedUsername, trimmedName);
-		navigate({ to: "/", replace: true });
+
+		try {
+			const identity = await createIdentity(username, displayName);
+			console.log("IDEN", identity);
+
+			const socket = getOrInitializeSocket(identity);
+
+			console.log(socket);
+
+			const unsub = socket.on("authenticated", () => {
+				login(identity);
+				navigate({ to: "/", replace: true });
+				unsub();
+			});
+
+			socket.connect();
+		} catch (err) {
+			console.error("Failed to generate identity:", err);
+			setState("error");
+			setErrorMsg("Failed to create account. Please try again.");
+		}
 	};
 
-	const isLoading = state === "checking";
+	const isLoading = state === "loading";
 	const isDisabled =
 		isLoading || username.trim().length < 3 || displayName.trim().length < 2;
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-primary px-6 relative">
+		<div className="min-h-screen overflow-auto h-full flex flex-col items-center justify-center bg-primary px-6 relative">
 			<button
 				type="button"
 				onClick={toggleTheme}
@@ -109,7 +119,8 @@ export default function LoginPage() {
 							placeholder="Your Name"
 							autoComplete="off"
 							maxLength={32}
-							className="w-full px-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 border-transparent focus:border-accent focus:outline-none transition-all duration-200"
+							disabled={isLoading}
+							className="w-full px-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 border-transparent focus:border-accent focus:outline-none transition-all duration-200 disabled:opacity-50"
 						/>
 					</div>
 
@@ -136,18 +147,19 @@ export default function LoginPage() {
 								placeholder="your_username"
 								autoComplete="off"
 								maxLength={32}
+								disabled={isLoading}
 								className={cn(
-									"w-full pl-8 pr-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 transition-all duration-200 focus:outline-none",
-									state === "taken" || state === "error"
+									"w-full pl-8 pr-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 transition-all duration-200 focus:outline-none disabled:opacity-50",
+									state === "error"
 										? "border-red-500"
-										: state === "free"
+										: state === "success"
 											? "border-green-500"
 											: "border-transparent focus:border-accent",
 								)}
 							/>
 						</div>
 
-						{(errorMsg || state === "free") && (
+						{(errorMsg || state === "success") && (
 							<div
 								className={cn(
 									"flex items-center gap-1.5 mt-2 text-xs font-medium animate-fade-in",
@@ -170,16 +182,16 @@ export default function LoginPage() {
 						type="submit"
 						disabled={isDisabled}
 						className={cn(
-							"w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
+							"w-full bg-red-700 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
 							isDisabled
 								? "bg-tertiary text-muted cursor-not-allowed"
 								: "bg-accent hover:bg-accent-hover active:scale-[0.98] text-white shadow-sm",
 						)}
 					>
-						{isLoading ? (
+						{state === "loading" ? (
 							<>
 								<Loader2 className="w-4 h-4 animate-spin" />
-								Checking…
+								Creating account…
 							</>
 						) : (
 							<>

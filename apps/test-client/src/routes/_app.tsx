@@ -12,8 +12,8 @@ import { useAppStore } from "@/store/appStore";
 // layout warpper for app
 export const Route = createFileRoute("/_app")({
 	component: function ProtectedLayout() {
-		const { isLoggedIn } = useAppStore();
-		if (!isLoggedIn) return <Navigate to="/login" replace />;
+		const identity = useAppStore((s) => s.identity);
+		if (!identity) return <Navigate to="/login" replace />;
 		return (
 			<>
 				<ChatListPage />

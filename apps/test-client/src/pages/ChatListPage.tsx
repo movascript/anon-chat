@@ -1,21 +1,23 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { Moon, Settings, Sun, UsersRound } from "lucide-react";
+import { useState } from "react";
 import { ContactListItem } from "@/components/ContactListItem";
-import { NetworkStatus } from "@/components/NetworkStatus";
 import { SearchInput } from "@/components/SearchInput";
+import { SocketStatus } from "@/components/SocketStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/appStore";
 import { cn } from "@/utils/className";
 
 export default function ChatListPage() {
-	const { contacts, searchQuery, setSearchQuery } = useAppStore();
+	const [searchQuery, setSearchQuery] = useState("");
+	const { contacts } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	const filtered = contacts.filter(
+	const filtered = contacts?.filter(
 		(c) =>
-			c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			c.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			c.username.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
@@ -38,7 +40,7 @@ export default function ChatListPage() {
 					</div>
 
 					<div className="flex items-center gap-1">
-						<NetworkStatus />
+						<SocketStatus />
 						<button
 							type="button"
 							onClick={toggleTheme}
@@ -71,14 +73,14 @@ export default function ChatListPage() {
 				</div>
 
 				<div className="flex-1 overflow-y-auto">
-					{filtered.length === 0 && (
+					{filtered?.length === 0 && (
 						<div className="flex flex-col items-center justify-center text-secondary-foreground text-sm h-80 gap-2 text-center px-4 animate-fade-in">
 							<UsersRound size={30} className="mb-2" />
 							<p>{searchQuery ? "No contacts found." : "No contacts yet."}</p>
 							<p>Enter full username to send request.</p>
 						</div>
 					)}
-					{filtered.map((contact) => (
+					{filtered?.map((contact) => (
 						<ContactListItem key={contact.id} contact={contact} />
 					))}
 				</div>

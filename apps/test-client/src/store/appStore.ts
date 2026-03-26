@@ -1,30 +1,29 @@
+import type { UserID } from "@repo/types";
 import { create } from "zustand";
-import { mockContacts, mockMessages, mockUser } from "@/data/mockData";
-import type { Contact, Message, Theme, User } from "@/types";
+import * as db from "@/lib/db";
+import { type RuntimeIdentity, RuntimeIdentity2Identity } from "@/lib/identity";
+import type { Contact, Identity, Message, Theme } from "@/types";
 
 interface AppState {
-	// Auth
-	currentUser: User | null;
-	isLoggedIn: boolean;
-
-	// Data
-	contacts: Contact[];
-	messages: Message[];
+	// Cached data from IndexedDB - which needs to be synced
+	identity: Identity | null;
+	contacts: Contact[] | null;
 
 	// UI
 	theme: Theme;
-	searchQuery: string;
+
+	_hydrated: boolean;
 
 	// Actions
-	login: (username: string, name: string) => void;
-	logout: () => void;
+	syncWithDB: () => Promise<void>;
+	login: (identity: RuntimeIdentity) => Promise<void>;
+	logout: () => Promise<void>;
 	toggleTheme: () => void;
-	setSearchQuery: (q: string) => void;
-	sendMessage: (contactId: string, content: string) => void;
-	markAsRead: (contactId: string) => void;
+	// sendMessage: (contactId: string, content: string) => void;
+	markAsRead: (contactId: UserID) => void;
 	updateUserOnlineStatus: (isOnline: boolean) => void;
-	getContactMessages: (contactId: string) => Message[];
-	getContact: (contactId: string) => Contact | undefined;
+	getContactMessages: (contactId: UserID) => Promise<Message[]>;
+	getContact: (contactId: UserID) => Contact | undefined;
 }
 
 // Persist theme across sessions
@@ -32,26 +31,31 @@ const savedTheme = (localStorage.getItem("theme") as Theme) || "light";
 if (savedTheme === "dark") document.documentElement.classList.add("dark");
 
 export const useAppStore = create<AppState>((set, get) => ({
-	currentUser: null,
-	isLoggedIn: !!sessionStorage.getItem("anonchat_user"),
-	contacts: mockContacts,
-	messages: mockMessages,
-	theme: savedTheme,
-	searchQuery: "",
+	identity: null,
+	contacts: null,
+	messages: null,
 
-	login: (username, name) => {
-		const user: User = {
-			...mockUser,
-			username,
-			name,
-		};
-		sessionStorage.setItem("anonchat_user", JSON.stringify(user));
-		set({ currentUser: user, isLoggedIn: true });
+	theme: savedTheme,
+
+	_hydrated: false,
+	syncWithDB: async () => {
+		const [identity, contacts] = await Promise.all([
+			db.getIdentity(),
+			db.getAllContacts(),
+		]);
+
+		set({ identity, contacts, _hydrated: true });
 	},
 
-	logout: () => {
-		sessionStorage.removeItem("anonchat_user");
-		set({ currentUser: null, isLoggedIn: false });
+	login: async (identity) => {
+		const id = await RuntimeIdentity2Identity(identity);
+		await db.saveIdentity(id);
+		get().syncWithDB();
+	},
+
+	logout: async () => {
+		await db.clearIdentity();
+		get().syncWithDB();
 	},
 
 	toggleTheme: () => {
@@ -61,83 +65,74 @@ export const useAppStore = create<AppState>((set, get) => ({
 		set({ theme: next });
 	},
 
-	setSearchQuery: (q) => set({ searchQuery: q }),
+	// sendMessage: (contactId, content) => {
+	// 	const newMsg: Message = {
+	// 		id: `msg_${Date.now()}`,
+	// 		contactId,
+	// 		content,
+	// 		timestamp: new Date(),
+	// 		isSent: true,
+	// 		status: "sending",
+	// 		type: "text",
+	// 	};
 
-	sendMessage: (contactId, content) => {
-		const newMsg: Message = {
-			id: `msg_${Date.now()}`,
-			contactId,
-			content,
-			timestamp: new Date(),
-			isSent: true,
-			status: "sending",
-			type: "text",
-		};
+	// 	set((state) => ({
+	// 		messages: [...state.messages, newMsg],
+	// 		contacts: state.contacts.map((c) =>
+	// 			c.id === contactId
+	// 				? {
+	// 						...c,
+	// 						lastMessage: content,
+	// 						lastMessageTime: new Date(),
+	// 						unreadCount: 0,
+	// 					}
+	// 				: c,
+	// 		),
+	// 	}));
 
-		set((state) => ({
-			messages: [...state.messages, newMsg],
-			contacts: state.contacts.map((c) =>
-				c.id === contactId
-					? {
-							...c,
-							lastMessage: content,
-							lastMessageTime: new Date(),
-							unreadCount: 0,
-						}
-					: c,
-			),
-		}));
+	// 	// Simulate status progression
+	// 	setTimeout(() => {
+	// 		set((state) => ({
+	// 			messages: state.messages.map((m) =>
+	// 				m.id === newMsg.id ? { ...m, status: "sent" } : m,
+	// 			),
+	// 		}));
+	// 	}, 600);
 
-		// Simulate status progression
-		setTimeout(() => {
-			set((state) => ({
-				messages: state.messages.map((m) =>
-					m.id === newMsg.id ? { ...m, status: "sent" } : m,
-				),
-			}));
-		}, 600);
+	// 	setTimeout(() => {
+	// 		set((state) => ({
+	// 			messages: state.messages.map((m) =>
+	// 				m.id === newMsg.id ? { ...m, status: "delivered" } : m,
+	// 			),
+	// 		}));
+	// 	}, 1400);
 
-		setTimeout(() => {
-			set((state) => ({
-				messages: state.messages.map((m) =>
-					m.id === newMsg.id ? { ...m, status: "delivered" } : m,
-				),
-			}));
-		}, 1400);
-
-		setTimeout(() => {
-			set((state) => ({
-				messages: state.messages.map((m) =>
-					m.id === newMsg.id ? { ...m, status: "read" } : m,
-				),
-			}));
-		}, 2800);
-	},
+	// 	setTimeout(() => {
+	// 		set((state) => ({
+	// 			messages: state.messages.map((m) =>
+	// 				m.id === newMsg.id ? { ...m, status: "read" } : m,
+	// 			),
+	// 		}));
+	// 	}, 2800);
+	// },
 
 	markAsRead: (contactId) => {
-		set((state) => ({
-			contacts: state.contacts.map((c) =>
-				c.id === contactId ? { ...c, unreadCount: 0 } : c,
-			),
-			messages: state.messages.map((m) =>
-				m.contactId === contactId && !m.isSent ? { ...m, status: "read" } : m,
-			),
-		}));
+		db.clearUnread(contactId);
+		get().syncWithDB();
 	},
 
 	updateUserOnlineStatus: (isOnline) => {
+		// ! should become synced with db or restructed
 		set((state) => ({
-			currentUser: state.currentUser
-				? { ...state.currentUser, isOnline }
-				: null,
+			identity: state.identity ? { ...state.identity, isOnline } : null,
 		}));
 	},
 
-	getContactMessages: (contactId) => {
-		return get().messages.filter((m) => m.contactId === contactId);
+	getContactMessages: async (contactId) => {
+		return await db.getMessages(contactId);
 	},
 
 	getContact: (contactId) => {
-		return get().contacts.find((c) => c.id === contactId);
+		return get().contacts?.find((c) => c.id === contactId);
 	},
 }));
