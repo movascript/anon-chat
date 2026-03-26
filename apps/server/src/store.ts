@@ -9,6 +9,7 @@ import type { WebSocket } from "ws";
 interface ConnectedClient {
 	userID: UserID;
 	username: string;
+	displayName: string;
 	publicKey: string; // JWK stringified, kept for search results
 	socket: unknown; // typed as unknown here, cast to WebSocket in store
 	connectedAt: number;
@@ -50,6 +51,7 @@ function registerSocket(socket: WebSocket, nonce: string): SocketID {
 	const client: ConnectedClient = {
 		userID: "" as UserID,
 		username: "",
+		displayName: "",
 		publicKey: "",
 		socket: socket as unknown,
 		connectedAt: Date.now(),
@@ -74,6 +76,7 @@ function authenticateClient(
 	socketID: SocketID,
 	userID: UserID,
 	username: string,
+	displayName: string,
 	publicKey: string,
 ): boolean {
 	const client = socketMap.get(socketID);
@@ -97,6 +100,7 @@ function authenticateClient(
 
 	client.userID = userID;
 	client.username = username;
+	client.displayName = displayName;
 	client.publicKey = publicKey;
 	client.pendingNonce = null;
 	client.nonceIssuedAt = null; // clear timestamp after use

@@ -123,7 +123,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 		return;
 	}
 
-	const { username, publicKey, signature } = frame;
+	const { username, displayName, publicKey, signature } = frame;
 
 	// ── Username validation ───────────────────────────────────────────────────
 
@@ -173,6 +173,7 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 		socketID,
 		userID,
 		username,
+		displayName,
 		publicKey,
 	);
 
@@ -240,6 +241,7 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 		type: "chat_request_in",
 		fromUserID: sender.userID,
 		fromUsername: sender.username,
+		fromDisplayName: sender.displayName,
 		fromPublicKey: sender.publicKey,
 	});
 }

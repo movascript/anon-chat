@@ -1,6 +1,6 @@
 import type { UserID } from "@repo/types";
+import type { Identity } from "@/types";
 import { getIdentity, saveIdentity } from "./db";
-import type { Identity } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -25,8 +25,9 @@ const SIGN_ALGORITHM: EcdsaParams = {
  * Holds live CryptoKey objects alongside the plain record from IndexedDB.
  */
 export interface RuntimeIdentity {
-	userID: string;
+	userID: UserID;
 	username: string;
+	displayName: string;
 	publicKey: CryptoKey; // verify + export only
 	privateKey: CryptoKey; // sign only — never exported after initial save
 	publicKeyJwk: JsonWebKey;
@@ -131,27 +132,26 @@ export async function signNonce(
 	return bytesToBase64(new Uint8Array(sigBuf));
 }
 
-// ─── Bootstrap ────────────────────────────────────────────────────────────────
+// -----------------
 
-/**
- * Called once at app startup.
- *
- * - If an identity exists in IndexedDB: hydrates it back into live CryptoKey objects.
- * - If no identity exists: generates a new keypair and stores it.
- *
- * In both cases returns a RuntimeIdentity ready for use.
- * The `username` field is empty string on a brand-new identity —
- * the caller (onboarding flow) must collect a username and call `finaliseIdentity`.
- */
-export async function loadOrCreateIdentity(): Promise<RuntimeIdentity> {
-	const stored = await getIdentity();
+export async function RuntimeIdentity2Identity(identity: RuntimeIdentity) {
+	const publicKeyJwk = await exportPublicKey(identity.publicKey);
+	const privateKeyJwk = await exportPrivateKey(identity.privateKey);
 
-	if (stored) {
-		return hydrateIdentity(stored);
-	}
+	const record: Identity = {
+		id: 1,
+		userID: identity.userID,
+		username: identity.username,
+		displayName: identity.displayName,
+		publicKey: publicKeyJwk,
+		privateKey: privateKeyJwk,
+		createdAt: Date.now(),
+	};
 
-	return createFreshIdentity();
+	return record;
 }
+
+// ─── Bootstrap ────────────────────────────────────────────────────────────────
 
 /**
  * After the user picks a username, generate the keypair, derive the userID,
@@ -162,6 +162,7 @@ export async function loadOrCreateIdentity(): Promise<RuntimeIdentity> {
  */
 export async function createAndSaveIdentity(
 	username: string,
+	displayName: string,
 ): Promise<RuntimeIdentity> {
 	const existing = await getIdentity();
 	if (existing) throw new Error("Identity already exists");
@@ -175,6 +176,7 @@ export async function createAndSaveIdentity(
 		id: 1,
 		userID,
 		username,
+		displayName,
 		publicKey: publicKeyJwk,
 		privateKey: privateKeyJwk,
 		createdAt: Date.now(),
@@ -185,6 +187,7 @@ export async function createAndSaveIdentity(
 	return {
 		userID,
 		username,
+		displayName,
 		publicKey: keypair.publicKey,
 		privateKey: keypair.privateKey,
 		publicKeyJwk,
@@ -193,11 +196,10 @@ export async function createAndSaveIdentity(
 
 // ─── Internal Helpers ─────────────────────────────────────────────────────────
 
-/**
- * Re-hydrates a stored Identity back into live CryptoKey objects.
- * Called on every app load after the first.
- */
-async function hydrateIdentity(record: Identity): Promise<RuntimeIdentity> {
+export async function hydrateIdentity() {
+	const record = await getIdentity();
+	if (!record) return null;
+
 	const [publicKey, privateKey] = await Promise.all([
 		importPublicKey(record.publicKey),
 		importPrivateKey(record.privateKey),
@@ -206,28 +208,25 @@ async function hydrateIdentity(record: Identity): Promise<RuntimeIdentity> {
 	return {
 		userID: record.userID,
 		username: record.username,
+		displayName: record.displayName,
 		publicKey,
 		privateKey,
 		publicKeyJwk: record.publicKey,
 	};
 }
 
-/**
- * Creates a brand-new keypair identity with no username.
- * Used only in the edge case where `loadOrCreateIdentity` finds no DB record
- * but we need a RuntimeIdentity shell before the onboarding form runs.
- *
- * NOTE: this does NOT persist to IndexedDB — that only happens in
- * `createAndSaveIdentity` once a username is confirmed.
- */
-async function createFreshIdentity(): Promise<RuntimeIdentity> {
+export async function createIdentity(
+	username: string,
+	displayName: string,
+): Promise<RuntimeIdentity> {
 	const keypair = await generateKeypair();
 	const publicKeyJwk = await exportPublicKey(keypair.publicKey);
 	const userID = await deriveUserID(publicKeyJwk);
 
 	return {
 		userID,
-		username: "",
+		username,
+		displayName,
 		publicKey: keypair.publicKey,
 		privateKey: keypair.privateKey,
 		publicKeyJwk,

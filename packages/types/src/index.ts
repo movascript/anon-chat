@@ -46,6 +46,7 @@ export interface ChallengeFrame extends WSFrame {
 export interface AuthFrame extends WSFrame {
 	type: "auth";
 	username: string;
+	displayName: string;
 	publicKey: string; // JWK stringified
 	signature: string; // base64 encoded signature of nonce
 }
@@ -88,6 +89,7 @@ export interface ChatRequestInFrame extends WSFrame {
 	type: "chat_request_in";
 	fromUserID: UserID;
 	fromUsername: string;
+	fromDisplayName: string;
 	fromPublicKey: string;
 }
 

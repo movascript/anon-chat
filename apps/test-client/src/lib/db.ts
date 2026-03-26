@@ -6,7 +6,7 @@ import type {
 	Identity,
 	Message,
 	MessageStatus,
-} from "./types";
+} from "@/types";
 
 // ─── Dexie Subclass ───────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ class AnonChatDB extends Dexie {
 
 			// primary key = userId
 			// indexes: username lookup, status filter, recency ordering
-			contacts: "id, username, status, lastMessageAt, updatedAt",
+			contacts: "id, username, displayName, status, lastMessageAt, updatedAt",
 
 			// primary key = messageId
 			// compound index enables efficient per-peer time-ordered queries
@@ -116,6 +116,7 @@ export async function upsertContact(
 	const record: Contact = {
 		id: contact.id,
 		username: contact.username,
+		displayName: contact.displayName,
 		publicKey: contact.publicKey,
 		status: contact.status,
 		online: contact.online,

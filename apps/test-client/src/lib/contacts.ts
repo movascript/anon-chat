@@ -4,9 +4,9 @@ import type {
 	PresenceFrame,
 	UserID,
 } from "@repo/types";
+import type { Contact } from "@/types";
 import { db } from "./db";
 import type { AnonSocket } from "./socket";
-import type { Contact } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +83,7 @@ export class ContactsManager {
 	async sendRequest(
 		toUserID: UserID,
 		username: string, // display name we know them by (from search result)
+		displayName: string,
 		publicKey: JsonWebKey,
 	): Promise<Contact> {
 		if (toUserID === this.myUserID) {
@@ -100,6 +101,7 @@ export class ContactsManager {
 		const contact: Contact = {
 			id: toUserID,
 			username,
+			displayName,
 			publicKey,
 			status: "pending_out",
 			online: false,
@@ -142,6 +144,7 @@ export class ContactsManager {
 			const contact: Contact = {
 				id: frame.fromUserID,
 				username: frame.fromUsername,
+				displayName: frame.fromDisplayName,
 				publicKey: JSON.parse(frame.fromPublicKey),
 				status: "accepted",
 				online: false,
@@ -195,6 +198,7 @@ export class ContactsManager {
 			await db.contacts.put({
 				id: frame.fromUserID,
 				username: frame.fromUsername,
+				displayName: frame.fromDisplayName,
 				publicKey: JSON.parse(frame.fromPublicKey),
 				status: "blocked",
 				online: false,

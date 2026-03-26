@@ -8,15 +8,8 @@ import type {
 import type { RuntimeIdentity } from "./identity";
 import { signNonce } from "./identity";
 
-// ─── Frame Types (mirrors backend/src/types.ts) ───────────────────────────────
-
-/**
- * Every frame type the server can send to us.
- * Kept in sync with the server's ServerFrame union manually —
- * a shared package would be cleaner but adds build complexity.
- */
-
-// Inbound frame shapes
+// ! socket states should be more precise and the socket should
+// ! handle reconnections and auth error instead of just closing it
 
 // ─── Event Map ────────────────────────────────────────────────────────────────
 
@@ -50,7 +43,7 @@ type EventListener<K extends keyof SocketEventMap> = (
 // ─── Reconnect Config ─────────────────────────────────────────────────────────
 
 interface SocketConfig {
-	url: string;
+	url?: string;
 	/** Max reconnection attempts before giving up. Default: Infinity */
 	maxRetries?: number;
 	/** Base delay in ms for exponential backoff. Default: 500 */
@@ -90,14 +83,14 @@ export class AnonSocket {
 		[K in keyof SocketEventMap]?: Set<EventListener<K>>;
 	} = {};
 
-	constructor(identity: RuntimeIdentity, config: SocketConfig) {
+	constructor(identity: RuntimeIdentity, config?: SocketConfig) {
 		this.identity = identity;
 		this.config = {
-			maxRetries: config.maxRetries ?? Infinity,
-			baseDelay: config.baseDelay ?? 500,
-			maxDelay: config.maxDelay ?? 30_000,
-			jitter: config.jitter ?? 0.3,
-			url: config.url,
+			maxRetries: config?.maxRetries ?? Infinity,
+			baseDelay: config?.baseDelay ?? 500,
+			maxDelay: config?.maxDelay ?? 30_000,
+			jitter: config?.jitter ?? 0.3,
+			url: config?.url ?? import.meta.env.VITE_WS_URL,
 		};
 	}
 
@@ -207,21 +200,16 @@ export class AnonSocket {
 
 		try {
 			frame = JSON.parse(e.data);
+			console.log("IN", frame);
 		} catch {
 			console.error("[AnonSocket] Received non-JSON message:", e.data);
 			return;
 		}
 
 		// Drive the auth handshake before passing frames to the app
-		if (frame.type === "challenge") {
-			await this.handleChallenge(frame);
-			return;
-		}
+		if (frame.type === "challenge") return await this.handleChallenge(frame);
 
-		if (frame.type === "auth_success") {
-			this.handleAuthSuccess(frame);
-			return;
-		}
+		if (frame.type === "auth_success") return this.handleAuthSuccess(frame);
 
 		if (frame.type === "auth_error") {
 			console.error("[AnonSocket] Auth rejected:", frame.reason);
@@ -299,6 +287,7 @@ export class AnonSocket {
 		this.transmit({
 			type: "auth",
 			username: this.identity.username,
+			displayName: this.identity.displayName,
 			publicKey: JSON.stringify(this.identity.publicKeyJwk),
 			signature,
 		});
@@ -358,6 +347,8 @@ export class AnonSocket {
 	// ─── Send Helpers ────────────────────────────────────────────────────────────
 
 	private transmit(frame: OutgoingClientFrame): void {
+		console.log("OUT", frame);
+
 		const fullFrame: Client2ServerFrame = {
 			...frame,
 			id: window.crypto.randomUUID(),
@@ -410,13 +401,21 @@ let _instance: AnonSocket | null = null;
  * 
 */
 
-export function getSocket(
-	identity: RuntimeIdentity,
-	config: SocketConfig,
-): AnonSocket {
+export function getOrInitializeSocket(
+	identity?: RuntimeIdentity,
+	config?: SocketConfig,
+) {
 	if (!_instance) {
+		if (!identity) throw new Error("Socket is not initialized");
+
 		_instance = new AnonSocket(identity, config);
 	}
+
+	return _instance;
+}
+
+export function getSocket() {
+	if (!_instance) throw new Error("Socket is not initialized");
 
 	return _instance;
 }
