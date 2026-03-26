@@ -112,7 +112,7 @@ async function verifySignature(
 		return false; // malformed base64 → treat as verification failure
 	}
 
-	const nonceBytes = new TextEncoder().encode(nonce);
+	const nonceBytes = hexToBytes(nonce);
 
 	try {
 		const valid = await crypto.subtle.verify(
@@ -125,6 +125,15 @@ async function verifySignature(
 	} catch {
 		return false; // subtle can throw on malformed signature bytes
 	}
+}
+
+function hexToBytes(hex: string) {
+	if (hex.length % 2 !== 0) throw new Error("Invalid hex string");
+	const bytes = new Uint8Array(hex.length / 2);
+	for (let i = 0; i < bytes.length; i++) {
+		bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+	}
+	return bytes;
 }
 
 // ─── Derive a stable UserID from a public key ─────────────────────────────────
