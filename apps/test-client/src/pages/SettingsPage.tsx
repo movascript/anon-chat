@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Camera, ChevronRight, LogOut } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AppInfo } from "@/components/AppInfo";
 import { Avatar } from "@/components/Avatar";
 import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
@@ -51,7 +52,7 @@ function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
 }
 
 export default function SettingsPage() {
-	const { currentUser, logout, updateUserOnlineStatus } = useAppStore();
+	const { identity, logout, updateUserOnlineStatus } = useAppStore();
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 
@@ -61,10 +62,9 @@ export default function SettingsPage() {
 	const [lastSeenVisible, setLastSeenVisible] = useState(true);
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-	const user = currentUser ?? {
-		name: "User",
+	const user = identity ?? {
+		displayName: "User",
 		username: "user",
-		avatarColor: "#3b82f6",
 	};
 
 	const handleOnlineToggle = () => {
@@ -85,10 +85,15 @@ export default function SettingsPage() {
 			<div className="flex-1 overflow-y-auto">
 				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
-						<Avatar name={user.name} color={user.avatarColor} size="xl" />
+						<Avatar
+							name={user.displayName}
+							// color={user.avatarColor}
+							color="#3b82f6" // ! should be changed
+							size="xl"
+						/>
 						<button
 							type="button"
-							onClick={() => navigate({ to: "/settings/edit-profile" })}
+							onClick={() => toast.info("Not Implemented")}
 							className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center shadow-md hover:bg-accent-hover active:scale-95 transition-all duration-200"
 							aria-label="Edit profile"
 						>
@@ -96,7 +101,7 @@ export default function SettingsPage() {
 						</button>
 					</div>
 					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
-						{user.name}
+						{user.displayName}
 					</h2>
 					<p className="text-sm text-secondary-foreground mt-0.5">
 						@{user.username}
@@ -126,6 +131,7 @@ export default function SettingsPage() {
 								onChange={handleOnlineToggle}
 								label="Online status"
 								size="md"
+								buttonLess
 							/>
 						}
 					/>
@@ -143,6 +149,7 @@ export default function SettingsPage() {
 								onChange={() => setNotifications(!notifications)}
 								label="Notifications"
 								size="md"
+								buttonLess
 							/>
 						}
 					/>
@@ -164,6 +171,7 @@ export default function SettingsPage() {
 								onChange={() => setReadReceipts(!readReceipts)}
 								label="Read receipts"
 								size="md"
+								buttonLess
 							/>
 						}
 					/>
@@ -178,6 +186,7 @@ export default function SettingsPage() {
 								onChange={() => setLastSeenVisible(!lastSeenVisible)}
 								label="Last seen visibility"
 								size="md"
+								buttonLess
 							/>
 						}
 					/>
@@ -201,6 +210,7 @@ export default function SettingsPage() {
 								onChange={toggleTheme}
 								label="Dark mode"
 								size="md"
+								buttonLess
 							/>
 						}
 					/>

@@ -57,9 +57,23 @@ interface ToggleProps extends VariantProps<typeof toggleVariants> {
 	checked: boolean;
 	onChange: () => void;
 	label: string;
+	buttonLess?: boolean; // prevents hydrartion error when used inside settings row
 }
 
-export function Toggle({ checked, onChange, label, size }: ToggleProps) {
+export function Toggle({
+	checked,
+	onChange,
+	label,
+	size,
+	buttonLess,
+}: ToggleProps) {
+	if (buttonLess) {
+		return (
+			<div className={cn(toggleVariants({ checked, size }))}>
+				<span className={cn(thumbVariants({ checked, size }))} />
+			</div>
+		);
+	}
 	return (
 		<button
 			type="button"

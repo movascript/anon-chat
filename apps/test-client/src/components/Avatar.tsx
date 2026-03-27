@@ -1,6 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/utils/className";
 
+// todo: the avatar color should be deterministic by the user id
+
 const avatarVariants = cva(
 	"rounded-full flex items-center justify-center font-semibold text-white shrink-0",
 	{

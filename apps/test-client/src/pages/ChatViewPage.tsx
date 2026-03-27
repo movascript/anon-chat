@@ -1,3 +1,4 @@
+import type { MessageID } from "@repo/types";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MoreVertical } from "lucide-react";
 import { useEffect, useMemo } from "react";
@@ -10,7 +11,7 @@ import { TypingIndicator } from "@/components/TypingIndicator";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useAppStore } from "@/store/appStore";
 import type { Message } from "@/types";
-import { formatDateSeparator, formatLastSeen, isSameDay } from "@/utils/date";
+import { formatDateSeparator, isSameDay } from "@/utils/date";
 
 type ListItem =
 	| { kind: "date"; label: string; key: string }
@@ -21,8 +22,8 @@ export function ChatViewPage() {
 	const navigate = useNavigate();
 	const { getContact, getContactMessages, markAsRead } = useAppStore();
 
-	const contact = getContact(contactId ?? "");
-	const rawMessages = getContactMessages(contactId ?? "");
+	const contact = getContact(contactId);
+	const rawMessages = getContactMessages(contactId);
 
 	const isTyping = useTypingIndicator(contactId ?? "");
 
@@ -34,10 +35,10 @@ export function ChatViewPage() {
 		const items: ListItem[] = [];
 		rawMessages.forEach((msg, i) => {
 			const prev = rawMessages[i - 1];
-			if (!prev || !isSameDay(prev.timestamp, msg.timestamp)) {
+			if (!prev || !isSameDay(prev.ts, msg.ts)) {
 				items.push({
 					kind: "date",
-					label: formatDateSeparator(msg.timestamp),
+					label: formatDateSeparator(msg.ts),
 					key: `date_${i}`,
 				});
 			}
@@ -47,13 +48,12 @@ export function ChatViewPage() {
 			items.push({
 				kind: "msg",
 				message: {
-					id: "__typing__",
-					contactId: contactId ?? "",
+					id: "__typing__" as MessageID,
+					userID: contactId,
 					content: "",
-					timestamp: new Date(),
-					isSent: false,
-					status: "read",
-					type: "text",
+					ts: Date.now(),
+					sentByMe: false,
+					status: "received",
 				},
 			});
 		}
@@ -68,11 +68,7 @@ export function ChatViewPage() {
 		);
 	}
 
-	const subtitle = contact.isOnline
-		? "Online"
-		: contact.lastSeen
-			? `Last seen ${formatLastSeen(contact.lastSeen)}`
-			: "Offline";
+	const subtitle = contact.online ? "Online" : "Offline";
 
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary overflow-hidden">
@@ -97,18 +93,18 @@ export function ChatViewPage() {
 					className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity duration-200"
 				>
 					<div className="relative shrink-0">
-						<Avatar name={contact.name} color={contact.avatarColor} size="md" />
+						<Avatar name={contact.displayName} color="red" size="md" />
 						<div className="absolute -bottom-0.5 -right-0.5">
-							<StatusIndicator isOnline={contact.isOnline} />
+							<StatusIndicator isOnline={contact.online} />
 						</div>
 					</div>
 					<div className="min-w-0 text-left">
 						<p className="font-semibold text-sm text-primary-foreground truncate leading-tight">
-							{contact.name}
+							{contact.displayName}
 						</p>
 						<p
 							className={`text-xs truncate leading-tight transition-colors duration-200 ${
-								contact.isOnline || isTyping
+								contact.online || isTyping
 									? "text-accent"
 									: "text-secondary-foreground"
 							}`}

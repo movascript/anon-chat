@@ -6,7 +6,6 @@ import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { useAppStore } from "@/store/appStore";
-import { formatLastSeen } from "@/utils/date";
 
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
@@ -38,25 +37,28 @@ export default function ProfilePage() {
 				{/* Hero */}
 				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
-						<Avatar name={contact.name} color={contact.avatarColor} size="xl" />
+						<Avatar
+							name={contact.displayName}
+							// color={contact.avatarColor}
+							color="#ffeeaa" // ! should be changed
+							size="xl"
+						/>
 						<div className="absolute -bottom-1 -right-1">
-							<StatusIndicator isOnline={contact.isOnline} size="md" />
+							<StatusIndicator isOnline={contact.online} size="md" />
 						</div>
 					</div>
 					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
-						{contact.name}
+						{contact.displayName}
 					</h2>
 					<p className="text-sm text-secondary-foreground mt-0.5">
 						@{contact.username}
 					</p>
 					<p
 						className={`text-xs mt-2 font-medium ${
-							contact.isOnline ? "text-accent" : "text-muted"
+							contact.online ? "text-accent" : "text-muted"
 						}`}
 					>
-						{contact.isOnline
-							? "● Online"
-							: `Last seen ${formatLastSeen(contact.lastSeen)}`}
+						{contact.online ? "● Online" : `Last seen recently`}
 					</p>
 				</div>
 
@@ -93,7 +95,7 @@ export default function ProfilePage() {
 					<InlineConfirmDialog
 						show={showBlockConfirm}
 						variant="danger"
-						title={`Block ${contact.name}?`}
+						title={`Block ${contact.displayName}?`}
 						description="They will not be able to send you messages."
 						confirmText="Block"
 						onCancel={() => setShowBlockConfirm(false)}
@@ -117,7 +119,7 @@ export default function ProfilePage() {
 					<InlineConfirmDialog
 						show={showDeleteConfirm}
 						variant="danger"
-						title={`Delete chat with ${contact.name}?`}
+						title={`Delete chat with ${contact.displayName}?`}
 						description="This action cannot be undone."
 						confirmText="Delete"
 						onCancel={() => setShowDeleteConfirm(false)}
