@@ -1,25 +1,12 @@
-interface TypingIndicatorProps {
-	isTyping: boolean;
-}
-
-export function TypingIndicator({ isTyping }: TypingIndicatorProps) {
-	if (!isTyping) return null;
-
+export function TypingIndicator() {
 	return (
-		<div className="px-4 py-2 bg-gray-50 border-t">
-			<div className="flex items-center gap-2 text-gray-600">
-				<div className="flex gap-1">
-					<span className="animate-bounce" style={{ animationDelay: "0ms" }}>
-						●
-					</span>
-					<span className="animate-bounce" style={{ animationDelay: "150ms" }}>
-						●
-					</span>
-					<span className="animate-bounce" style={{ animationDelay: "300ms" }}>
-						●
-					</span>
+		<div className="flex justify-start mb-2 animate-fade-in animate-duration-200">
+			<div className="bg-bubble-received rounded-2xl rounded-bl-sm px-4 py-3 shadow-(--shadow)">
+				<div className="flex items-center gap-1">
+					<span className="typing-dot" />
+					<span className="typing-dot" />
+					<span className="typing-dot" />
 				</div>
-				<span className="text-sm">در حال نوشتن</span>
 			</div>
 		</div>
 	);

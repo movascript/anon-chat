@@ -5,9 +5,9 @@ import type {
 	TypingInFrame,
 	UserID,
 } from "@repo/types";
+import type { Contact, Message } from "@/types";
 import { db } from "./db";
 import type { AnonSocket } from "./socket";
-import type { Contact, Message } from "./types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -335,6 +335,7 @@ export class MessagingManager {
 				publicKey: {},
 				status: "pending_in",
 				username: "xoxo", // ! should be changed
+				displayName: "Bullshit",
 				lastMessage: message.content,
 				lastMessageAt: message.ts,
 				unreadCount: incrementUnread ? 1 : 0,
