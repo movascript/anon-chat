@@ -1,3 +1,4 @@
+import type { UserID } from "@repo/types";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import {
 	createFileRoute,
@@ -32,7 +33,7 @@ function HotkeyProvider() {
 	useHotkey("Escape", () => {
 		const path = location.pathname;
 		if (path.endsWith("profile")) {
-			const contactId = path.split("/")[2];
+			const contactId = path.split("/")[2] as UserID;
 			navigate({ to: "/chat/$contactId", params: { contactId } });
 		} else if (path.startsWith("/chat/")) {
 			navigate({ to: "/" });

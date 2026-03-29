@@ -196,7 +196,7 @@ export async function createAndSaveIdentity(
 
 // ─── Internal Helpers ─────────────────────────────────────────────────────────
 
-export async function hydrateIdentity() {
+export async function hydrateRuntimeIdentity(): Promise<RuntimeIdentity | null> {
 	const record = await getIdentity();
 	if (!record) return null;
 

@@ -1,13 +1,23 @@
 import type { UserID } from "@repo/types";
+import { toast } from "sonner";
 import { create } from "zustand";
 import * as db from "@/lib/db";
-import { type RuntimeIdentity, RuntimeIdentity2Identity } from "@/lib/identity";
-import type { Contact, Identity, Message, Theme } from "@/types";
+import {
+	createIdentity,
+	hydrateRuntimeIdentity,
+	type RuntimeIdentity,
+	RuntimeIdentity2Identity,
+} from "@/lib/identity";
+import { AnonSocket } from "@/lib/socket";
+import type { Contact, Message, Theme } from "@/types";
 
 interface AppState {
 	// Cached data from IndexedDB - which needs to be synced
-	identity: Identity | null;
+	identity: RuntimeIdentity | null;
 	contacts: Contact[] | null;
+
+	socket: AnonSocket;
+	rebuildSocket: () => AnonSocket;
 
 	// UI
 	theme: Theme;
@@ -15,8 +25,8 @@ interface AppState {
 	_hydrated: boolean;
 
 	// Actions
-	syncWithDB: () => Promise<void>;
-	login: (identity: RuntimeIdentity) => Promise<void>;
+	syncStore: () => Promise<void>;
+	login: (username: string, displayName: string) => Promise<void>;
 	logout: () => Promise<void>;
 	toggleTheme: () => void;
 	// sendMessage: (contactId: string, content: string) => void;
@@ -32,30 +42,72 @@ if (savedTheme === "dark") document.documentElement.classList.add("dark");
 
 export const useAppStore = create<AppState>((set, get) => ({
 	identity: null,
+	runtimeIdentity: null,
 	contacts: null,
-	messages: null,
+
+	socket: new AnonSocket(),
+	// ! for now we keep this function - later should implement it inside the AnonSocket
+	rebuildSocket: () => {
+		get().socket.close();
+
+		set({ socket: new AnonSocket() });
+
+		return get().socket;
+	},
 
 	theme: savedTheme,
 
 	_hydrated: false,
-	syncWithDB: async () => {
+	syncStore: async () => {
 		const [identity, contacts] = await Promise.all([
-			db.getIdentity(),
+			hydrateRuntimeIdentity(),
 			db.getAllContacts(),
 		]);
+
+		const socket = get().socket;
+		if (identity && get().socket.currentState === "idle") {
+			// ! in real life scenario the username might be taken when not connected
+			// ! so this would trigger error and should be handled properly
+
+			// to simulate production latency
+			// ! should be removed on production
+			setTimeout(() => socket.connect(identity), 300);
+		}
 
 		set({ identity, contacts, _hydrated: true });
 	},
 
-	login: async (identity) => {
-		const id = await RuntimeIdentity2Identity(identity);
-		await db.saveIdentity(id);
-		get().syncWithDB();
+	login: async (username, displayName) => {
+		const identity = await createIdentity(username, displayName);
+
+		const socket = get().socket;
+
+		const unsubAuthSUccess = socket.on("auth_success", async () => {
+			const id = await RuntimeIdentity2Identity(identity);
+			await db.saveIdentity(id);
+			get().syncStore();
+			toast.success("logged in successfully");
+
+			unsubAuthSUccess();
+			unsubAuthError();
+		});
+		const unsubAuthError = socket.on("auth_error", () => {
+			get().rebuildSocket();
+
+			unsubAuthSUccess();
+			unsubAuthError();
+		});
+
+		set({ socket });
+
+		socket.connect(identity);
 	},
 
 	logout: async () => {
 		await db.clearIdentity();
-		get().syncWithDB();
+		get().rebuildSocket();
+		get().syncStore();
+		toast.success("logged out successfully");
 	},
 
 	toggleTheme: () => {
@@ -118,7 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 	markAsRead: (contactId) => {
 		db.clearUnread(contactId);
-		get().syncWithDB();
+		get().syncStore();
 	},
 
 	updateUserOnlineStatus: (isOnline) => {

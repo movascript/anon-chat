@@ -7,8 +7,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Toaster, type ToasterProps } from "sonner";
 import ErrorFallback from "@/components/ErrorFallback";
 import { useTheme } from "@/hooks/useTheme";
-import { hydrateIdentity } from "@/lib/identity";
-import { getOrInitializeSocket } from "@/lib/socket";
 import { useAppStore } from "@/store/appStore";
 export const Route = createRootRoute({
 	component: Root,
@@ -16,26 +14,15 @@ export const Route = createRootRoute({
 
 function Root() {
 	const hydrated = useAppStore((s) => s._hydrated);
-	const syncWithDB = useAppStore((s) => s.syncWithDB);
+	const identity = useAppStore((s) => s.identity);
+	const syncStore = useAppStore((s) => s.syncStore);
 	const navigate = useNavigate();
 	const { theme = "system" } = useTheme();
 
 	useEffect(() => {
-		hydrateIdentity()
-			.then((identity) => {
-				if (!identity) navigate({ to: "/login" });
-				else {
-					const socket = getOrInitializeSocket(identity);
-
-					// to simulate production latency
-					// ! should be removed on production
-					setTimeout(() => socket.connect(), 200);
-				}
-
-				syncWithDB();
-			})
-			.catch((e) => console.log("couldnt fetch the identity from db", e));
-	}, [navigate, syncWithDB]);
+		if (!hydrated) syncStore();
+		else if (!identity) navigate({ to: "/login" });
+	}, [navigate, syncStore, hydrated, identity]);
 
 	return (
 		<>

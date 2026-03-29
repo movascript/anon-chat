@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	ArrowRight,
@@ -10,8 +9,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
-import { createIdentity } from "@/lib/identity";
-import { getOrInitializeSocket } from "@/lib/socket";
 import { useAppStore } from "@/store/appStore";
 import { cn } from "@/utils/className";
 
@@ -22,9 +19,9 @@ export default function LoginPage() {
 	const [displayName, setDisplayName] = useState("");
 	const [state, setState] = useState<State>("idle");
 	const [errorMsg, setErrorMsg] = useState("");
-	const { login } = useAppStore();
+	const login = useAppStore((s) => s.login);
+	const socket = useAppStore((s) => s.socket);
 	const { isDark, toggleTheme } = useTheme();
-	const navigate = useNavigate();
 
 	// ! should make sure the submit handler is disabled when socket is on pending
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -50,24 +47,26 @@ export default function LoginPage() {
 		await new Promise((r) => setTimeout(r, 400));
 
 		try {
-			const identity = await createIdentity(username, displayName);
-			console.log("IDEN", identity);
+			const unsubAuthSUccess = socket.on("auth_success", async () => {
+				setState("success");
 
-			const socket = getOrInitializeSocket(identity);
-
-			console.log(socket);
-
-			const unsub = socket.on("authenticated", () => {
-				login(identity);
-				navigate({ to: "/", replace: true });
-				unsub();
+				unsubAuthSUccess();
+				unsubAuthError();
 			});
+			const unsubAuthError = socket.on("auth_error", (f) => {
+				setState("error");
+				setErrorMsg(f.reason);
 
-			socket.connect();
+				unsubAuthSUccess();
+				unsubAuthError();
+			});
+			login(username, displayName);
+			setState("success");
 		} catch (err) {
 			console.error("Failed to generate identity:", err);
 			setState("error");
 			setErrorMsg("Failed to create account. Please try again.");
+		} finally {
 		}
 	};
 

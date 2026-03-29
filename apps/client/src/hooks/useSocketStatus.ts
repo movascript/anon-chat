@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { getSocket } from "@/lib/socket";
+import { useAppStore } from "@/store/appStore";
 
 // ! still not what i wanted should be more complex - like handling reconnections
 
 export const useSocketStatus = () => {
-	const socket = getSocket();
+	const socket = useAppStore((s) => s.socket);
 	const [isConnected, setIsConnected] = useState(
 		socket.currentState === "ready",
 	);

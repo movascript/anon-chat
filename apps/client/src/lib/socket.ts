@@ -24,13 +24,10 @@ type BaseSocketEvents = {
 	reconnecting: [attempt: number];
 	frame: [frame: Server2ClientFrame];
 };
-type SocketEventFrames = Exclude<
-	Server2ClientFrame,
-	{ type: "challenge" | "auth_success" | "auth_error" }
->;
+
 type FrameEvents = {
-	[K in SocketEventFrames["type"]]: [
-		frame: Extract<SocketEventFrames, { type: K }>,
+	[K in Server2ClientFrame["type"]]: [
+		frame: Extract<Server2ClientFrame, { type: K }>,
 	];
 };
 
@@ -42,7 +39,7 @@ type EventListener<K extends keyof SocketEventMap> = (
 
 // ─── Reconnect Config ─────────────────────────────────────────────────────────
 
-interface SocketConfig {
+export interface SocketConfig {
 	url?: string;
 	/** Max reconnection attempts before giving up. Default: Infinity */
 	maxRetries?: number;
@@ -68,7 +65,7 @@ type SocketState =
 
 export class AnonSocket {
 	private ws: WebSocket | null = null;
-	private identity: RuntimeIdentity;
+	private identity!: RuntimeIdentity;
 	private config: Required<SocketConfig>;
 	private state: SocketState = "idle";
 
@@ -83,8 +80,7 @@ export class AnonSocket {
 		[K in keyof SocketEventMap]?: Set<EventListener<K>>;
 	} = {};
 
-	constructor(identity: RuntimeIdentity, config?: SocketConfig) {
-		this.identity = identity;
+	constructor(config?: SocketConfig) {
 		this.config = {
 			maxRetries: config?.maxRetries ?? Infinity,
 			baseDelay: config?.baseDelay ?? 500,
@@ -97,7 +93,8 @@ export class AnonSocket {
 	// ─── Public API ─────────────────────────────────────────────────────────────
 
 	/** Opens the connection. Safe to call once. */
-	connect(): void {
+	connect(identity: RuntimeIdentity): void {
+		this.identity = identity;
 		if (this.state !== "idle") {
 			console.warn("[AnonSocket] connect() called in state:", this.state);
 			return;
@@ -200,21 +197,9 @@ export class AnonSocket {
 
 		try {
 			frame = JSON.parse(e.data);
-			console.log("IN", frame);
+			console.debug("IN", frame);
 		} catch {
 			console.error("[AnonSocket] Received non-JSON message:", e.data);
-			return;
-		}
-
-		// Drive the auth handshake before passing frames to the app
-		if (frame.type === "challenge") return await this.handleChallenge(frame);
-
-		if (frame.type === "auth_success") return this.handleAuthSuccess(frame);
-
-		if (frame.type === "auth_error") {
-			console.error("[AnonSocket] Auth rejected:", frame.reason);
-			// Treat auth failure as permanent — don't retry (it won't fix itself)
-			this.close(4001, "auth_error");
 			return;
 		}
 
@@ -223,6 +208,20 @@ export class AnonSocket {
 
 		// Emit typed convenience events
 		switch (frame.type) {
+			case "challenge":
+				await this.handleChallenge(frame);
+				this.emit("challenge", frame);
+				break;
+			case "auth_success":
+				this.handleAuthSuccess(frame);
+				this.emit("auth_success", frame);
+				break;
+			case "auth_error":
+				console.error("[AnonSocket] Auth rejected:", frame.reason);
+				// Treat auth failure as permanent — don't retry (it won't fix itself)
+				this.close(4001, "auth_error");
+				this.emit("auth_error", frame);
+				break;
 			case "search_result":
 				throw new Error("search_result frame not implemented yet");
 			case "presence":
@@ -347,7 +346,7 @@ export class AnonSocket {
 	// ─── Send Helpers ────────────────────────────────────────────────────────────
 
 	private transmit(frame: OutgoingClientFrame): void {
-		console.log("OUT", frame);
+		console.debug("OUT", frame);
 
 		const fullFrame: Client2ServerFrame = {
 			...frame,
@@ -382,49 +381,4 @@ export class AnonSocket {
 		console.debug(`[AnonSocket] ${this.state} → ${next}`);
 		this.state = next;
 	}
-}
-
-// ─── Singleton Factory ────────────────────────────────────────────────────────
-
-let _instance: AnonSocket | null = null;
-
-/**
- * Returns the app-wide socket instance.
- * Creates it on first call — call `connect()` separately to open the connection.
- *
- * @example
- *
-```ts
- * const socket = getSocket(identity, { url: "wss://..." })
- * socket.on("authenticated", () => { ... })
- * socket.connect()
- * 
-*/
-
-export function getOrInitializeSocket(
-	identity?: RuntimeIdentity,
-	config?: SocketConfig,
-) {
-	if (!_instance) {
-		if (!identity) throw new Error("Socket is not initialized");
-
-		_instance = new AnonSocket(identity, config);
-	}
-
-	return _instance;
-}
-
-export function getSocket() {
-	if (!_instance) throw new Error("Socket is not initialized");
-
-	return _instance;
-}
-
-/**
-    Tears down the singleton — useful during testing or account reset.
-*/
-
-export function destroySocket(): void {
-	_instance?.close();
-	_instance = null;
 }
