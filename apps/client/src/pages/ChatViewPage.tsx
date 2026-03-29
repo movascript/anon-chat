@@ -20,7 +20,9 @@ type ListItem =
 export function ChatViewPage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/" });
 	const navigate = useNavigate();
-	const { getContact, getContactMessages, markAsRead } = useAppStore();
+	const getContact = useAppStore((s) => s.getContact);
+	const getContactMessages = useAppStore((s) => s.getContactMessages);
+	const markAsRead = useAppStore((s) => s.markAsRead);
 
 	const contact = getContact(contactId);
 	const rawMessages = getContactMessages(contactId);

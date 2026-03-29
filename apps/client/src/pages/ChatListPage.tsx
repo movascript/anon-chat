@@ -4,13 +4,13 @@ import { useState } from "react";
 import { ContactListItem } from "@/components/ContactListItem";
 import { SearchInput } from "@/components/SearchInput";
 import { SocketStatus } from "@/components/SocketStatus";
-import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/appStore";
+import { useTheme } from "@/store/theme";
 import { cn } from "@/utils/className";
 
 export default function ChatListPage() {
 	const [searchQuery, setSearchQuery] = useState("");
-	const { contacts } = useAppStore();
+	const contacts = useAppStore((s) => s.contacts);
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const location = useLocation();

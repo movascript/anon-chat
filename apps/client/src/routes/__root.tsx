@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Toaster, type ToasterProps } from "sonner";
 import ErrorFallback from "@/components/ErrorFallback";
-import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/appStore";
+import { useTheme } from "@/store/theme";
 export const Route = createRootRoute({
 	component: Root,
 });

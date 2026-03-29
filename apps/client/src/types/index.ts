@@ -69,5 +69,3 @@ export interface Message {
 	status: MessageStatus;
 	ts: number;
 }
-
-export type Theme = "light" | "dark";

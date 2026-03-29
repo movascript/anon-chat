@@ -8,8 +8,8 @@ import {
 	Sun,
 } from "lucide-react";
 import { useState } from "react";
-import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/appStore";
+import { useTheme } from "@/store/theme";
 import { cn } from "@/utils/className";
 
 type State = "idle" | "loading" | "success" | "error";

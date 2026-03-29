@@ -7,8 +7,8 @@ import { Avatar } from "@/components/Avatar";
 import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { Toggle } from "@/components/Toggle";
-import { useTheme } from "@/hooks/useTheme";
 import { useAppStore } from "@/store/appStore";
+import { useTheme } from "@/store/theme";
 
 function Divider() {
 	return <div className="h-px bg-border mx-4" />;
@@ -52,7 +52,9 @@ function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
 }
 
 export default function SettingsPage() {
-	const { identity, logout, updateUserOnlineStatus } = useAppStore();
+	const identity = useAppStore((s) => s.identity);
+	const logout = useAppStore((s) => s.logout);
+	const updateUserOnlineStatus = useAppStore((s) => s.updateUserOnlineStatus);
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 

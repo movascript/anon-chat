@@ -9,7 +9,7 @@ import {
 	RuntimeIdentity2Identity,
 } from "@/lib/identity";
 import { AnonSocket } from "@/lib/socket";
-import type { Contact, Message, Theme } from "@/types";
+import type { Contact, Message } from "@/types";
 
 interface AppState {
 	// Cached data from IndexedDB - which needs to be synced
@@ -19,26 +19,18 @@ interface AppState {
 	socket: AnonSocket;
 	rebuildSocket: () => AnonSocket;
 
-	// UI
-	theme: Theme;
-
 	_hydrated: boolean;
 
 	// Actions
 	syncStore: () => Promise<void>;
 	login: (username: string, displayName: string) => Promise<void>;
 	logout: () => Promise<void>;
-	toggleTheme: () => void;
 	// sendMessage: (contactId: string, content: string) => void;
 	markAsRead: (contactId: UserID) => void;
 	updateUserOnlineStatus: (isOnline: boolean) => void;
 	getContactMessages: (contactId: UserID) => Promise<Message[]>;
 	getContact: (contactId: UserID) => Contact | undefined;
 }
-
-// Persist theme across sessions
-const savedTheme = (localStorage.getItem("theme") as Theme) || "light";
-if (savedTheme === "dark") document.documentElement.classList.add("dark");
 
 export const useAppStore = create<AppState>((set, get) => ({
 	identity: null,
@@ -54,8 +46,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 		return get().socket;
 	},
-
-	theme: savedTheme,
 
 	_hydrated: false,
 	syncStore: async () => {
@@ -108,13 +98,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 		get().rebuildSocket();
 		get().syncStore();
 		toast.success("logged out successfully");
-	},
-
-	toggleTheme: () => {
-		const next = get().theme === "light" ? "dark" : "light";
-		localStorage.setItem("theme", next);
-		document.documentElement.classList.toggle("dark", next === "dark");
-		set({ theme: next });
 	},
 
 	// sendMessage: (contactId, content) => {

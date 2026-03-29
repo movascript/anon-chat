@@ -10,7 +10,7 @@ import { useAppStore } from "@/store/appStore";
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
 	const navigate = useNavigate();
-	const { getContact } = useAppStore();
+	const getContact = useAppStore((s) => s.getContact);
 	const contact = getContact(contactId ?? "");
 
 	const [showBlockConfirm, setShowBlockConfirm] = useState(false);

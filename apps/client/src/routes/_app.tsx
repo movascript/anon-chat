@@ -6,9 +6,9 @@ import {
 	useNavigate,
 	useRouterState,
 } from "@tanstack/react-router";
-import { useTheme } from "@/hooks/useTheme";
 import ChatListPage from "@/pages/ChatListPage";
 import { useAppStore } from "@/store/appStore";
+import { useTheme } from "@/store/theme";
 
 // layout warpper for app
 export const Route = createFileRoute("/_app")({
