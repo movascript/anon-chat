@@ -69,14 +69,25 @@ export interface SearchUserFrame extends WSFrame {
 	username: string;
 }
 
-export interface SearchResultFrame extends WSFrame {
+export type SearchResultFrame = WSFrame & {
 	type: "search_result";
 	username: string;
-	found: boolean;
-	online: boolean;
-	userID?: UserID;
-	publicKey?: string;
-}
+} & (
+		| {
+				found: true;
+				online: boolean;
+				displayName: string;
+				userID: UserID;
+				publicKey: string;
+		  }
+		| {
+				found: false;
+				online?: never;
+				displayName?: never;
+				userID?: never;
+				publicKey?: never;
+		  }
+	);
 
 // ─── Chat Request ─────────────────────────────────────────────────────────────
 

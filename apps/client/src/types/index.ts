@@ -69,3 +69,10 @@ export interface Message {
 	status: MessageStatus;
 	ts: number;
 }
+
+export type SearchedContact = {
+	username: string;
+	displayName: string;
+	userID: UserID;
+	publicKey: JsonWebKey;
+};

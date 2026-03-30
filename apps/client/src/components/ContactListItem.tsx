@@ -1,23 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import type { Contact } from "@/types";
 import { cn } from "@/utils/className";
+import { formatTime } from "@/utils/date";
 import { Avatar } from "./Avatar";
 import { StatusIndicator } from "./StatusIndicator";
 
 interface ContactListItemProps {
 	contact: Contact;
-}
-
-function formatTime(date?: Date): string {
-	if (!date) return "";
-	const now = new Date();
-	const diff = now.getTime() - date.getTime();
-	const days = Math.floor(diff / 86400000);
-	if (days === 0)
-		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-	if (days === 1) return "Yesterday";
-	if (days < 7) return date.toLocaleDateString([], { weekday: "short" });
-	return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 export function ContactListItem({ contact }: ContactListItemProps) {
@@ -30,31 +19,31 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 			inactiveProps={{ className: "hover:bg-secondary active:bg-tertiary" }}
 		>
 			<div className="relative shrink-0">
-				<Avatar name={contact.name} color={contact.avatarColor} size="md" />
+				<Avatar name={contact.displayName} color="red" size="md" />
 				<div className="absolute -bottom-0.5 -right-0.5">
-					<StatusIndicator isOnline={contact.isOnline} />
+					<StatusIndicator isOnline={contact.online} />
 				</div>
 			</div>
 
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center justify-between gap-2">
 					<span className="font-medium text-sm text-primary-foreground truncate">
-						{contact.name}
+						{contact.displayName}
 					</span>
 					<span className="text-xs text-muted shrink-0">
-						{formatTime(contact.lastMessageTime)}
+						{formatTime(contact.lastMessageAt)}
 					</span>
 				</div>
 				<div className="flex items-center justify-between gap-2 mt-0.5">
 					<span
 						className={cn(
 							"text-xs truncate",
-							contact.isTyping
+							contact.online // ! typing
 								? "text-accent italic"
 								: "text-secondary-foreground",
 						)}
 					>
-						{contact.isTyping
+						{contact.online // ! typing
 							? "typing…"
 							: (contact.lastMessage ?? "No messages yet")}
 					</span>

@@ -223,7 +223,8 @@ export class AnonSocket {
 				this.emit("auth_error", frame);
 				break;
 			case "search_result":
-				throw new Error("search_result frame not implemented yet");
+				this.emit("search_result", frame);
+				break;
 			case "presence":
 				this.emit("presence", frame);
 				break;

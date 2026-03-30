@@ -203,10 +203,8 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 	if (!target || !target.authenticated) {
 		store.sendToSocket(socketID, {
 			type: "search_result",
-
 			username: frame.username,
 			found: false,
-			online: false,
 		});
 		return;
 	}
@@ -214,6 +212,7 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 	store.sendToSocket(socketID, {
 		type: "search_result",
 		username: target.username,
+		displayName: target.displayName,
 		found: true,
 		online: true,
 		userID: target.userID,

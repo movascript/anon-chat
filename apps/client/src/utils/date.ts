@@ -5,6 +5,7 @@ function toDate(value: Date | number): Date {
 export function formatLastSeen(date?: Date | number): string {
 	if (!date) return "a long time ago";
 	const d = toDate(date);
+
 	const diff = Date.now() - d.getTime();
 	const mins = Math.floor(diff / 60000);
 	if (mins < 1) return "just now";
@@ -24,6 +25,7 @@ export function isSameDay(a: Date | number, b: Date | number): boolean {
 
 export function formatDateSeparator(date: Date | number): string {
 	const d = toDate(date);
+
 	const now = new Date();
 	if (isSameDay(d, now)) return "Today";
 	const yesterday = new Date(now);
@@ -34,4 +36,18 @@ export function formatDateSeparator(date: Date | number): string {
 		month: "long",
 		day: "numeric",
 	});
+}
+
+export function formatTime(date?: Date | number | null): string {
+	if (!date) return "";
+	const d = toDate(date);
+
+	const now = new Date();
+	const diff = now.getTime() - d.getTime();
+	const days = Math.floor(diff / 86400000);
+	if (days === 0)
+		return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+	if (days === 1) return "Yesterday";
+	if (days < 7) return d.toLocaleDateString([], { weekday: "short" });
+	return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }

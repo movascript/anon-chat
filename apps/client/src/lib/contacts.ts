@@ -2,11 +2,10 @@ import type {
 	ChatRequestInFrame,
 	ChatResponseFrame,
 	PresenceFrame,
-	UserID,
 } from "@repo/types";
-import type { Contact } from "@/types";
+import { useAppStore } from "@/store/appStore";
+import type { Contact, SearchedContact } from "@/types";
 import { db } from "./db";
-import type { AnonSocket } from "./socket";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,8 +32,6 @@ const presenceCache = new Map<string, boolean>();
 // ─── Contacts Manager ─────────────────────────────────────────────────────────
 
 export class ContactsManager {
-	private socket: AnonSocket;
-	private myUserID: string;
 	private unsubs: Array<() => void> = [];
 
 	/**
@@ -44,11 +41,6 @@ export class ContactsManager {
 	private onPresenceChange: Array<(userID: string, online: boolean) => void> =
 		[];
 	private onIncomingRequest: Array<(frame: ChatRequestInFrame) => void> = [];
-
-	constructor(socket: AnonSocket, myUserID: string) {
-		this.socket = socket;
-		this.myUserID = myUserID;
-	}
 
 	// ─── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -64,10 +56,10 @@ export class ContactsManager {
 	/**
 	 * Detach all socket listeners. Call on logout / account reset.
 	 */
-	destroy(): void {
-		for (const unsub of this.unsubs) unsub();
-		this.unsubs = [];
-	}
+	// destroy(): void {
+	// 	for (const unsub of this.unsubs) unsub();
+	// 	this.unsubs = [];
+	// }
 
 	// ─── Sending a Contact Request ─────────────────────────────────────────────
 
@@ -80,18 +72,18 @@ export class ContactsManager {
 	 * 3. Send `chat_request` frame to server.
 	 * 4. Return the new contact record.
 	 */
-	async sendRequest(
-		toUserID: UserID,
-		username: string, // display name we know them by (from search result)
-		displayName: string,
-		publicKey: JsonWebKey,
-	): Promise<Contact> {
-		if (toUserID === this.myUserID) {
+	static async sendRequest({
+		username,
+		displayName,
+		userID,
+		publicKey,
+	}: SearchedContact): Promise<Contact> {
+		if (userID === useAppStore.getState().identity?.userID) {
 			throw new Error("Cannot send a contact request to yourself");
 		}
 
 		// Idempotency: if a record already exists, return it as-is
-		const existing = await db.contacts.get(toUserID);
+		const existing = await db.contacts.get(userID);
 		if (existing) {
 			return existing;
 		}
@@ -99,7 +91,7 @@ export class ContactsManager {
 		const now = Date.now();
 
 		const contact: Contact = {
-			id: toUserID,
+			id: userID,
 			username,
 			displayName,
 			publicKey,
@@ -116,12 +108,12 @@ export class ContactsManager {
 
 		await db.contacts.put(contact);
 
-		this.socket.send({
+		useAppStore.getState().socket.send({
 			type: "chat_request",
-			toUserID,
+			toUserID: userID,
 		});
 
-		console.info(`[Contacts] Sent chat request to ${username} (${toUserID})`);
+		console.info(`[Contacts] Sent chat request to ${username} (${userID})`);
 		return contact;
 	}
 
@@ -159,13 +151,13 @@ export class ContactsManager {
 
 			await db.contacts.put(contact);
 
-			this.socket.send({
+			useAppStore.getState().socket.send({
 				type: "chat_accept",
 				toUserID: frame.fromUserID,
 			});
 
 			// Subscribe to their online/offline events
-			this.subscribePresence([frame.fromUserID]);
+			// ! this.subscribePresence([frame.fromUserID]);
 
 			console.info(
 				`[Contacts] Accepted request from ${frame.fromUsername} (${frame.fromUserID})`,
@@ -188,7 +180,7 @@ export class ContactsManager {
 		frame: ChatRequestInFrame,
 		block = false,
 	): Promise<void> {
-		this.socket.send({
+		useAppStore.getState().socket.send({
 			type: "chat_decline",
 			toUserID: frame.fromUserID,
 		});
@@ -243,25 +235,29 @@ export class ContactsManager {
 
 	// ─── Presence Subscription ─────────────────────────────────────────────────
 
+	// ! not yet determined to use presence or not
+
 	/**
 	 * Subscribe to presence events for a set of userIDs.
 	 * Sends a `subscribe_presence` frame to the server;
 	 * the server will immediately push current status and future changes.
 	 */
-	subscribePresence(userIDs: string[]): void {
-		if (userIDs.length === 0) return;
-		this.socket.send({ type: "subscribe_presence", userIDs });
-	}
+	// subscribePresence(userIDs: string[]): void {
+	// 	if (userIDs.length === 0) return;
+	// 	useAppStore.getState().socket.send({ type: "subscribe_presence", userIDs });
+	// }
 
 	/**
 	 * Unsubscribe from presence events for a set of userIDs.
 	 * Also clears them from the local cache.
 	 */
-	unsubscribePresence(userIDs: string[]): void {
-		if (userIDs.length === 0) return;
-		this.socket.send({ type: "unsubscribe_presence", userIDs });
-		for (const id of userIDs) presenceCache.delete(id);
-	}
+	// unsubscribePresence(userIDs: string[]): void {
+	// 	if (userIDs.length === 0) return;
+	// 	useAppStore
+	// 		.getState()
+	// 		.socket.send({ type: "unsubscribe_presence", userIDs });
+	// 	for (const id of userIDs) presenceCache.delete(id);
+	// }
 
 	// ─── Reactive Listeners (for UI layer) ────────────────────────────────────
 
@@ -305,17 +301,21 @@ export class ContactsManager {
 	// ─── Private: Socket Event Handling ───────────────────────────────────────
 
 	private attachSocketListeners(): void {
-		const unsubPresence = this.socket.on("presence", (frame) =>
-			this.handlePresenceFrame(frame),
-		);
+		const unsubPresence = useAppStore
+			.getState()
+			.socket.on("presence", (frame) => this.handlePresenceFrame(frame));
 
-		const unsubRequest = this.socket.on("chat_request_in", (frame) =>
-			this.handleChatRequestInFrame(frame),
-		);
+		const unsubRequest = useAppStore
+			.getState()
+			.socket.on("chat_request_in", (frame) =>
+				this.handleChatRequestInFrame(frame),
+			);
 
-		const unsubResponse = this.socket.on("chat_response", (frame) =>
-			this.handleChatResponseFrame(frame),
-		);
+		const unsubResponse = useAppStore
+			.getState()
+			.socket.on("chat_response", (frame) =>
+				this.handleChatResponseFrame(frame),
+			);
 
 		this.unsubs.push(unsubPresence, unsubRequest, unsubResponse);
 	}
@@ -348,7 +348,7 @@ export class ContactsManager {
 			console.info(
 				`[Contacts] Auto-accepting duplicate request from ${frame.fromUserID}`,
 			);
-			this.socket.send({
+			useAppStore.getState().socket.send({
 				type: "chat_accept",
 				toUserID: frame.fromUserID,
 			});
@@ -391,7 +391,7 @@ export class ContactsManager {
 
 		if (frame.accepted) {
 			// Start watching their presence now that we're connected
-			this.subscribePresence([frame.fromUserID]);
+			// ! this.subscribePresence([frame.fromUserID]);
 			console.info(`[Contacts] ${frame.fromUserID} accepted our request`);
 		} else {
 			console.info(`[Contacts] ${frame.fromUserID} declined our request`);
@@ -416,50 +416,10 @@ export class ContactsManager {
 
 		const ids = accepted.map((c) => c.id);
 		if (ids.length > 0) {
-			this.subscribePresence(ids);
+			// ! this.subscribePresence(ids);
 			console.info(
 				`[Contacts] Re-subscribed presence for ${ids.length} contact(s)`,
 			);
 		}
 	}
-}
-
-// ─── Module-Level Singleton ───────────────────────────────────────────────────
-
-let _instance: ContactsManager | null = null;
-
-/**
-
-    Returns the app-wide ContactsManager singleton.
-    @example
-
-    After socket reaches "authenticated":
-    const contacts = getContactsManager(socket, identity.userID)
-    await contacts.init()
-
-    contacts.onPresence((userID, online) => { ... })
-    contacts.onRequest((frame)  => { showRequestDialog(frame) })
- 
-
-*/
-
-export function getContactsManager(
-	socket: AnonSocket,
-
-	myUserID: string,
-): ContactsManager {
-	if (!_instance) {
-		_instance = new ContactsManager(socket, myUserID);
-	}
-
-	return _instance;
-}
-
-/**
-    Tears down the singleton — call on logout or account reset.
-*/
-
-export function destroyContactsManager(): void {
-	_instance?.destroy();
-	_instance = null;
 }
