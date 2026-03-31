@@ -1,7 +1,15 @@
 import type { MessageID } from "@repo/types";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, MoreVertical } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import {
+	ALargeSmall,
+	ArrowLeft,
+	Ban,
+	Clock,
+	MoreVertical,
+	UserCheck,
+	UserX,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Avatar } from "@/components/Avatar";
 import InputBox from "@/components/InputBox";
@@ -17,6 +25,29 @@ type ListItem =
 	| { kind: "date"; label: string; key: string }
 	| { kind: "msg"; message: Message };
 
+const STATUS_INFO = {
+	pending_out: {
+		icon: Clock,
+		message: "Request sent. Waiting for acceptance...",
+	},
+	pending_in: {
+		icon: UserCheck,
+		message: "Contact request pending. Accept to start chatting.",
+	},
+	accepted: {
+		icon: ALargeSmall,
+		message: "This message should not be shown!",
+	},
+	declined: {
+		icon: UserX,
+		message: "Contact request was declined.",
+	},
+	blocked: {
+		icon: Ban,
+		message: "This contact is blocked.",
+	},
+};
+
 export function ChatViewPage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/" });
 	const navigate = useNavigate();
@@ -25,13 +56,20 @@ export function ChatViewPage() {
 	const markAsRead = useAppStore((s) => s.markAsRead);
 
 	const contact = getContact(contactId);
-	const rawMessages = getContactMessages(contactId);
+
+	const [rawMessages, setRawMessages] = useState<Message[]>([]);
+
+	useEffect(() => {
+		if (contact?.status === "accepted") {
+			getContactMessages(contactId).then(setRawMessages);
+		}
+	}, [contactId, contact?.status, getContactMessages]);
 
 	const isTyping = useTypingIndicator(contactId ?? "");
 
 	useEffect(() => {
-		if (contactId) markAsRead(contactId);
-	}, [contactId, markAsRead]);
+		if (contactId && contact?.status === "accepted") markAsRead(contactId);
+	}, [contactId, contact?.status, markAsRead]);
 
 	const listItems: ListItem[] = useMemo(() => {
 		const items: ListItem[] = [];
@@ -71,6 +109,7 @@ export function ChatViewPage() {
 	}
 
 	const subtitle = contact.online ? "Online" : "Offline";
+	const isAccepted = contact.status === "accepted";
 
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary overflow-hidden">
@@ -131,9 +170,26 @@ export function ChatViewPage() {
 				</div>
 			</header>
 
-			{/* Messages */}
+			{/* Messages or Status Message */}
 			<div className="flex-1 overflow-hidden">
-				{listItems.length === 0 ? (
+				{!isAccepted ? (
+					<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-3">
+						{(() => {
+							const StatusIcon = STATUS_INFO[contact.status].icon;
+							return (
+								<>
+									<StatusIcon
+										className="w-12 h-12 text-muted"
+										strokeWidth={1.5}
+									/>
+									<p className="text-sm text-secondary-foreground text-center px-4">
+										{STATUS_INFO[contact.status].message}
+									</p>
+								</>
+							);
+						})()}
+					</div>
+				) : listItems.length === 0 ? (
 					<div className="flex-1 flex items-center justify-center h-full animate-fade-in">
 						<p className="text-sm text-secondary-foreground">
 							No messages yet. Say hi! 👋
@@ -172,7 +228,7 @@ export function ChatViewPage() {
 				)}
 			</div>
 
-			<InputBox contactId={contactId} />
+			<InputBox contactId={contactId} disabled={!isAccepted} />
 		</div>
 	);
 }

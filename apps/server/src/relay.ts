@@ -199,8 +199,9 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 
 function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 	const target = store.getClientByUsername(frame.username);
+	const senderUsername = store.getClientBySocketID(socketID)?.username;
 
-	if (!target || !target.authenticated) {
+	if (!target || !target.authenticated || senderUsername === frame.username) {
 		store.sendToSocket(socketID, {
 			type: "search_result",
 			username: frame.username,
@@ -224,6 +225,7 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 
 function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 	const sender = store.getClientBySocketID(socketID);
+
 	if (!sender) return;
 
 	const target = store.getClientByUserID(frame.toUserID);

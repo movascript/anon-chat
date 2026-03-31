@@ -1,11 +1,50 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Ban, MessageCircle, Trash2 } from "lucide-react";
+import {
+	Ban,
+	Clock,
+	MessageCircle,
+	Trash2,
+	UserCheck,
+	UserX,
+} from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { useAppStore } from "@/store/appStore";
+import type { ContactStatus } from "@/types";
+
+const CONTACT_STATUS_INFO: Record<
+	ContactStatus,
+	{ label: string; icon: React.ElementType; className: string }
+> = {
+	accepted: {
+		icon: MessageCircle,
+		label: "Connected",
+		className: "text-accent",
+	},
+	pending_out: {
+		icon: Clock,
+		label: "Request Sent",
+		className: "text-yellow-500",
+	},
+	pending_in: {
+		icon: UserCheck,
+		label: "Wants to Connect",
+		className: "text-blue-500",
+	},
+	declined: {
+		icon: UserX,
+		label: "Request Declined",
+		className: "text-red-500",
+	},
+	blocked: {
+		icon: Ban,
+		label: "Blocked",
+		className: "text-red-500",
+	},
+};
 
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
@@ -29,6 +68,10 @@ export default function ProfilePage() {
 		);
 	}
 
+	const statusInfo = CONTACT_STATUS_INFO[contact.status];
+	const StatusIcon = statusInfo.icon;
+	const isAccepted = contact.status === "accepted";
+
 	return (
 		<div className="flex flex-col animate-fade-in h-full bg-primary">
 			<NavigationHeader title="Contact Info" showBack />
@@ -37,12 +80,7 @@ export default function ProfilePage() {
 				{/* Hero */}
 				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
 					<div className="relative">
-						<Avatar
-							name={contact.displayName}
-							// color={contact.avatarColor}
-							color="#ffeeaa" // ! should be changed
-							size="xl"
-						/>
+						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
 						<div className="absolute -bottom-1 -right-1">
 							<StatusIndicator isOnline={contact.online} size="md" />
 						</div>
@@ -58,8 +96,16 @@ export default function ProfilePage() {
 							contact.online ? "text-accent" : "text-muted"
 						}`}
 					>
-						{contact.online ? "● Online" : `Last seen recently`}
+						{contact.online ? "● Online" : "Last seen recently"}
 					</p>
+
+					{/* Contact status badge */}
+					<div
+						className={`flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-medium border border-current/20 bg-current/5 ${statusInfo.className}`}
+					>
+						<StatusIcon className="w-3 h-3" strokeWidth={2} />
+						{statusInfo.label}
+					</div>
 				</div>
 
 				{/* Message action */}
@@ -72,11 +118,25 @@ export default function ProfilePage() {
 								params: { contactId: contact.id },
 							})
 						}
-						className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover active:scale-[0.98] text-white transition-all duration-200 shadow-sm"
+						disabled={!isAccepted}
+						className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover active:scale-[0.98] text-white transition-all duration-200 shadow-sm disabled:opacity-40 disabled:pointer-events-none"
 					>
 						<MessageCircle className="w-4 h-4" strokeWidth={2} />
 						Send Message
 					</button>
+
+					{!isAccepted && (
+						<p className="text-xs text-center text-secondary-foreground mt-2">
+							{contact.status === "pending_out" &&
+								"Messaging will be available once they accept your request."}
+							{contact.status === "pending_in" &&
+								"Accept the contact request to start messaging."}
+							{contact.status === "declined" &&
+								"This request was declined. Messaging is unavailable."}
+							{contact.status === "blocked" &&
+								"Unblock this contact to start messaging."}
+						</p>
+					)}
 				</div>
 
 				{/* Danger zone */}

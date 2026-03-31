@@ -1,37 +1,34 @@
+import { useHotkey } from "@tanstack/react-hotkeys";
 import { Send } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAppStore } from "@/store/appStore";
 import { cn } from "@/utils/className";
 
-const InputBox = ({ contactId }: { contactId: string }) => {
+interface InputBoxProps {
+	contactId: string;
+	disabled?: boolean;
+}
+
+const InputBox = ({ contactId, disabled }: InputBoxProps) => {
 	const { sendMessage } = useAppStore();
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const [inputText, setInputText] = useState("");
 
-	const handleSend = useCallback(() => {
-		const text = inputText.trim();
-		if (!text || !contactId) return;
+	const text = inputText.trim();
+
+	const readyToSend = Boolean(!disabled && text && contactId);
+
+	const handleSend = () => {
+		if (!readyToSend) return;
 		sendMessage(contactId, text);
 		setInputText("");
 
 		textareaRef.current?.focus();
-	}, [inputText, contactId, sendMessage]);
-
-	const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-			e.preventDefault();
-			handleSend();
-		}
 	};
 
-	useEffect(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "auto";
-			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-		}
-	}, [inputText]);
+	useHotkey("Control+Enter", handleSend, { target: textareaRef });
 
 	return (
 		<div className="shrink-0 px-4 py-3 bg-header-bg border-t border-border">
@@ -40,10 +37,14 @@ const InputBox = ({ contactId }: { contactId: string }) => {
 					<textarea
 						ref={textareaRef}
 						value={inputText}
-						onChange={(e) => setInputText(e.target.value)}
-						onKeyDown={handleKey}
+						onChange={(e) => {
+							setInputText(e.target.value);
+							e.currentTarget.style.height = "auto";
+							e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+						}}
 						placeholder="Message…"
 						rows={1}
+						disabled={disabled}
 						className="flex-1 bg-transparent text-sm text-primary-foreground placeholder:text-muted focus:outline-none resize-none max-h-32 overflow-y-auto"
 					/>
 				</div>
@@ -51,11 +52,11 @@ const InputBox = ({ contactId }: { contactId: string }) => {
 				<button
 					type="button"
 					onClick={handleSend}
-					disabled={!inputText.trim()}
+					disabled={readyToSend}
 					aria-label="Send"
 					className={cn(
 						"p-2.5 rounded-full transition-all duration-200 shrink-0 text-sm font-semibold",
-						inputText.trim()
+						readyToSend
 							? "bg-accent hover:bg-accent-hover active:scale-95 text-white shadow-sm"
 							: "bg-tertiary text-muted cursor-not-allowed",
 					)}

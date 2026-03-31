@@ -35,7 +35,7 @@ function Root() {
 				className="toaster group"
 			/>
 
-			<TanStackDevtools
+			{/* <TanStackDevtools
 				config={{
 					position: "bottom-right",
 				}}
@@ -49,7 +49,7 @@ function Root() {
 						render: <HotkeysDevtoolsPanel />,
 					},
 				]}
-			/>
+			/> */}
 		</>
 	);
 }
