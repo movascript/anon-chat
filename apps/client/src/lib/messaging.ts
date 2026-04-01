@@ -331,7 +331,6 @@ export class MessagingManager {
 			// ! that doesnt exist on my contact list, should be refactored
 			const record: Contact = {
 				id: userID,
-				online: false,
 				publicKey: {},
 				status: "pending_in",
 				username: "xoxo", // ! should be changed

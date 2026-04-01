@@ -1,8 +1,10 @@
 import { UserPlus } from "lucide-react";
-import { ContactsManager } from "@/lib/contacts";
+import { useAppStore } from "@/store/appStore";
 import type { SearchedContact } from "@/types";
 
 export function FoundUserCard({ user }: { user: SearchedContact }) {
+	const sendChatRequest = useAppStore((s) => s.sendChatRequest);
+
 	return (
 		<div className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors animate-fade-in">
 			<div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
@@ -20,7 +22,7 @@ export function FoundUserCard({ user }: { user: SearchedContact }) {
 			</div>
 			<button
 				type="button"
-				onClick={() => ContactsManager.sendRequest(user)}
+				onClick={() => sendChatRequest(user)}
 				className="p-2 rounded-full hover:bg-tertiary transition-colors shrink-0"
 				aria-label="Send contact request"
 			>

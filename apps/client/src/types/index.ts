@@ -27,7 +27,8 @@ export type ContactStatus =
 	| "pending_in"
 	| "accepted"
 	| "declined"
-	| "blocked";
+	| "blocked"
+	| "deleted";
 
 /**
  * One record per known peer.
@@ -40,7 +41,6 @@ export interface Contact {
 	displayName: string;
 	publicKey: JsonWebKey;
 	status: ContactStatus;
-	online: boolean;
 	lastMessage: string | null; // preview text (empty string before any message)
 	lastMessageAt: number | null; // ms timestamp (0 before any message)
 	unreadCount: number;

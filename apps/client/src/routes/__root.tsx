@@ -1,7 +1,4 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { HotkeysDevtoolsPanel } from "@tanstack/react-hotkeys-devtools";
 import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { useEffect } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Toaster, type ToasterProps } from "sonner";

@@ -1,7 +1,6 @@
 import type { MessageID } from "@repo/types";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
-	ALargeSmall,
 	ArrowLeft,
 	Ban,
 	Clock,
@@ -17,43 +16,130 @@ import { MessageBubble } from "@/components/MessageBubble";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { getMessages } from "@/lib/db";
 import { useAppStore } from "@/store/appStore";
-import type { Message } from "@/types";
+import type { Contact, Message } from "@/types";
 import { formatDateSeparator, isSameDay } from "@/utils/date";
 
+interface StatusViewProps {
+	contact: Contact;
+	onNavigate: () => void;
+}
+
+function PendingInView({ contact, onNavigate }: StatusViewProps) {
+	const acceptChatRequest = useAppStore((s) => s.acceptChatRequest);
+	const declineChatRequest = useAppStore((s) => s.declineChatRequest);
+
+	return (
+		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
+			<UserCheck className="w-12 h-12 text-muted" strokeWidth={1.5} />
+			<p className="text-sm text-secondary-foreground text-center">
+				Contact request pending. Accept to start chatting.
+			</p>
+			<div className="flex flex-col gap-2 w-full max-w-xs">
+				<button
+					type="button"
+					onClick={() => {
+						acceptChatRequest(contact.id);
+						onNavigate();
+					}}
+					className="w-full py-2.5 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover text-white transition-all duration-200"
+				>
+					Accept
+				</button>
+				<div className="flex gap-2">
+					<button
+						type="button"
+						onClick={() => {
+							declineChatRequest(contact.id);
+							onNavigate();
+						}}
+						className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
+					>
+						Decline
+					</button>
+					<button
+						type="button"
+						onClick={() => {
+							declineChatRequest(contact.id, true);
+							onNavigate();
+						}}
+						className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50 transition-all duration-200"
+					>
+						Block
+					</button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function BlockedView({ contact, onNavigate }: StatusViewProps) {
+	const unblockContact = useAppStore((s) => s.unblockContact);
+
+	return (
+		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
+			<Ban className="w-12 h-12 text-muted" strokeWidth={1.5} />
+			<p className="text-sm text-secondary-foreground text-center">
+				This contact is blocked.
+			</p>
+			<button
+				type="button"
+				onClick={() => {
+					unblockContact(contact.id);
+					onNavigate();
+				}}
+				className="w-full max-w-xs py-2.5 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover text-white transition-all duration-200"
+			>
+				Unblock
+			</button>
+		</div>
+	);
+}
+
+function DeclinedView({ contact, onNavigate }: StatusViewProps) {
+	const deleteContact = useAppStore((s) => s.deleteContact);
+
+	return (
+		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
+			<UserX className="w-12 h-12 text-muted" strokeWidth={1.5} />
+			<p className="text-sm text-secondary-foreground text-center">
+				Contact request was declined.
+			</p>
+			<button
+				type="button"
+				onClick={() => {
+					deleteContact(contact.id);
+					onNavigate();
+				}}
+				className="w-full max-w-xs py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
+			>
+				Delete Contact
+			</button>
+		</div>
+	);
+}
+
+function PendingOutView() {
+	return (
+		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-3">
+			<Clock className="w-12 h-12 text-muted" strokeWidth={1.5} />
+			<p className="text-sm text-secondary-foreground text-center px-4">
+				Request sent. Waiting for acceptance...
+			</p>
+		</div>
+	);
+}
 type ListItem =
 	| { kind: "date"; label: string; key: string }
 	| { kind: "msg"; message: Message };
-
-const STATUS_INFO = {
-	pending_out: {
-		icon: Clock,
-		message: "Request sent. Waiting for acceptance...",
-	},
-	pending_in: {
-		icon: UserCheck,
-		message: "Contact request pending. Accept to start chatting.",
-	},
-	accepted: {
-		icon: ALargeSmall,
-		message: "This message should not be shown!",
-	},
-	declined: {
-		icon: UserX,
-		message: "Contact request was declined.",
-	},
-	blocked: {
-		icon: Ban,
-		message: "This contact is blocked.",
-	},
-};
 
 export function ChatViewPage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/" });
 	const navigate = useNavigate();
 	const getContact = useAppStore((s) => s.getContact);
-	const getContactMessages = useAppStore((s) => s.getContactMessages);
 	const markAsRead = useAppStore((s) => s.markAsRead);
+	const presenceMap = useAppStore((s) => s.presenceMap);
 
 	const contact = getContact(contactId);
 
@@ -61,9 +147,9 @@ export function ChatViewPage() {
 
 	useEffect(() => {
 		if (contact?.status === "accepted") {
-			getContactMessages(contactId).then(setRawMessages);
+			getMessages(contactId).then(setRawMessages);
 		}
-	}, [contactId, contact?.status, getContactMessages]);
+	}, [contactId, contact?.status]);
 
 	const isTyping = useTypingIndicator(contactId ?? "");
 
@@ -108,7 +194,7 @@ export function ChatViewPage() {
 		);
 	}
 
-	const subtitle = contact.online ? "Online" : "Offline";
+	const subtitle = presenceMap.get(contact.id) ? "Online" : "Offline";
 	const isAccepted = contact.status === "accepted";
 
 	return (
@@ -136,7 +222,7 @@ export function ChatViewPage() {
 					<div className="relative shrink-0">
 						<Avatar name={contact.displayName} color="red" size="md" />
 						<div className="absolute -bottom-0.5 -right-0.5">
-							<StatusIndicator isOnline={contact.online} />
+							<StatusIndicator isOnline={presenceMap.get(contact.id)} />
 						</div>
 					</div>
 					<div className="min-w-0 text-left">
@@ -145,7 +231,7 @@ export function ChatViewPage() {
 						</p>
 						<p
 							className={`text-xs truncate leading-tight transition-colors duration-200 ${
-								contact.online || isTyping
+								presenceMap.get(contact.id) || isTyping
 									? "text-accent"
 									: "text-secondary-foreground"
 							}`}
@@ -173,23 +259,30 @@ export function ChatViewPage() {
 			{/* Messages or Status Message */}
 			<div className="flex-1 overflow-hidden">
 				{!isAccepted ? (
-					<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-3">
-						{(() => {
-							const StatusIcon = STATUS_INFO[contact.status].icon;
-							return (
-								<>
-									<StatusIcon
-										className="w-12 h-12 text-muted"
-										strokeWidth={1.5}
-									/>
-									<p className="text-sm text-secondary-foreground text-center px-4">
-										{STATUS_INFO[contact.status].message}
-									</p>
-								</>
-							);
-						})()}
-					</div>
+					<>
+						{contact.status === "pending_in" && (
+							<PendingInView
+								contact={contact}
+								onNavigate={() => navigate({ to: "/" })}
+							/>
+						)}
+						{contact.status === "pending_out" && <PendingOutView />}
+						{contact.status === "blocked" && (
+							<BlockedView
+								contact={contact}
+								onNavigate={() => navigate({ to: "/" })}
+							/>
+						)}
+						{contact.status === "declined" && (
+							<DeclinedView
+								contact={contact}
+								onNavigate={() => navigate({ to: "/" })}
+							/>
+						)}
+					</>
 				) : listItems.length === 0 ? (
+					// ... rest of the code
+
 					<div className="flex-1 flex items-center justify-center h-full animate-fade-in">
 						<p className="text-sm text-secondary-foreground">
 							No messages yet. Say hi! 👋

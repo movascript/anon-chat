@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useAppStore } from "@/store/appStore";
 import type { Contact } from "@/types";
 import { cn } from "@/utils/className";
 import { formatTime } from "@/utils/date";
@@ -10,6 +11,7 @@ interface ContactListItemProps {
 }
 
 export function ContactListItem({ contact }: ContactListItemProps) {
+	const presenceMap = useAppStore((s) => s.presenceMap);
 	return (
 		<Link
 			to="/chat/$contactId"
@@ -21,7 +23,7 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 			<div className="relative shrink-0">
 				<Avatar name={contact.displayName} color="red" size="md" />
 				<div className="absolute -bottom-0.5 -right-0.5">
-					<StatusIndicator isOnline={contact.online} />
+					<StatusIndicator isOnline={presenceMap.get(contact.id)} />
 				</div>
 			</div>
 
@@ -38,12 +40,12 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 					<span
 						className={cn(
 							"text-xs truncate",
-							contact.online // ! typing
+							presenceMap.get(contact.id) // ! typing
 								? "text-accent italic"
 								: "text-secondary-foreground",
 						)}
 					>
-						{contact.online // ! typing
+						{presenceMap.get(contact.id) // ! typing
 							? "typing…"
 							: (contact.lastMessage ?? "No messages yet")}
 					</span>

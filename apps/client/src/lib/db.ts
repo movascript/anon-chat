@@ -105,10 +105,7 @@ export async function getAcceptedContacts() {
  * `updatedAt` is always refreshed unless explicitly supplied.
  */
 export async function upsertContact(
-	contact: Omit<Contact, "createdAt" | "updatedAt"> & {
-		createdAt?: number;
-		updatedAt?: number;
-	},
+	contact: Omit<Contact, "createdAt" | "updatedAt">,
 ): Promise<void> {
 	const now = Date.now();
 	const existing = await db.contacts.get(contact.id);
@@ -119,7 +116,6 @@ export async function upsertContact(
 		displayName: contact.displayName,
 		publicKey: contact.publicKey,
 		status: contact.status,
-		online: contact.online,
 
 		// Conversation state: use provided value, or existing, or default
 		lastMessage: contact.lastMessage ?? existing?.lastMessage ?? "",
@@ -127,8 +123,8 @@ export async function upsertContact(
 		unreadCount: contact.unreadCount ?? existing?.unreadCount ?? 0,
 
 		// Timestamps
-		createdAt: existing?.createdAt ?? contact.createdAt ?? now,
-		updatedAt: contact.updatedAt ?? now,
+		createdAt: existing?.createdAt ?? now,
+		updatedAt: now,
 	};
 
 	await db.contacts.put(record);
@@ -139,10 +135,6 @@ export async function updateContactStatus(
 	status: ContactStatus,
 ) {
 	await db.contacts.update(userID, { status, updatedAt: Date.now() });
-}
-
-export async function updateContactPresence(userID: UserID, online: boolean) {
-	await db.contacts.update(userID, { online, updatedAt: Date.now() });
 }
 
 /**

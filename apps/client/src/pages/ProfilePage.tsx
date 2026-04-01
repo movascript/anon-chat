@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import {
 	Ban,
 	Clock,
+	Delete,
 	MessageCircle,
 	Trash2,
 	UserCheck,
@@ -44,12 +45,18 @@ const CONTACT_STATUS_INFO: Record<
 		label: "Blocked",
 		className: "text-red-500",
 	},
+	deleted: {
+		icon: Delete,
+		label: "deleted",
+		className: "text-red-500",
+	},
 };
 
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
 	const navigate = useNavigate();
 	const getContact = useAppStore((s) => s.getContact);
+	const presenceMap = useAppStore((s) => s.presenceMap);
 	const contact = getContact(contactId ?? "");
 
 	const [showBlockConfirm, setShowBlockConfirm] = useState(false);
@@ -82,7 +89,10 @@ export default function ProfilePage() {
 					<div className="relative">
 						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
 						<div className="absolute -bottom-1 -right-1">
-							<StatusIndicator isOnline={contact.online} size="md" />
+							<StatusIndicator
+								isOnline={presenceMap.get(contact.id)}
+								size="md"
+							/>
 						</div>
 					</div>
 					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
@@ -93,10 +103,10 @@ export default function ProfilePage() {
 					</p>
 					<p
 						className={`text-xs mt-2 font-medium ${
-							contact.online ? "text-accent" : "text-muted"
+							presenceMap.get(contact.id) ? "text-accent" : "text-muted"
 						}`}
 					>
-						{contact.online ? "● Online" : "Last seen recently"}
+						{presenceMap.get(contact.id) ? "● Online" : "Last seen recently"}
 					</p>
 
 					{/* Contact status badge */}
