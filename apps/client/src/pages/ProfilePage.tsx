@@ -55,10 +55,10 @@ export default function ProfilePage() {
 
 	if (!contact) {
 		return (
-			<div className="flex flex-col h-full bg-primary">
+			<div className="flex h-full flex-col bg-primary">
 				<NavigationHeader title="Contact" showBack />
-				<div className="flex-1 flex items-center justify-center">
-					<p className="text-sm text-secondary-foreground">Contact not found.</p>
+				<div className="flex flex-1 items-center justify-center">
+					<p className="text-secondary-foreground text-sm">Contact not found.</p>
 				</div>
 			</div>
 		)
@@ -69,31 +69,31 @@ export default function ProfilePage() {
 	const isAccepted = contact.status === "accepted"
 
 	return (
-		<div className="flex flex-col animate-fade-in h-full bg-primary">
+		<div className="flex h-full animate-fade-in flex-col bg-primary">
 			<NavigationHeader title="Contact Info" showBack />
 
 			<div className="flex-1 overflow-y-auto">
 				{/* Hero */}
-				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
+				<div className="flex flex-col items-center border-border border-b bg-secondary px-4 py-8">
 					<div className="relative">
 						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
-						<div className="absolute -bottom-1 -right-1">
+						<div className="absolute -right-1 -bottom-1">
 							<StatusIndicator isOnline={contact.online} size="md" />
 						</div>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary-foreground">{contact.displayName}</h2>
-					<p className="text-sm text-secondary-foreground mt-0.5">@{contact.username}</p>
+					<h2 className="mt-4 font-bold text-primary-foreground text-xl">{contact.displayName}</h2>
+					<p className="mt-0.5 text-secondary-foreground text-sm">@{contact.username}</p>
 					<p
-						className={`text-xs mt-2 font-medium ${contact.online ? "text-accent" : "text-muted"}`}
+						className={`mt-2 font-medium text-xs ${contact.online ? "text-accent" : "text-muted"}`}
 					>
 						{contact.online ? "● Online" : "Last seen recently"}
 					</p>
 
 					{/* Contact status badge */}
 					<div
-						className={`flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-xs font-medium border border-current/20 bg-current/5 ${statusInfo.className}`}
+						className={`mt-3 flex items-center gap-1.5 rounded-full border border-current/20 bg-current/5 px-3 py-1 font-medium text-xs ${statusInfo.className}`}
 					>
-						<StatusIcon className="w-3 h-3" strokeWidth={2} />
+						<StatusIcon className="h-3 w-3" strokeWidth={2} />
 						{statusInfo.label}
 					</div>
 				</div>
@@ -109,14 +109,14 @@ export default function ProfilePage() {
 							})
 						}
 						disabled={!isAccepted}
-						className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover active:scale-[0.98] text-white transition-all duration-200 shadow-sm disabled:opacity-40 disabled:pointer-events-none"
+						className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 font-semibold text-sm text-white shadow-sm transition-all duration-200 hover:bg-accent-hover active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40"
 					>
-						<MessageCircle className="w-4 h-4" strokeWidth={2} />
+						<MessageCircle className="h-4 w-4" strokeWidth={2} />
 						Send Message
 					</button>
 
 					{!isAccepted && (
-						<p className="text-xs text-center text-secondary-foreground mt-2">
+						<p className="mt-2 text-center text-secondary-foreground text-xs">
 							{contact.status === "pending_out" &&
 								"Messaging will be available once they accept your request."}
 							{contact.status === "pending_in" && "Accept the contact request to start messaging."}
@@ -134,9 +134,9 @@ export default function ProfilePage() {
 						<button
 							type="button"
 							onClick={() => setShowBlockConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50 transition-all duration-200"
+							className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50"
 						>
-							<Ban className="w-4 h-4" />
+							<Ban className="h-4 w-4" />
 							Block User
 						</button>
 					)}
@@ -158,9 +158,9 @@ export default function ProfilePage() {
 						<button
 							type="button"
 							onClick={() => setShowDeleteConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
+							className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 py-3 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
 						>
-							<Trash2 className="w-4 h-4" />
+							<Trash2 className="h-4 w-4" />
 							Delete Chat
 						</button>
 					)}

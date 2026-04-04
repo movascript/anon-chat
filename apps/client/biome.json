@@ -12,7 +12,20 @@
 			"!**/src/routeTree.gen.ts"
 		]
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"nursery": {
+        		"useSortedClasses": {
+          		"level": "warn",
+          			"options": {
+            			"attributes": ["className", "class"],
+            			"functions": ["clsx", "cva", "cn", "tw"]
+          			}
+        		}
+      		}
+		}
+	},
 	"css": {
     	"parser": { "tailwindDirectives": true }
   	}

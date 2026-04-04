@@ -66,34 +66,34 @@ export default function LoginPage() {
 	const isDisabled = isLoading || username.trim().length < 3 || displayName.trim().length < 2
 
 	return (
-		<div className="min-h-screen overflow-auto h-full flex flex-col items-center justify-center bg-primary px-6 relative">
+		<div className="relative flex h-full min-h-screen flex-col items-center justify-center overflow-auto bg-primary px-6">
 			<button
 				type="button"
 				onClick={toggleTheme}
-				className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+				className="absolute top-4 right-4 rounded-full p-2 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 				aria-label="Toggle theme"
 			>
 				{isDark ? (
-					<Sun className="w-5 h-5 text-secondary-foreground" />
+					<Sun className="h-5 w-5 text-secondary-foreground" />
 				) : (
-					<Moon className="w-5 h-5 text-secondary-foreground" />
+					<Moon className="h-5 w-5 text-secondary-foreground" />
 				)}
 			</button>
 
 			<div className="w-full max-w-sm animate-fade-in">
-				<div className="flex flex-col items-center mb-10">
-					<div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4 shadow-lg">
-						<MessageCircle className="w-8 h-8 text-white" strokeWidth={2.5} />
+				<div className="mb-10 flex flex-col items-center">
+					<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent shadow-lg">
+						<MessageCircle className="h-8 w-8 text-white" strokeWidth={2.5} />
 					</div>
-					<h1 className="text-2xl font-bold text-primary-foreground">AnonChat</h1>
-					<p className="text-sm text-secondary-foreground mt-1">Secure. Anonymous. No servers.</p>
+					<h1 className="font-bold text-2xl text-primary-foreground">AnonChat</h1>
+					<p className="mt-1 text-secondary-foreground text-sm">Secure. Anonymous. No servers.</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-3">
 					<div>
 						<label
 							htmlFor="displayName"
-							className="block text-sm font-medium text-primary-foreground mb-1.5"
+							className="mb-1.5 block font-medium text-primary-foreground text-sm"
 						>
 							Display name
 						</label>
@@ -106,19 +106,19 @@ export default function LoginPage() {
 							autoComplete="off"
 							maxLength={32}
 							disabled={isLoading}
-							className="w-full px-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 border-transparent focus:border-accent focus:outline-none transition-all duration-200 disabled:opacity-50"
+							className="w-full rounded-xl border-2 border-transparent bg-input-bg px-4 py-3 text-primary-foreground text-sm transition-all duration-200 placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-50"
 						/>
 					</div>
 
 					<div>
 						<label
 							htmlFor="username"
-							className="block text-sm font-medium text-primary-foreground mb-1.5"
+							className="mb-1.5 block font-medium text-primary-foreground text-sm"
 						>
 							Choose a username
 						</label>
 						<div className="relative">
-							<span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-sm font-medium">
+							<span className="absolute top-1/2 left-3.5 -translate-y-1/2 font-medium text-muted text-sm">
 								@
 							</span>
 							<input
@@ -135,7 +135,7 @@ export default function LoginPage() {
 								maxLength={32}
 								disabled={isLoading}
 								className={cn(
-									"w-full pl-8 pr-4 py-3 rounded-xl text-sm bg-input-bg text-primary-foreground placeholder:text-muted border-2 transition-all duration-200 focus:outline-none disabled:opacity-50",
+									"w-full rounded-xl border-2 bg-input-bg py-3 pr-4 pl-8 text-primary-foreground text-sm transition-all duration-200 placeholder:text-muted focus:outline-none disabled:opacity-50",
 									state === "error"
 										? "border-red-500"
 										: state === "success"
@@ -148,13 +148,13 @@ export default function LoginPage() {
 						{(errorMsg || state === "success") && (
 							<div
 								className={cn(
-									"flex items-center gap-1.5 mt-2 text-xs font-medium animate-fade-in",
+									"mt-2 flex animate-fade-in items-center gap-1.5 font-medium text-xs",
 									errorMsg ? "text-red-500" : "text-green-500"
 								)}
 							>
 								{errorMsg ? (
 									<>
-										<AlertCircle className="w-3.5 h-3.5 shrink-0" />
+										<AlertCircle className="h-3.5 w-3.5 shrink-0" />
 										{errorMsg}
 									</>
 								) : (
@@ -168,28 +168,28 @@ export default function LoginPage() {
 						type="submit"
 						disabled={isDisabled}
 						className={cn(
-							"w-full bg-red-700 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
+							"flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 py-3 font-semibold text-sm transition-all duration-200",
 							isDisabled
-								? "bg-tertiary text-muted cursor-not-allowed"
-								: "bg-accent hover:bg-accent-hover active:scale-[0.98] text-white shadow-sm"
+								? "cursor-not-allowed bg-tertiary text-muted"
+								: "bg-accent text-white shadow-sm hover:bg-accent-hover active:scale-[0.98]"
 						)}
 					>
 						{state === "loading" ? (
 							<>
-								<Loader2 className="w-4 h-4 animate-spin" />
+								<Loader2 className="h-4 w-4 animate-spin" />
 								Creating account…
 							</>
 						) : (
 							<>
 								Start chatting
-								<ArrowRight className="w-4 h-4" />
+								<ArrowRight className="h-4 w-4" />
 							</>
 						)}
 					</button>
 				</form>
 
 				<div className="mt-8 space-y-2 text-center">
-					<p className="text-xs text-muted">End-to-end encrypted. No data stored.</p>
+					<p className="text-muted text-xs">End-to-end encrypted. No data stored.</p>
 					<div className="flex items-center justify-center gap-4 text-xs">
 						<a href="/about" className="text-accent hover:underline">
 							About & Privacy
@@ -200,7 +200,7 @@ export default function LoginPage() {
 							rel="noopener noreferrer"
 							className="flex items-center gap-1 text-accent hover:underline"
 						>
-							<Github className="w-3 h-3" />
+							<Github className="h-3 w-3" />
 							GitHub
 						</a>
 					</div>

@@ -198,7 +198,7 @@ function subscribeToPresence(watcherSocketID: SocketID, targetUserID: UserID): v
 	if (!subscriberMap.has(targetUserID)) {
 		subscriberMap.set(targetUserID, new Set())
 	}
-	subscriberMap.get(targetUserID)!.add(watcherSocketID)
+	subscriberMap.get(targetUserID)?.add(watcherSocketID)
 }
 
 function unsubscribeFromPresence(watcherSocketID: SocketID, targetUserID: UserID): void {

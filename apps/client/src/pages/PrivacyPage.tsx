@@ -5,25 +5,25 @@ export default function PrivacyPage() {
 	const navigate = useNavigate()
 
 	return (
-		<div className="h-screen bg-primary animate-fade-in overflow-auto">
-			<div className="container mx-auto px-6 py-8 max-w-4xl">
+		<div className="h-screen animate-fade-in overflow-auto bg-primary">
+			<div className="container mx-auto max-w-4xl px-6 py-8">
 				<button
 					type="button"
 					onClick={() => navigate({ to: ".." })}
-					className="flex items-center gap-2 text-secondary-foreground hover:text-primary-foreground mb-8 transition-colors"
+					className="mb-8 flex items-center gap-2 text-secondary-foreground transition-colors hover:text-primary-foreground"
 				>
-					<ArrowLeft className="w-5 h-5" />
+					<ArrowLeft className="h-5 w-5" />
 					Back
 				</button>
 
 				<div className="space-y-8 text-secondary-foreground">
 					<div>
-						<h1 className="text-4xl font-bold text-primary-foreground mb-3">Privacy Policy</h1>
-						<p className="text-sm text-muted">Last updated: March 18, 2026</p>
+						<h1 className="mb-3 font-bold text-4xl text-primary-foreground">Privacy Policy</h1>
+						<p className="text-muted text-sm">Last updated: March 18, 2026</p>
 					</div>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							Our Commitment to Privacy
 						</h2>
 						<p>
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							Zero-Knowledge Architecture
 						</h2>
 						<p className="mb-3">
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
 							as a relay, passing encrypted messages between users without ever having the ability
 							to decrypt them.
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>Messages are encrypted on your device before transmission</li>
 							<li>The server only sees encrypted data it cannot read</li>
 							<li>Decryption happens only on the recipient's device</li>
@@ -51,10 +51,10 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							What We Don't Collect
 						</h2>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>No message content - messages are never stored on our servers</li>
 							<li>No phone numbers or email addresses required</li>
 							<li>No tracking cookies or third-party analytics</li>
@@ -65,13 +65,13 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							What We Temporarily Process
 						</h2>
 						<p className="mb-3">
 							To facilitate message delivery, our relay server temporarily handles:
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>Encrypted message packets (unreadable to us)</li>
 							<li>Routing information to deliver messages to the correct recipient</li>
 							<li>Active connection status (online/offline)</li>
@@ -83,11 +83,11 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Data You Control</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Data You Control</h2>
 						<p className="mb-3">
 							All persistent data is stored locally on your device using browser storage:
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>Your username and display name</li>
 							<li>Your encryption keys</li>
 							<li>Your contact list</li>
@@ -101,11 +101,11 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							Security & Encryption
 						</h2>
 						<p className="mb-3">AnonChat implements industry-standard end-to-end encryption:</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>All messages are encrypted using modern cryptographic algorithms</li>
 							<li>Each conversation uses unique encryption keys</li>
 							<li>Forward secrecy ensures past messages remain secure</li>
@@ -114,14 +114,14 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
+						<h2 className="font-semibold text-2xl text-primary-foreground">
 							Open Source & Transparency
 						</h2>
 						<p className="mb-3">
 							AnonChat is fully open source. Our code is publicly available for security audits and
 							community review. You can:
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>Review our encryption implementation</li>
 							<li>Verify our privacy claims</li>
 							<li>Audit the server relay code</li>
@@ -143,11 +143,11 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Contributing</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Contributing</h2>
 						<p className="mb-3">
 							We welcome contributions from the community. You can help improve AnonChat by:
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>Reporting security vulnerabilities responsibly</li>
 							<li>Submitting bug fixes and feature improvements</li>
 							<li>Improving documentation and translations</li>
@@ -169,7 +169,7 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Third-Party Services</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Third-Party Services</h2>
 						<p>
 							AnonChat does not integrate with any third-party analytics, advertising, or tracking
 							services. We do not share data with external parties because we don't collect any data
@@ -178,12 +178,12 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Your Rights</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Your Rights</h2>
 						<p className="mb-3">
 							Since we don't collect or store personal data, traditional data rights (access,
 							deletion, portability) don't apply in the conventional sense. However:
 						</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>You own all data stored on your device</li>
 							<li>You can export your data at any time</li>
 							<li>You can permanently delete everything by logging out</li>
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Policy Updates</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Policy Updates</h2>
 						<p>
 							We may update this privacy policy to reflect changes in our practices or legal
 							requirements. Any changes will be reflected in the "Last updated" date above.
@@ -201,9 +201,9 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">Contact & Support</h2>
+						<h2 className="font-semibold text-2xl text-primary-foreground">Contact & Support</h2>
 						<p className="mb-3">Questions about privacy or security?</p>
-						<ul className="list-disc list-inside space-y-2 ml-2">
+						<ul className="ml-2 list-inside list-disc space-y-2">
 							<li>
 								Open an issue on our{" "}
 								<a
@@ -225,8 +225,8 @@ export default function PrivacyPage() {
 						</ul>
 					</section>
 
-					<div className="pt-6 pb-12 border-t border-secondary-foreground/20">
-						<p className="text-sm text-muted">
+					<div className="border-secondary-foreground/20 border-t pt-6 pb-12">
+						<p className="text-muted text-sm">
 							AnonChat is committed to protecting your privacy through transparent practices and
 							open-source technology. Your trust is our priority.
 						</p>

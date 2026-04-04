@@ -10,35 +10,35 @@ export function ContactListItem({ contact }: { contact: RuntimeContact }) {
 		<Link
 			to="/chat/$contactId"
 			params={{ contactId: contact.id }}
-			className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200"
+			className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all duration-200"
 			activeProps={{ className: "bg-accent-light" }}
 			inactiveProps={{ className: "hover:bg-secondary active:bg-tertiary" }}
 		>
 			<div className="relative shrink-0">
 				<Avatar name={contact.displayName} color="red" size="md" />
-				<div className="absolute -bottom-0.5 -right-0.5">
+				<div className="absolute -right-0.5 -bottom-0.5">
 					<StatusIndicator isOnline={contact.online} />
 				</div>
 			</div>
 
-			<div className="flex-1 min-w-0">
+			<div className="min-w-0 flex-1">
 				<div className="flex items-center justify-between gap-2">
-					<span className="font-medium text-sm text-primary-foreground truncate">
+					<span className="truncate font-medium text-primary-foreground text-sm">
 						{contact.displayName}
 					</span>
-					<span className="text-xs text-muted shrink-0">{formatTime(contact.lastMessageAt)}</span>
+					<span className="shrink-0 text-muted text-xs">{formatTime(contact.lastMessageAt)}</span>
 				</div>
-				<div className="flex items-center justify-between gap-2 mt-0.5">
+				<div className="mt-0.5 flex items-center justify-between gap-2">
 					<span
 						className={cn(
-							"text-xs truncate",
+							"truncate text-xs",
 							contact.isTyping ? "text-accent italic" : "text-secondary-foreground"
 						)}
 					>
 						{contact.isTyping ? "typing…" : (contact.lastMessage ?? "No messages yet")}
 					</span>
 					{contact.unreadCount > 0 && (
-						<span className="shrink-0 min-w-4.5 h-4.5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
+						<span className="flex h-4.5 min-w-4.5 shrink-0 items-center justify-center rounded-full bg-accent px-1 font-bold text-[10px] text-white">
 							{contact.unreadCount > 99 ? "99+" : contact.unreadCount}
 						</span>
 					)}

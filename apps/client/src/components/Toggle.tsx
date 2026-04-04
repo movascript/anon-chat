@@ -1,11 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/utils/className"
 
-const toggleVariants = cva("relative rounded-full transition-colors duration-200 shrink-0", {
+const toggleVariants = cva("relative shrink-0 rounded-full transition-colors duration-200", {
 	variants: {
 		size: {
-			sm: "w-9 h-5",
-			md: "w-11 h-6",
+			sm: "h-5 w-9",
+			md: "h-6 w-11",
 		},
 		checked: {
 			true: "bg-accent",
@@ -19,12 +19,12 @@ const toggleVariants = cva("relative rounded-full transition-colors duration-200
 })
 
 const thumbVariants = cva(
-	"absolute top-0.5 bg-white rounded-full shadow transition-transform duration-200",
+	"absolute top-0.5 rounded-full bg-white shadow transition-transform duration-200",
 	{
 		variants: {
 			size: {
-				sm: "left-0.5 w-4 h-4",
-				md: "left-0.5 w-5 h-5",
+				sm: "left-0.5 h-4 w-4",
+				md: "left-0.5 h-5 w-5",
 			},
 			checked: {
 				true: "",

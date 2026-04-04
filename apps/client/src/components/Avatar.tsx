@@ -4,14 +4,14 @@ import { cn } from "@/utils/className"
 // todo: the avatar color should be deterministic by the user id
 
 const avatarVariants = cva(
-	"rounded-full flex items-center justify-center font-semibold text-white shrink-0",
+	"flex shrink-0 items-center justify-center rounded-full font-semibold text-white",
 	{
 		variants: {
 			size: {
-				sm: "w-8 h-8 text-xs",
-				md: "w-10 h-10 text-sm",
-				lg: "w-14 h-14 text-xl",
-				xl: "w-20 h-20 text-3xl",
+				sm: "h-8 w-8 text-xs",
+				md: "h-10 w-10 text-sm",
+				lg: "h-14 w-14 text-xl",
+				xl: "h-20 w-20 text-3xl",
 			},
 		},
 		defaultVariants: {

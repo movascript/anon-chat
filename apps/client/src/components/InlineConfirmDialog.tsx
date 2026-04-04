@@ -31,26 +31,26 @@ export function InlineConfirmDialog({
 		<div className={className}>
 			{show ? (
 				<div
-					className={`bg-primary rounded-xl border overflow-hidden animate-fade-in ${
+					className={`animate-fade-in overflow-hidden rounded-xl border bg-primary ${
 						isDanger ? "border-red-200 dark:border-red-900" : "border-border"
 					}`}
 				>
 					<div className="px-4 py-3.5">
 						<div className="flex items-start gap-3">
-							{icon && <div className="shrink-0 mt-0.5">{icon}</div>}
-							<div className="flex-1 min-w-0">
-								<p className="text-sm font-medium text-primary-foreground">{title}</p>
+							{icon && <div className="mt-0.5 shrink-0">{icon}</div>}
+							<div className="min-w-0 flex-1">
+								<p className="font-medium text-primary-foreground text-sm">{title}</p>
 								{description && (
-									<p className="text-xs text-secondary-foreground mt-0.5">{description}</p>
+									<p className="mt-0.5 text-secondary-foreground text-xs">{description}</p>
 								)}
 							</div>
 						</div>
 					</div>
-					<div className="flex border-t border-border">
+					<div className="flex border-border border-t">
 						<button
 							type="button"
 							onClick={onCancel}
-							className="flex-1 py-3 text-sm font-medium text-secondary-foreground hover:bg-secondary transition-all duration-200"
+							className="flex-1 py-3 font-medium text-secondary-foreground text-sm transition-all duration-200 hover:bg-secondary"
 						>
 							{cancelText}
 						</button>
@@ -58,7 +58,7 @@ export function InlineConfirmDialog({
 						<button
 							type="button"
 							onClick={onConfirm}
-							className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 ${
+							className={`flex-1 py-3 font-semibold text-sm transition-all duration-200 ${
 								isDanger
 									? "text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
 									: "text-accent hover:bg-secondary"

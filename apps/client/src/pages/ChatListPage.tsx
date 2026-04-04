@@ -73,14 +73,14 @@ export default function ChatListPage() {
 		<div className="flex h-full w-full overflow-hidden bg-primary">
 			<aside
 				className={cn(
-					"flex flex-col bg-sidebar-bg border-r border-border animate-fade-in shrink-0",
+					"flex shrink-0 animate-fade-in flex-col border-border border-r bg-sidebar-bg",
 					hasOutlet ? "hidden md:flex" : "flex",
 					"w-full md:w-80 lg:w-96"
 				)}
 			>
-				<div className="flex h-16 items-center gap-3 px-5 border-b border-border">
-					<div className="flex-1 min-w-0">
-						<h1 className="font-bold text-xl text-primary-foreground truncate leading-tight">
+				<div className="flex h-16 items-center gap-3 border-border border-b px-5">
+					<div className="min-w-0 flex-1">
+						<h1 className="truncate font-bold text-primary-foreground text-xl leading-tight">
 							AnonChat
 						</h1>
 					</div>
@@ -89,27 +89,27 @@ export default function ChatListPage() {
 						<button
 							type="button"
 							onClick={toggleTheme}
-							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+							className="rounded-full p-2 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 							aria-label="Toggle theme"
 						>
 							{isDark ? (
-								<Sun className="w-4 h-4 text-secondary-foreground" />
+								<Sun className="h-4 w-4 text-secondary-foreground" />
 							) : (
-								<Moon className="w-4 h-4 text-secondary-foreground" />
+								<Moon className="h-4 w-4 text-secondary-foreground" />
 							)}
 						</button>
 						<button
 							type="button"
 							onClick={() => navigate({ to: "/settings" })}
-							className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+							className="rounded-full p-2 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 							aria-label="Settings"
 						>
-							<Settings className="w-4 h-4 text-secondary-foreground" />
+							<Settings className="h-4 w-4 text-secondary-foreground" />
 						</button>
 					</div>
 				</div>
 
-				<div className="px-4 py-3 border-b border-border">
+				<div className="border-border border-b px-4 py-3">
 					<SearchInput
 						value={searchQuery}
 						onChange={setSearchQuery}
@@ -125,7 +125,7 @@ export default function ChatListPage() {
 					{showGlobalSearch && (
 						<>
 							{isSearching && (
-								<div className="flex items-center justify-center h-20 text-sm text-secondary-foreground animate-fade-in">
+								<div className="flex h-20 animate-fade-in items-center justify-center text-secondary-foreground text-sm">
 									Searching…
 								</div>
 							)}
@@ -144,7 +144,7 @@ export default function ChatListPage() {
 
 			<main
 				className={cn(
-					"flex-1 flex flex-col overflow-hidden",
+					"flex flex-1 flex-col overflow-hidden",
 					!hasOutlet ? "hidden md:flex" : "flex"
 				)}
 			>

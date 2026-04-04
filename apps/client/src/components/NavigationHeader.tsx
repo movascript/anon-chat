@@ -26,24 +26,24 @@ export function NavigationHeader({
 	}
 
 	return (
-		<header className="flex items-center gap-3 px-4 h-16 bg-header-bg border-b border-border z-10 shrink-0">
+		<header className="z-10 flex h-16 shrink-0 items-center gap-3 border-border border-b bg-header-bg px-4">
 			{showBack && (
 				<button
 					type="button"
 					onClick={handleBack}
-					className="p-1.5 -ml-1 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+					className="-ml-1 rounded-full p-1.5 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 					aria-label="Go back"
 				>
-					<ArrowLeft className="w-5 h-5 text-primary-foreground" />
+					<ArrowLeft className="h-5 w-5 text-primary-foreground" />
 				</button>
 			)}
 			{leftSlot}
-			<div className="flex-1 min-w-0">
-				<h1 className="font-semibold text-base text-primary-foreground truncate leading-tight py-1">
+			<div className="min-w-0 flex-1">
+				<h1 className="truncate py-1 font-semibold text-base text-primary-foreground leading-tight">
 					{title}
 				</h1>
 				{subtitle && (
-					<p className="text-xs text-secondary-foreground truncate leading-tight mt-0.5">
+					<p className="mt-0.5 truncate text-secondary-foreground text-xs leading-tight">
 						{subtitle}
 					</p>
 				)}

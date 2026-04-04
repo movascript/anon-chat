@@ -21,21 +21,21 @@ export function MessageActionDialog({
 		<Drawer.Root open={open} onOpenChange={onOpenChange}>
 			<Drawer.Portal>
 				<Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-				<Drawer.Content className="fixed bottom-0 left-0 right-0 flex flex-col rounded-t-3xl bg-primary border-t border-border max-h-[85vh] mx-auto max-w-md">
+				<Drawer.Content className="fixed right-0 bottom-0 left-0 mx-auto flex max-h-[85vh] max-w-md flex-col rounded-t-3xl border-border border-t bg-primary">
 					<div className="flex-1 overflow-y-auto">
-						<div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-tertiary mt-4 mb-6" />
+						<div className="mx-auto mt-4 mb-6 h-1.5 w-12 shrink-0 rounded-full bg-tertiary" />
 
-						<div className="px-4 pb-8 space-y-2">
+						<div className="space-y-2 px-4 pb-8">
 							<button
 								type="button"
 								onClick={() => {
 									onCopy()
 									onOpenChange(false)
 								}}
-								className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-secondary active:bg-tertiary transition-colors"
+								className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 transition-colors hover:bg-secondary active:bg-tertiary"
 							>
-								<Copy className="w-5 h-5 text-secondary-foreground" />
-								<span className="text-sm font-medium text-primary-foreground">Copy Message</span>
+								<Copy className="h-5 w-5 text-secondary-foreground" />
+								<span className="font-medium text-primary-foreground text-sm">Copy Message</span>
 							</button>
 
 							<button
@@ -44,10 +44,10 @@ export function MessageActionDialog({
 									onReply()
 									onOpenChange(false)
 								}}
-								className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-secondary active:bg-tertiary transition-colors"
+								className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 transition-colors hover:bg-secondary active:bg-tertiary"
 							>
-								<Reply className="w-5 h-5 text-secondary-foreground" />
-								<span className="text-sm font-medium text-primary-foreground">Reply</span>
+								<Reply className="h-5 w-5 text-secondary-foreground" />
+								<span className="font-medium text-primary-foreground text-sm">Reply</span>
 							</button>
 						</div>
 					</div>

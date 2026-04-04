@@ -22,19 +22,19 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 	const declineChatRequest = useAppStore(s => s.declineChatRequest)
 
 	return (
-		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
-			<UserCheck className="w-12 h-12 text-muted" strokeWidth={1.5} />
-			<p className="text-sm text-secondary-foreground text-center">
+		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
+			<UserCheck className="h-12 w-12 text-muted" strokeWidth={1.5} />
+			<p className="text-center text-secondary-foreground text-sm">
 				Contact request pending. Accept to start chatting.
 			</p>
-			<div className="flex flex-col gap-2 w-full max-w-xs">
+			<div className="flex w-full max-w-xs flex-col gap-2">
 				<button
 					type="button"
 					onClick={() => {
 						acceptChatRequest(contact.id)
 						onNavigate()
 					}}
-					className="w-full py-2.5 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover text-white transition-all duration-200"
+					className="w-full rounded-xl bg-accent py-2.5 font-semibold text-sm text-white transition-all duration-200 hover:bg-accent-hover"
 				>
 					Accept
 				</button>
@@ -45,7 +45,7 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 							declineChatRequest(contact.id)
 							onNavigate()
 						}}
-						className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
+						className="flex-1 rounded-xl border border-red-200 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
 					>
 						Decline
 					</button>
@@ -55,7 +55,7 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 							declineChatRequest(contact.id, true)
 							onNavigate()
 						}}
-						className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50 transition-all duration-200"
+						className="flex-1 rounded-xl bg-red-50 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50"
 					>
 						Block
 					</button>
@@ -69,16 +69,16 @@ function BlockedView({ contact, onNavigate }: StatusViewProps) {
 	const unblockContact = useAppStore(s => s.unblockContact)
 
 	return (
-		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
-			<Ban className="w-12 h-12 text-muted" strokeWidth={1.5} />
-			<p className="text-sm text-secondary-foreground text-center">This contact is blocked.</p>
+		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
+			<Ban className="h-12 w-12 text-muted" strokeWidth={1.5} />
+			<p className="text-center text-secondary-foreground text-sm">This contact is blocked.</p>
 			<button
 				type="button"
 				onClick={() => {
 					unblockContact(contact.id)
 					onNavigate()
 				}}
-				className="w-full max-w-xs py-2.5 rounded-xl text-sm font-semibold bg-accent hover:bg-accent-hover text-white transition-all duration-200"
+				className="w-full max-w-xs rounded-xl bg-accent py-2.5 font-semibold text-sm text-white transition-all duration-200 hover:bg-accent-hover"
 			>
 				Unblock
 			</button>
@@ -90,16 +90,16 @@ function DeclinedView({ contact, onNavigate }: StatusViewProps) {
 	const deleteContact = useAppStore(s => s.deleteContact)
 
 	return (
-		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-4 px-4">
-			<UserX className="w-12 h-12 text-muted" strokeWidth={1.5} />
-			<p className="text-sm text-secondary-foreground text-center">Contact request was declined.</p>
+		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
+			<UserX className="h-12 w-12 text-muted" strokeWidth={1.5} />
+			<p className="text-center text-secondary-foreground text-sm">Contact request was declined.</p>
 			<button
 				type="button"
 				onClick={() => {
 					deleteContact(contact.id)
 					onNavigate()
 				}}
-				className="w-full max-w-xs py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200"
+				className="w-full max-w-xs rounded-xl border border-red-200 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
 			>
 				Delete Contact
 			</button>
@@ -109,9 +109,9 @@ function DeclinedView({ contact, onNavigate }: StatusViewProps) {
 
 function PendingOutView() {
 	return (
-		<div className="flex-1 flex flex-col items-center justify-center h-full animate-fade-in gap-3">
-			<Clock className="w-12 h-12 text-muted" strokeWidth={1.5} />
-			<p className="text-sm text-secondary-foreground text-center px-4">
+		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-3">
+			<Clock className="h-12 w-12 text-muted" strokeWidth={1.5} />
+			<p className="px-4 text-center text-secondary-foreground text-sm">
 				Request sent. Waiting for acceptance...
 			</p>
 		</div>
@@ -157,7 +157,7 @@ export function ChatViewPage() {
 
 	if (!contactId || !contact) {
 		return (
-			<div className="flex-1 flex items-center justify-center">
+			<div className="flex flex-1 items-center justify-center">
 				<p className="text-secondary-foreground text-sm">Contact not found.</p>
 			</div>
 		)
@@ -166,15 +166,15 @@ export function ChatViewPage() {
 	const isAccepted = contact.status === "accepted"
 
 	return (
-		<div className="flex flex-col h-full animate-fade-in bg-primary overflow-hidden">
+		<div className="flex h-full animate-fade-in flex-col overflow-hidden bg-primary">
 			{/* Header */}
-			<header className="flex items-center gap-3 px-4 h-16 bg-header-bg border-b border-border shadow-(--shadow) shrink-0 animate-slide-in-from-top-2">
+			<header className="flex h-16 shrink-0 animate-slide-in-from-top-2 items-center gap-3 border-border border-b bg-header-bg px-4 shadow-(--shadow)">
 				<button
 					type="button"
 					onClick={() => navigate({ to: "/" })}
-					className="p-1.5 -ml-1 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+					className="-ml-1 rounded-full p-1.5 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 				>
-					<ArrowLeft className="w-5 h-5 text-primary-foreground" />
+					<ArrowLeft className="h-5 w-5 text-primary-foreground" />
 				</button>
 
 				<button
@@ -185,20 +185,20 @@ export function ChatViewPage() {
 							params: { contactId: contact.id },
 						})
 					}
-					className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity duration-200"
+					className="flex min-w-0 flex-1 items-center gap-3 transition-opacity duration-200 hover:opacity-80"
 				>
 					<div className="relative shrink-0">
 						<Avatar name={contact.displayName} color="red" size="md" />
-						<div className="absolute -bottom-0.5 -right-0.5">
+						<div className="absolute -right-0.5 -bottom-0.5">
 							<StatusIndicator isOnline={contact.online} />
 						</div>
 					</div>
 					<div className="min-w-0 text-left">
-						<p className="font-semibold text-sm text-primary-foreground truncate leading-tight">
+						<p className="truncate font-semibold text-primary-foreground text-sm leading-tight">
 							{contact.displayName}
 						</p>
 						<p
-							className={`text-xs truncate leading-tight transition-colors duration-200 ${
+							className={`truncate text-xs leading-tight transition-colors duration-200 ${
 								contact.online || contact.isTyping ? "text-accent" : "text-secondary-foreground"
 							}`}
 						>
@@ -207,14 +207,14 @@ export function ChatViewPage() {
 					</div>
 				</button>
 
-				<div className="flex items-center gap-0.5 shrink-0">
+				<div className="flex shrink-0 items-center gap-0.5">
 					<button
 						type="button"
 						onClick={() => {}}
-						className="p-2 rounded-full hover:bg-secondary active:bg-tertiary transition-all duration-200"
+						className="rounded-full p-2 transition-all duration-200 hover:bg-secondary active:bg-tertiary"
 						aria-label="More options"
 					>
-						<MoreVertical className="w-4.5 h-4.5 text-secondary-foreground" strokeWidth={2} />
+						<MoreVertical className="h-4.5 w-4.5 text-secondary-foreground" strokeWidth={2} />
 					</button>
 				</div>
 			</header>
@@ -237,8 +237,8 @@ export function ChatViewPage() {
 				) : listItems.length === 0 ? (
 					// ... rest of the code
 
-					<div className="flex-1 flex items-center justify-center h-full animate-fade-in">
-						<p className="text-sm text-secondary-foreground">No messages yet. Say hi! 👋</p>
+					<div className="flex h-full flex-1 animate-fade-in items-center justify-center">
+						<p className="text-secondary-foreground text-sm">No messages yet. Say hi! 👋</p>
 					</div>
 				) : (
 					<Virtuoso
@@ -249,8 +249,8 @@ export function ChatViewPage() {
 						itemContent={(_index, item) => {
 							if (item.kind === "date") {
 								return (
-									<div className="flex items-center justify-center py-3 px-4">
-										<span className="text-xs text-muted bg-secondary px-3 py-1 rounded-full">
+									<div className="flex items-center justify-center px-4 py-3">
+										<span className="rounded-full bg-secondary px-3 py-1 text-muted text-xs">
 											{item.label}
 										</span>
 									</div>

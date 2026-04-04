@@ -11,13 +11,13 @@ import { useAppStore } from "@/store/appStore"
 import { useTheme } from "@/store/theme"
 
 function Divider() {
-	return <div className="h-px bg-border mx-4" />
+	return <div className="mx-4 h-px bg-border" />
 }
 
 function SectionHeader({ title }: { title: string }) {
 	return (
 		<div className="px-4 pt-5 pb-1.5">
-			<p className="text-xs font-semibold text-accent uppercase tracking-wider">{title}</p>
+			<p className="font-semibold text-accent text-xs uppercase tracking-wider">{title}</p>
 		</div>
 	)
 }
@@ -35,13 +35,13 @@ function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
 			type="button"
 			onClick={onClick}
 			disabled={!onClick}
-			className="w-full flex items-center justify-between px-4 py-3.5 transition-all duration-200 text-left disabled:cursor-default hover:bg-secondary active:bg-tertiary"
+			className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-all duration-200 hover:bg-secondary active:bg-tertiary disabled:cursor-default"
 		>
 			<div className="min-w-0 flex-1">
-				<p className="text-sm font-medium text-primary-foreground">{label}</p>
-				{sublabel && <p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>}
+				<p className="font-medium text-primary-foreground text-sm">{label}</p>
+				{sublabel && <p className="mt-0.5 text-secondary-foreground text-xs">{sublabel}</p>}
 			</div>
-			{right ?? (onClick && <ChevronRight className="w-4 h-4 text-muted shrink-0" />)}
+			{right ?? (onClick && <ChevronRight className="h-4 w-4 shrink-0 text-muted" />)}
 		</button>
 	)
 }
@@ -76,11 +76,11 @@ export default function SettingsPage() {
 	}
 
 	return (
-		<div className="flex flex-col h-full animate-fade-in bg-primary">
+		<div className="flex h-full animate-fade-in flex-col bg-primary">
 			<NavigationHeader title="Settings" showBack backTo="/" />
 
 			<div className="flex-1 overflow-y-auto">
-				<div className="flex flex-col items-center py-8 px-4 bg-secondary border-b border-border">
+				<div className="flex flex-col items-center border-border border-b bg-secondary px-4 py-8">
 					<div className="relative">
 						<Avatar
 							name={user.displayName}
@@ -91,29 +91,29 @@ export default function SettingsPage() {
 						<button
 							type="button"
 							onClick={() => toast.info("Not Implemented")}
-							className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center shadow-md hover:bg-accent-hover active:scale-95 transition-all duration-200"
+							className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-md transition-all duration-200 hover:bg-accent-hover active:scale-95"
 							aria-label="Edit profile"
 						>
-							<Camera className="w-4 h-4" strokeWidth={2.5} />
+							<Camera className="h-4 w-4" strokeWidth={2.5} />
 						</button>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary-foreground">{user.displayName}</h2>
-					<p className="text-sm text-secondary-foreground mt-0.5">@{user.username}</p>
-					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-primary border border-border">
+					<h2 className="mt-4 font-bold text-primary-foreground text-xl">{user.displayName}</h2>
+					<p className="mt-0.5 text-secondary-foreground text-sm">@{user.username}</p>
+					<div className="mt-3 flex items-center gap-2 rounded-full border border-border bg-primary px-4 py-1.5">
 						<span
-							className="w-2 h-2 rounded-full transition-colors duration-300"
+							className="h-2 w-2 rounded-full transition-colors duration-300"
 							style={{
 								backgroundColor: isOnline ? "#22c55e" : "#6b7280",
 							}}
 						/>
-						<span className="text-xs font-medium text-secondary-foreground">
+						<span className="font-medium text-secondary-foreground text-xs">
 							{isOnline ? "Online" : "Offline"}
 						</span>
 					</div>
 				</div>
 
 				<SectionHeader title="Status" />
-				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="mx-4 overflow-hidden rounded-xl border border-border bg-primary">
 					<SettingRow
 						label="Show as Online"
 						sublabel="Let others see when you are active"
@@ -131,7 +131,7 @@ export default function SettingsPage() {
 				</div>
 
 				<SectionHeader title="Notifications" />
-				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="mx-4 overflow-hidden rounded-xl border border-border bg-primary">
 					<SettingRow
 						label="Push Notifications"
 						sublabel="Receive message alerts"
@@ -153,7 +153,7 @@ export default function SettingsPage() {
 				</div>
 
 				<SectionHeader title="Privacy" />
-				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="mx-4 overflow-hidden rounded-xl border border-border bg-primary">
 					<SettingRow
 						label="Read Receipts"
 						sublabel="Show when you have read messages"
@@ -188,7 +188,7 @@ export default function SettingsPage() {
 				</div>
 
 				<SectionHeader title="Appearance" />
-				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="mx-4 overflow-hidden rounded-xl border border-border bg-primary">
 					<SettingRow
 						label="Dark Mode"
 						sublabel="Switch between light and dark themes"
@@ -206,7 +206,7 @@ export default function SettingsPage() {
 				</div>
 
 				<SectionHeader title="About" />
-				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
+				<div className="mx-4 overflow-hidden rounded-xl border border-border bg-primary">
 					<SettingRow label="Privacy Policy" onClick={() => navigate({ to: "/privacy" })} />
 				</div>
 
@@ -226,9 +226,9 @@ export default function SettingsPage() {
 						<button
 							type="button"
 							onClick={() => setShowLogoutConfirm(true)}
-							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60 active:scale-[0.98] transition-all duration-200"
+							className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-100 active:scale-[0.98] dark:bg-red-950/40 dark:hover:bg-red-950/60"
 						>
-							<LogOut className="w-4 h-4" />
+							<LogOut className="h-4 w-4" />
 							Logout
 						</button>
 					)}

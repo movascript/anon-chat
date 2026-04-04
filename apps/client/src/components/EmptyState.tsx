@@ -2,7 +2,7 @@ import { UsersRound } from "lucide-react"
 
 export function EmptyState({ searchQuery }: { searchQuery: string }) {
 	return (
-		<div className="flex flex-col items-center justify-center text-secondary-foreground text-sm h-80 gap-2 text-center px-4 animate-fade-in">
+		<div className="flex h-80 animate-fade-in flex-col items-center justify-center gap-2 px-4 text-center text-secondary-foreground text-sm">
 			<UsersRound size={30} className="mb-2" />
 			{searchQuery ? (
 				<>

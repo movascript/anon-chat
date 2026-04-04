@@ -31,9 +31,9 @@ const InputBox = ({ contactId, disabled }: InputBoxProps) => {
 	useHotkey("Control+Enter", handleSend, { target: textareaRef })
 
 	return (
-		<div className="shrink-0 px-4 py-3 bg-header-bg border-t border-border">
+		<div className="shrink-0 border-border border-t bg-header-bg px-4 py-3">
 			<div className="flex items-end gap-2">
-				<div className="flex-1 flex items-center bg-input-bg rounded-3xl px-4 py-2.5 transition-all duration-200 focus-within:ring-1 focus-within:ring-accent">
+				<div className="flex flex-1 items-center rounded-3xl bg-input-bg px-4 py-2.5 transition-all duration-200 focus-within:ring-1 focus-within:ring-accent">
 					<textarea
 						ref={textareaRef}
 						value={inputText}
@@ -45,7 +45,7 @@ const InputBox = ({ contactId, disabled }: InputBoxProps) => {
 						placeholder="Message…"
 						rows={1}
 						disabled={disabled}
-						className="flex-1 bg-transparent text-sm text-primary-foreground placeholder:text-muted focus:outline-none resize-none max-h-32 overflow-y-auto"
+						className="max-h-32 flex-1 resize-none overflow-y-auto bg-transparent text-primary-foreground text-sm placeholder:text-muted focus:outline-none"
 					/>
 				</div>
 
@@ -55,13 +55,13 @@ const InputBox = ({ contactId, disabled }: InputBoxProps) => {
 					disabled={readyToSend}
 					aria-label="Send"
 					className={cn(
-						"p-2.5 rounded-full transition-all duration-200 shrink-0 text-sm font-semibold",
+						"shrink-0 rounded-full p-2.5 font-semibold text-sm transition-all duration-200",
 						readyToSend
-							? "bg-accent hover:bg-accent-hover active:scale-95 text-white shadow-sm"
-							: "bg-tertiary text-muted cursor-not-allowed"
+							? "bg-accent text-white shadow-sm hover:bg-accent-hover active:scale-95"
+							: "cursor-not-allowed bg-tertiary text-muted"
 					)}
 				>
-					<Send className="w-4.5 h-4.5" strokeWidth={2.5} />
+					<Send className="h-4.5 w-4.5" strokeWidth={2.5} />
 				</button>
 			</div>
 		</div>

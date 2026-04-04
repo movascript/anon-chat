@@ -6,23 +6,23 @@ export function FoundUserCard({ user }: { user: SearchedContact }) {
 	const sendChatRequest = useAppStore(s => s.sendChatRequest)
 
 	return (
-		<div className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors animate-fade-in">
-			<div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
-				<span className="text-sm font-semibold text-accent-foreground">
+		<div className="flex animate-fade-in items-center gap-3 px-4 py-3 transition-colors hover:bg-secondary">
+			<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent">
+				<span className="font-semibold text-accent-foreground text-sm">
 					{user.displayName[0].toUpperCase()}
 				</span>
 			</div>
-			<div className="flex-1 min-w-0">
-				<p className="text-sm font-medium text-primary-foreground truncate">{user.displayName}</p>
-				<p className="text-xs text-secondary-foreground truncate">@{user.username}</p>
+			<div className="min-w-0 flex-1">
+				<p className="truncate font-medium text-primary-foreground text-sm">{user.displayName}</p>
+				<p className="truncate text-secondary-foreground text-xs">@{user.username}</p>
 			</div>
 			<button
 				type="button"
 				onClick={() => sendChatRequest(user)}
-				className="p-2 rounded-full hover:bg-tertiary transition-colors shrink-0"
+				className="shrink-0 rounded-full p-2 transition-colors hover:bg-tertiary"
 				aria-label="Send contact request"
 			>
-				<UserPlus className="w-4 h-4 text-secondary-foreground" />
+				<UserPlus className="h-4 w-4 text-secondary-foreground" />
 			</button>
 		</div>
 	)

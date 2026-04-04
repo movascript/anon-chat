@@ -23,9 +23,9 @@ export function AppInfo() {
 						: "Unknown OS"
 
 	return (
-		<div className="px-4 pb-8 flex flex-col items-center gap-1">
-			<p className="text-xs text-center text-muted">Version 1.0.0</p>
-			<p className="text-xs text-center text-muted">
+		<div className="flex flex-col items-center gap-1 px-4 pb-8">
+			<p className="text-center text-muted text-xs">Version 1.0.0</p>
+			<p className="text-center text-muted text-xs">
 				{browser} on {os}
 			</p>
 		</div>

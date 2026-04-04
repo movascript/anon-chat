@@ -25,19 +25,19 @@ export function ConfirmDialog({
 	return (
 		<Drawer.Root open={open} onOpenChange={onOpenChange}>
 			<Drawer.Portal>
-				<Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
-				<Drawer.Content className="fixed bottom-0 left-0 right-0 flex flex-col rounded-t-3xl bg-primary border-t border-border max-h-[85vh] mx-auto max-w-md z-50">
-					<div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-tertiary mt-4 mb-6" />
+				<Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+				<Drawer.Content className="fixed right-0 bottom-0 left-0 z-50 mx-auto flex max-h-[85vh] max-w-md flex-col rounded-t-3xl border-border border-t bg-primary">
+					<div className="mx-auto mt-4 mb-6 h-1.5 w-12 shrink-0 rounded-full bg-tertiary" />
 
 					<div className="px-6 pb-8">
-						<h3 className="text-lg font-semibold text-primary-foreground mb-2">{title}</h3>
-						<p className="text-sm text-secondary-foreground mb-6">{description}</p>
+						<h3 className="mb-2 font-semibold text-lg text-primary-foreground">{title}</h3>
+						<p className="mb-6 text-secondary-foreground text-sm">{description}</p>
 
 						<div className="flex gap-3">
 							<button
 								type="button"
 								onClick={() => onOpenChange(false)}
-								className="flex-1 py-3 rounded-xl text-sm font-medium text-secondary-foreground bg-secondary hover:bg-tertiary transition-colors"
+								className="flex-1 rounded-xl bg-secondary py-3 font-medium text-secondary-foreground text-sm transition-colors hover:bg-tertiary"
 							>
 								{cancelText}
 							</button>
@@ -48,10 +48,10 @@ export function ConfirmDialog({
 									onOpenChange(false)
 								}}
 								className={cn(
-									"flex-1 py-3 rounded-xl text-sm font-semibold transition-colors",
+									"flex-1 rounded-xl py-3 font-semibold text-sm transition-colors",
 									variant === "danger"
-										? "bg-red-500 hover:bg-red-600 text-white"
-										: "bg-accent hover:bg-accent-hover text-white"
+										? "bg-red-500 text-white hover:bg-red-600"
+										: "bg-accent text-white hover:bg-accent-hover"
 								)}
 							>
 								{confirmText}
