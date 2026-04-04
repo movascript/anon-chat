@@ -68,6 +68,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 		set({ socket: new AnonSocket() });
 
+		get().attachSocketListeners();
+
 		return get().socket;
 	},
 	attachSocketListeners: () => {
@@ -85,6 +87,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 			hydrateRuntimeIdentity(),
 			db.getAllContacts(),
 		]);
+
+		if (!get()._hydrated) get().attachSocketListeners();
 
 		const socket = get().socket;
 		if (identity && get().socket.currentState === "idle") {
@@ -157,12 +161,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 	blockContact: async (userId) => {
 		await db.updateContactStatus(userId, "blocked");
+		await get().syncStore();
 	},
 	unblockContact: async (userId) => {
 		await db.updateContactStatus(userId, "accepted");
+		await get().syncStore();
 	},
 	deleteContact: async (userId) => {
 		await db.updateContactStatus(userId, "deleted");
+		await get().syncStore();
 	},
 
 	sendChatRequest: async ({ username, displayName, userID, publicKey }) => {
@@ -322,6 +329,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 		const newStatus = frame.accepted ? "accepted" : "declined";
 
 		await db.updateContactStatus(frame.fromUserID, newStatus);
+		await get().syncStore();
 
 		if (frame.accepted) {
 			toast.success("Your chat requests got accepted!", {
