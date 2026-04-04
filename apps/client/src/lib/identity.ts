@@ -1,5 +1,5 @@
 import type { UserID } from "@repo/types"
-import type { Identity } from "@/types"
+import type { Identity, RuntimeIdentity } from "@/types"
 import { getIdentity, saveIdentity } from "./db"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -19,19 +19,6 @@ const SIGN_ALGORITHM: EcdsaParams = {
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-/**
- * The in-memory identity used at runtime.
- * Holds live CryptoKey objects alongside the plain record from IndexedDB.
- */
-export interface RuntimeIdentity {
-	userID: UserID
-	username: string
-	displayName: string
-	publicKey: CryptoKey // verify + export only
-	privateKey: CryptoKey // sign only — never exported after initial save
-	publicKeyJwk: JsonWebKey
-}
 
 // ─── Key Generation ───────────────────────────────────────────────────────────
 

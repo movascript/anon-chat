@@ -2,20 +2,16 @@ import type { ChatRequestInFrame, ChatResponseFrame, PresenceFrame, UserID } fro
 import { toast } from "sonner"
 import { create } from "zustand"
 import * as db from "@/lib/db"
-import {
-	createIdentity,
-	hydrateRuntimeIdentity,
-	type RuntimeIdentity,
-	RuntimeIdentity2Identity,
-} from "@/lib/identity"
+import { createIdentity, hydrateRuntimeIdentity, RuntimeIdentity2Identity } from "@/lib/identity"
 import { AnonSocket } from "@/lib/socket"
-import type { Contact, Message, SearchedContact } from "@/types"
+import type { Message, RuntimeContact, RuntimeIdentity, SearchedContact } from "@/types"
 
 interface AppState {
 	// Cached data from IndexedDB - which needs to be synced
 	identity: RuntimeIdentity | null
-	contacts: Contact[] | null
+	contacts: RuntimeContact[] | null
 	presenceMap: Map<UserID, boolean>
+	typingMap: Map<UserID, boolean>
 
 	socket: AnonSocket
 	rebuildSocket: () => AnonSocket
@@ -31,7 +27,7 @@ interface AppState {
 	markAsRead: (contactId: UserID) => void
 	updateUserOnlineStatus: (isOnline: boolean) => void
 	getContactMessages: (contactId: UserID) => Promise<Message[]>
-	getContact: (contactId: UserID) => Contact | undefined
+	getContact: (contactId: UserID) => RuntimeContact | undefined
 
 	blockContact: (userId: UserID) => Promise<void>
 	unblockContact: (userId: UserID) => Promise<void>
@@ -50,6 +46,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 	identity: null,
 	contacts: null,
 	presenceMap: new Map(),
+	typingMap: new Map(),
 
 	socket: new AnonSocket(),
 	// ! for now we keep this function - later should implement it inside the AnonSocket
@@ -73,7 +70,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 	_hydrated: false,
 	syncStore: async () => {
-		const [identity, contacts] = await Promise.all([hydrateRuntimeIdentity(), db.getAllContacts()])
+		const [identity, rawContacts] = await Promise.all([
+			hydrateRuntimeIdentity(),
+			db.getAllContacts(),
+		])
+
+		// ! hoping this wont be too expensive
+		const contacts = rawContacts.map(contact => ({
+			...contact,
+			online: get().presenceMap.get(contact.id) ?? false,
+			isTyping: get().typingMap.get(contact.id) ?? false,
+		}))
 
 		if (!get()._hydrated) get().attachSocketListeners()
 
@@ -143,7 +150,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 	},
 
 	getContact: contactId => {
-		return get().contacts?.find(c => c.id === contactId)
+		const contact = get().contacts?.find(c => c.id === contactId)
+		if (!contact) return undefined
+
+		return {
+			...contact,
+			online: get().presenceMap.get(contact.id) ?? false,
+			isTyping: get().typingMap.get(contact.id) ?? false,
+		}
 	},
 
 	blockContact: async userId => {

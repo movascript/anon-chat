@@ -48,7 +48,6 @@ export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" })
 	const navigate = useNavigate()
 	const getContact = useAppStore(s => s.getContact)
-	const presenceMap = useAppStore(s => s.presenceMap)
 	const contact = getContact(contactId ?? "")
 
 	const [showBlockConfirm, setShowBlockConfirm] = useState(false)
@@ -79,17 +78,15 @@ export default function ProfilePage() {
 					<div className="relative">
 						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
 						<div className="absolute -bottom-1 -right-1">
-							<StatusIndicator isOnline={presenceMap.get(contact.id)} size="md" />
+							<StatusIndicator isOnline={contact.online} size="md" />
 						</div>
 					</div>
 					<h2 className="mt-4 text-xl font-bold text-primary-foreground">{contact.displayName}</h2>
 					<p className="text-sm text-secondary-foreground mt-0.5">@{contact.username}</p>
 					<p
-						className={`text-xs mt-2 font-medium ${
-							presenceMap.get(contact.id) ? "text-accent" : "text-muted"
-						}`}
+						className={`text-xs mt-2 font-medium ${contact.online ? "text-accent" : "text-muted"}`}
 					>
-						{presenceMap.get(contact.id) ? "● Online" : "Last seen recently"}
+						{contact.online ? "● Online" : "Last seen recently"}
 					</p>
 
 					{/* Contact status badge */}

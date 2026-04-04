@@ -5,7 +5,7 @@ import type {
 	OutgoingClientFrame,
 	Server2ClientFrame,
 } from "@repo/types"
-import type { RuntimeIdentity } from "./identity"
+import type { RuntimeIdentity } from "@/types"
 import { signNonce } from "./identity"
 
 // ! socket states should be more precise and the socket should

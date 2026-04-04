@@ -15,6 +15,19 @@ export interface Identity {
 }
 
 /**
+ * The in-memory identity used at runtime.
+ * Holds live CryptoKey objects alongside the plain record from IndexedDB.
+ */
+export interface RuntimeIdentity {
+	userID: UserID
+	username: string
+	displayName: string
+	publicKey: CryptoKey // verify + export only
+	privateKey: CryptoKey // sign only — never exported after initial save
+	publicKeyJwk: JsonWebKey
+}
+
+/**
  * Lifecycle:
  *   pending_out  — we sent a chat_request, waiting for their response
  *   pending_in   — they sent a chat_request to us, awaiting our action
@@ -46,6 +59,11 @@ export interface Contact {
 	unreadCount: number
 	createdAt: number
 	updatedAt: number
+}
+
+export interface RuntimeContact extends Contact {
+	online: boolean
+	isTyping: boolean
 }
 
 /**

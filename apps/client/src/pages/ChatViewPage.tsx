@@ -1,4 +1,3 @@
-import type { MessageID } from "@repo/types"
 import { useNavigate, useParams } from "@tanstack/react-router"
 import { ArrowLeft, Ban, Clock, MoreVertical, UserCheck, UserX } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -8,7 +7,6 @@ import InputBox from "@/components/InputBox"
 import { MessageBubble } from "@/components/MessageBubble"
 import { StatusIndicator } from "@/components/StatusIndicator"
 import { TypingIndicator } from "@/components/TypingIndicator"
-import { useTypingIndicator } from "@/hooks/useTypingIndicator"
 import { getMessages } from "@/lib/db"
 import { useAppStore } from "@/store/appStore"
 import type { Contact, Message } from "@/types"
@@ -126,7 +124,6 @@ export function ChatViewPage() {
 	const navigate = useNavigate()
 	const getContact = useAppStore(s => s.getContact)
 	const markAsRead = useAppStore(s => s.markAsRead)
-	const presenceMap = useAppStore(s => s.presenceMap)
 
 	const contact = getContact(contactId)
 
@@ -137,8 +134,6 @@ export function ChatViewPage() {
 			getMessages(contactId).then(setRawMessages)
 		}
 	}, [contactId, contact?.status])
-
-	const isTyping = useTypingIndicator(contactId ?? "")
 
 	useEffect(() => {
 		if (contactId && contact?.status === "accepted") markAsRead(contactId)
@@ -157,21 +152,8 @@ export function ChatViewPage() {
 			}
 			items.push({ kind: "msg", message: msg })
 		})
-		if (isTyping) {
-			items.push({
-				kind: "msg",
-				message: {
-					id: "__typing__" as MessageID,
-					userID: contactId,
-					content: "",
-					ts: Date.now(),
-					sentByMe: false,
-					status: "received",
-				},
-			})
-		}
 		return items
-	}, [rawMessages, isTyping, contactId])
+	}, [rawMessages])
 
 	if (!contactId || !contact) {
 		return (
@@ -181,7 +163,6 @@ export function ChatViewPage() {
 		)
 	}
 
-	const subtitle = presenceMap.get(contact.id) ? "Online" : "Offline"
 	const isAccepted = contact.status === "accepted"
 
 	return (
@@ -209,7 +190,7 @@ export function ChatViewPage() {
 					<div className="relative shrink-0">
 						<Avatar name={contact.displayName} color="red" size="md" />
 						<div className="absolute -bottom-0.5 -right-0.5">
-							<StatusIndicator isOnline={presenceMap.get(contact.id)} />
+							<StatusIndicator isOnline={contact.online} />
 						</div>
 					</div>
 					<div className="min-w-0 text-left">
@@ -218,12 +199,10 @@ export function ChatViewPage() {
 						</p>
 						<p
 							className={`text-xs truncate leading-tight transition-colors duration-200 ${
-								presenceMap.get(contact.id) || isTyping
-									? "text-accent"
-									: "text-secondary-foreground"
+								contact.online || contact.isTyping ? "text-accent" : "text-secondary-foreground"
 							}`}
 						>
-							{isTyping ? "typing…" : subtitle}
+							{contact.isTyping ? "typing…" : contact.online ? "Online" : "Offline"}
 						</p>
 					</div>
 				</button>

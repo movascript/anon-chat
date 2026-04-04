@@ -1,17 +1,11 @@
 import { Link } from "@tanstack/react-router"
-import { useAppStore } from "@/store/appStore"
-import type { Contact } from "@/types"
+import type { RuntimeContact } from "@/types"
 import { cn } from "@/utils/className"
 import { formatTime } from "@/utils/date"
 import { Avatar } from "./Avatar"
 import { StatusIndicator } from "./StatusIndicator"
 
-interface ContactListItemProps {
-	contact: Contact
-}
-
-export function ContactListItem({ contact }: ContactListItemProps) {
-	const presenceMap = useAppStore(s => s.presenceMap)
+export function ContactListItem({ contact }: { contact: RuntimeContact }) {
 	return (
 		<Link
 			to="/chat/$contactId"
@@ -23,7 +17,7 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 			<div className="relative shrink-0">
 				<Avatar name={contact.displayName} color="red" size="md" />
 				<div className="absolute -bottom-0.5 -right-0.5">
-					<StatusIndicator isOnline={presenceMap.get(contact.id)} />
+					<StatusIndicator isOnline={contact.online} />
 				</div>
 			</div>
 
@@ -38,14 +32,10 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 					<span
 						className={cn(
 							"text-xs truncate",
-							presenceMap.get(contact.id) // ! typing
-								? "text-accent italic"
-								: "text-secondary-foreground"
+							contact.isTyping ? "text-accent italic" : "text-secondary-foreground"
 						)}
 					>
-						{presenceMap.get(contact.id) // ! typing
-							? "typing…"
-							: (contact.lastMessage ?? "No messages yet")}
+						{contact.isTyping ? "typing…" : (contact.lastMessage ?? "No messages yet")}
 					</span>
 					{contact.unreadCount > 0 && (
 						<span className="shrink-0 min-w-4.5 h-4.5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
