@@ -1,78 +1,69 @@
-import {
-	AlertCircle,
-	ArrowRight,
-	Github,
-	Loader2,
-	MessageCircle,
-	Moon,
-	Sun,
-} from "lucide-react";
-import { useState } from "react";
-import { useAppStore } from "@/store/appStore";
-import { useTheme } from "@/store/theme";
-import { cn } from "@/utils/className";
+import { AlertCircle, ArrowRight, Github, Loader2, MessageCircle, Moon, Sun } from "lucide-react"
+import { useState } from "react"
+import { useAppStore } from "@/store/appStore"
+import { useTheme } from "@/store/theme"
+import { cn } from "@/utils/className"
 
-type State = "idle" | "loading" | "success" | "error";
+type State = "idle" | "loading" | "success" | "error"
 
 export default function LoginPage() {
-	const [username, setUsername] = useState("");
-	const [displayName, setDisplayName] = useState("");
-	const [state, setState] = useState<State>("idle");
-	const [errorMsg, setErrorMsg] = useState("");
-	const login = useAppStore((s) => s.login);
-	const socket = useAppStore((s) => s.socket);
-	const { isDark, toggleTheme } = useTheme();
+	const [username, setUsername] = useState("")
+	const [displayName, setDisplayName] = useState("")
+	const [state, setState] = useState<State>("idle")
+	const [errorMsg, setErrorMsg] = useState("")
+	const login = useAppStore(s => s.login)
+	const socket = useAppStore(s => s.socket)
+	const { isDark, toggleTheme } = useTheme()
 
 	// ! should make sure the submit handler is disabled when socket is on pending
 	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		const trimmedUsername = username.trim().toLowerCase();
-		const trimmedName = displayName.trim();
+		e.preventDefault()
+		const trimmedUsername = username.trim().toLowerCase()
+		const trimmedName = displayName.trim()
 
-		if (!trimmedUsername || !trimmedName) return;
+		if (!trimmedUsername || !trimmedName) return
 
 		if (trimmedUsername.length < 3) {
-			setState("error");
-			setErrorMsg("Username must be at least 3 characters.");
-			return;
+			setState("error")
+			setErrorMsg("Username must be at least 3 characters.")
+			return
 		}
 		if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
-			setState("error");
-			setErrorMsg("Only letters, numbers, and underscores allowed.");
-			return;
+			setState("error")
+			setErrorMsg("Only letters, numbers, and underscores allowed.")
+			return
 		}
 
-		setState("loading");
-		setErrorMsg("");
-		await new Promise((r) => setTimeout(r, 400));
+		setState("loading")
+		setErrorMsg("")
+		await new Promise(r => setTimeout(r, 400))
 
 		try {
 			const unsubAuthSUccess = socket.on("auth_success", async () => {
-				setState("success");
+				setState("success")
 
-				unsubAuthSUccess();
-				unsubAuthError();
-			});
-			const unsubAuthError = socket.on("auth_error", (f) => {
-				setState("error");
-				setErrorMsg(f.reason);
+				unsubAuthSUccess()
+				unsubAuthError()
+			})
+			const unsubAuthError = socket.on("auth_error", f => {
+				setState("error")
+				setErrorMsg(f.reason)
 
-				unsubAuthSUccess();
-				unsubAuthError();
-			});
-			login(username, displayName);
-			setState("success");
+				unsubAuthSUccess()
+				unsubAuthError()
+			})
+			login(username, displayName)
+			setState("success")
 		} catch (err) {
-			console.error("Failed to generate identity:", err);
-			setState("error");
-			setErrorMsg("Failed to create account. Please try again.");
+			console.error("Failed to generate identity:", err)
+			setState("error")
+			setErrorMsg("Failed to create account. Please try again.")
 		} finally {
 		}
-	};
+	}
 
-	const isLoading = state === "loading";
-	const isDisabled =
-		isLoading || username.trim().length < 3 || displayName.trim().length < 2;
+	const isLoading = state === "loading"
+	const isDisabled = isLoading || username.trim().length < 3 || displayName.trim().length < 2
 
 	return (
 		<div className="min-h-screen overflow-auto h-full flex flex-col items-center justify-center bg-primary px-6 relative">
@@ -94,12 +85,8 @@ export default function LoginPage() {
 					<div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4 shadow-lg">
 						<MessageCircle className="w-8 h-8 text-white" strokeWidth={2.5} />
 					</div>
-					<h1 className="text-2xl font-bold text-primary-foreground">
-						AnonChat
-					</h1>
-					<p className="text-sm text-secondary-foreground mt-1">
-						Secure. Anonymous. No servers.
-					</p>
+					<h1 className="text-2xl font-bold text-primary-foreground">AnonChat</h1>
+					<p className="text-sm text-secondary-foreground mt-1">Secure. Anonymous. No servers.</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-3">
@@ -114,7 +101,7 @@ export default function LoginPage() {
 							id="displayName"
 							type="text"
 							value={displayName}
-							onChange={(e) => setDisplayName(e.target.value)}
+							onChange={e => setDisplayName(e.target.value)}
 							placeholder="Your Name"
 							autoComplete="off"
 							maxLength={32}
@@ -138,10 +125,10 @@ export default function LoginPage() {
 								id="username"
 								type="text"
 								value={username}
-								onChange={(e) => {
-									setUsername(e.target.value);
-									if (state !== "idle") setState("idle");
-									setErrorMsg("");
+								onChange={e => {
+									setUsername(e.target.value)
+									if (state !== "idle") setState("idle")
+									setErrorMsg("")
 								}}
 								placeholder="your_username"
 								autoComplete="off"
@@ -153,7 +140,7 @@ export default function LoginPage() {
 										? "border-red-500"
 										: state === "success"
 											? "border-green-500"
-											: "border-transparent focus:border-accent",
+											: "border-transparent focus:border-accent"
 								)}
 							/>
 						</div>
@@ -162,7 +149,7 @@ export default function LoginPage() {
 							<div
 								className={cn(
 									"flex items-center gap-1.5 mt-2 text-xs font-medium animate-fade-in",
-									errorMsg ? "text-red-500" : "text-green-500",
+									errorMsg ? "text-red-500" : "text-green-500"
 								)}
 							>
 								{errorMsg ? (
@@ -184,7 +171,7 @@ export default function LoginPage() {
 							"w-full bg-red-700 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
 							isDisabled
 								? "bg-tertiary text-muted cursor-not-allowed"
-								: "bg-accent hover:bg-accent-hover active:scale-[0.98] text-white shadow-sm",
+								: "bg-accent hover:bg-accent-hover active:scale-[0.98] text-white shadow-sm"
 						)}
 					>
 						{state === "loading" ? (
@@ -202,9 +189,7 @@ export default function LoginPage() {
 				</form>
 
 				<div className="mt-8 space-y-2 text-center">
-					<p className="text-xs text-muted">
-						End-to-end encrypted. No data stored.
-					</p>
+					<p className="text-xs text-muted">End-to-end encrypted. No data stored.</p>
 					<div className="flex items-center justify-center gap-4 text-xs">
 						<a href="/about" className="text-accent hover:underline">
 							About & Privacy
@@ -222,5 +207,5 @@ export default function LoginPage() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

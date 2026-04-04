@@ -1,34 +1,32 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Camera, ChevronRight, LogOut } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { AppInfo } from "@/components/AppInfo";
-import { Avatar } from "@/components/Avatar";
-import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
-import { NavigationHeader } from "@/components/NavigationHeader";
-import { Toggle } from "@/components/Toggle";
-import { useAppStore } from "@/store/appStore";
-import { useTheme } from "@/store/theme";
+import { useNavigate } from "@tanstack/react-router"
+import { Camera, ChevronRight, LogOut } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
+import { AppInfo } from "@/components/AppInfo"
+import { Avatar } from "@/components/Avatar"
+import { InlineConfirmDialog } from "@/components/InlineConfirmDialog"
+import { NavigationHeader } from "@/components/NavigationHeader"
+import { Toggle } from "@/components/Toggle"
+import { useAppStore } from "@/store/appStore"
+import { useTheme } from "@/store/theme"
 
 function Divider() {
-	return <div className="h-px bg-border mx-4" />;
+	return <div className="h-px bg-border mx-4" />
 }
 
 function SectionHeader({ title }: { title: string }) {
 	return (
 		<div className="px-4 pt-5 pb-1.5">
-			<p className="text-xs font-semibold text-accent uppercase tracking-wider">
-				{title}
-			</p>
+			<p className="text-xs font-semibold text-accent uppercase tracking-wider">{title}</p>
 		</div>
-	);
+	)
 }
 
 interface SettingRowProps {
-	label: string;
-	sublabel?: string;
-	right?: React.ReactNode;
-	onClick?: () => void;
+	label: string
+	sublabel?: string
+	right?: React.ReactNode
+	onClick?: () => void
 }
 
 function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
@@ -41,44 +39,41 @@ function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
 		>
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium text-primary-foreground">{label}</p>
-				{sublabel && (
-					<p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>
-				)}
+				{sublabel && <p className="text-xs text-secondary-foreground mt-0.5">{sublabel}</p>}
 			</div>
-			{right ??
-				(onClick && <ChevronRight className="w-4 h-4 text-muted shrink-0" />)}
+			{right ?? (onClick && <ChevronRight className="w-4 h-4 text-muted shrink-0" />)}
 		</button>
-	);
+	)
 }
 
 export default function SettingsPage() {
-	const identity = useAppStore((s) => s.identity);
-	const logout = useAppStore((s) => s.logout);
-	const updateUserOnlineStatus = useAppStore((s) => s.updateUserOnlineStatus);
-	const { isDark, toggleTheme } = useTheme();
-	const navigate = useNavigate();
+	const identity = useAppStore(s => s.identity)
+	const logout = useAppStore(s => s.logout)
+	const updateUserOnlineStatus = useAppStore(s => s.updateUserOnlineStatus)
+	const { isDark, toggleTheme } = useTheme()
+	const navigate = useNavigate()
 
-	const [isOnline, setIsOnline] = useState(true);
-	const [notifications, setNotifications] = useState(true);
-	const [readReceipts, setReadReceipts] = useState(true);
-	const [lastSeenVisible, setLastSeenVisible] = useState(true);
-	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+	const [isOnline, setIsOnline] = useState(true)
+	const [notifications, setNotifications] = useState(true)
+	const [readReceipts, setReadReceipts] = useState(true)
+	const [lastSeenVisible, setLastSeenVisible] = useState(true)
+	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
 	const user = identity ?? {
 		displayName: "User",
 		username: "user",
-	};
+	}
 
 	const handleOnlineToggle = () => {
-		const next = !isOnline;
-		setIsOnline(next);
-		updateUserOnlineStatus(next);
-	};
+		const next = !isOnline
+		setIsOnline(next)
+		updateUserOnlineStatus(next)
+	}
 
 	const handleLogout = () => {
-		logout();
-		navigate({ to: "/login", replace: true });
-	};
+		logout()
+		navigate({ to: "/login", replace: true })
+	}
 
 	return (
 		<div className="flex flex-col h-full animate-fade-in bg-primary">
@@ -102,12 +97,8 @@ export default function SettingsPage() {
 							<Camera className="w-4 h-4" strokeWidth={2.5} />
 						</button>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
-						{user.displayName}
-					</h2>
-					<p className="text-sm text-secondary-foreground mt-0.5">
-						@{user.username}
-					</p>
+					<h2 className="mt-4 text-xl font-bold text-primary-foreground">{user.displayName}</h2>
+					<p className="text-sm text-secondary-foreground mt-0.5">@{user.username}</p>
 					<div className="flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full bg-primary border border-border">
 						<span
 							className="w-2 h-2 rounded-full transition-colors duration-300"
@@ -193,11 +184,7 @@ export default function SettingsPage() {
 						}
 					/>
 					<Divider />
-					<SettingRow
-						label="Blocked Users"
-						sublabel="Manage blocked contacts"
-						onClick={() => {}}
-					/>
+					<SettingRow label="Blocked Users" sublabel="Manage blocked contacts" onClick={() => {}} />
 				</div>
 
 				<SectionHeader title="Appearance" />
@@ -220,10 +207,7 @@ export default function SettingsPage() {
 
 				<SectionHeader title="About" />
 				<div className="bg-primary rounded-xl mx-4 overflow-hidden border border-border">
-					<SettingRow
-						label="Privacy Policy"
-						onClick={() => navigate({ to: "/privacy" })}
-					/>
+					<SettingRow label="Privacy Policy" onClick={() => navigate({ to: "/privacy" })} />
 				</div>
 
 				<div className="mx-4 mt-5 mb-8">
@@ -253,5 +237,5 @@ export default function SettingsPage() {
 				<AppInfo />
 			</div>
 		</div>
-	);
+	)
 }

@@ -1,13 +1,13 @@
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router"
+import { ArrowLeft } from "lucide-react"
 
 interface NavigationHeaderProps {
-	title: string;
-	subtitle?: string;
-	showBack?: boolean;
-	backTo?: string; // ! backTo should be typesage not a string
-	rightSlot?: React.ReactNode;
-	leftSlot?: React.ReactNode;
+	title: string
+	subtitle?: string
+	showBack?: boolean
+	backTo?: string // ! backTo should be typesage not a string
+	rightSlot?: React.ReactNode
+	leftSlot?: React.ReactNode
 }
 
 export function NavigationHeader({
@@ -18,12 +18,12 @@ export function NavigationHeader({
 	rightSlot,
 	leftSlot,
 }: NavigationHeaderProps) {
-	const navigate = useNavigate();
+	const navigate = useNavigate()
 
 	const handleBack = () => {
-		if (backTo) navigate({ to: backTo });
-		else navigate({ to: ".." });
-	};
+		if (backTo) navigate({ to: backTo })
+		else navigate({ to: ".." })
+	}
 
 	return (
 		<header className="flex items-center gap-3 px-4 h-16 bg-header-bg border-b border-border z-10 shrink-0">
@@ -50,5 +50,5 @@ export function NavigationHeader({
 			</div>
 			{rightSlot && <div className="flex items-center gap-1">{rightSlot}</div>}
 		</header>
-	);
+	)
 }

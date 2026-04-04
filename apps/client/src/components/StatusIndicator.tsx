@@ -1,5 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/utils/className";
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/utils/className"
 
 const statusVariants = cva(
 	"rounded-full border-2 border-primary inline-block transition-colors duration-300",
@@ -18,17 +18,13 @@ const statusVariants = cva(
 			size: "sm",
 			isOnline: false,
 		},
-	},
-);
+	}
+)
 
 interface StatusIndicatorProps extends VariantProps<typeof statusVariants> {
-	className?: string;
+	className?: string
 }
 
-export function StatusIndicator({
-	isOnline,
-	size,
-	className,
-}: StatusIndicatorProps) {
-	return <span className={cn(statusVariants({ size, isOnline }), className)} />;
+export function StatusIndicator({ isOnline, size, className }: StatusIndicatorProps) {
+	return <span className={cn(statusVariants({ size, isOnline }), className)} />
 }

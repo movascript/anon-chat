@@ -1,57 +1,56 @@
-import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Moon, Settings, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
-import { ContactListItem } from "@/components/ContactListItem";
-import { EmptyState } from "@/components/EmptyState";
-import { FoundUserCard } from "@/components/FoundUserCard";
-import { SearchInput } from "@/components/SearchInput";
-import { SocketStatus } from "@/components/SocketStatus";
-import useDebounce from "@/hooks/useDebounce";
-import { useAppStore } from "@/store/appStore";
-import { useTheme } from "@/store/theme";
-import type { SearchedContact } from "@/types";
-import { cn } from "@/utils/className";
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router"
+import { Moon, Settings, Sun } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ContactListItem } from "@/components/ContactListItem"
+import { EmptyState } from "@/components/EmptyState"
+import { FoundUserCard } from "@/components/FoundUserCard"
+import { SearchInput } from "@/components/SearchInput"
+import { SocketStatus } from "@/components/SocketStatus"
+import useDebounce from "@/hooks/useDebounce"
+import { useAppStore } from "@/store/appStore"
+import { useTheme } from "@/store/theme"
+import type { SearchedContact } from "@/types"
+import { cn } from "@/utils/className"
 
 export default function ChatListPage() {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [foundedUser, setFoundedUser] = useState<SearchedContact | null>(null);
-	const [isSearching, setIsSearching] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("")
+	const [foundedUser, setFoundedUser] = useState<SearchedContact | null>(null)
+	const [isSearching, setIsSearching] = useState(false)
 
-	const contacts = useAppStore((s) => s.contacts);
-	const socket = useAppStore((s) => s.socket);
-	const { isDark, toggleTheme } = useTheme();
-	const navigate = useNavigate();
-	const location = useLocation();
+	const contacts = useAppStore(s => s.contacts)
+	const socket = useAppStore(s => s.socket)
+	const { isDark, toggleTheme } = useTheme()
+	const navigate = useNavigate()
+	const location = useLocation()
 
-	const debouncedSearchQuery = useDebounce(searchQuery, 300);
+	const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
 	const filtered = contacts?.filter(
-		(c) =>
+		c =>
 			c.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			c.username.toLowerCase().includes(searchQuery.toLowerCase()),
-	);
+			c.username.toLowerCase().includes(searchQuery.toLowerCase())
+	)
 
-	const shouldSearchGlobally =
-		debouncedSearchQuery !== "" && filtered?.length === 0;
+	const shouldSearchGlobally = debouncedSearchQuery !== "" && filtered?.length === 0
 
 	useEffect(() => {
 		if (debouncedSearchQuery === "") {
-			setFoundedUser(null);
-			setIsSearching(false);
-			return;
+			setFoundedUser(null)
+			setIsSearching(false)
+			return
 		}
 
 		if (!shouldSearchGlobally) {
-			setFoundedUser(null);
-			setIsSearching(false);
-			return;
+			setFoundedUser(null)
+			setIsSearching(false)
+			return
 		}
 
-		setIsSearching(true);
-		socket.send({ type: "search_user", username: debouncedSearchQuery });
+		setIsSearching(true)
+		socket.send({ type: "search_user", username: debouncedSearchQuery })
 
-		const unsub = socket.on("search_result", (f) => {
-			setIsSearching(false);
+		const unsub = socket.on("search_result", f => {
+			setIsSearching(false)
 			setFoundedUser(
 				f.found
 					? {
@@ -60,15 +59,15 @@ export default function ChatListPage() {
 							userID: f.userID,
 							publicKey: JSON.parse(f.publicKey),
 						}
-					: null,
-			);
-		});
+					: null
+			)
+		})
 
-		return unsub;
-	}, [debouncedSearchQuery, shouldSearchGlobally, socket]);
+		return unsub
+	}, [debouncedSearchQuery, shouldSearchGlobally, socket])
 
-	const hasOutlet = location.pathname !== "/";
-	const showGlobalSearch = shouldSearchGlobally || isSearching;
+	const hasOutlet = location.pathname !== "/"
+	const showGlobalSearch = shouldSearchGlobally || isSearching
 
 	return (
 		<div className="flex h-full w-full overflow-hidden bg-primary">
@@ -76,7 +75,7 @@ export default function ChatListPage() {
 				className={cn(
 					"flex flex-col bg-sidebar-bg border-r border-border animate-fade-in shrink-0",
 					hasOutlet ? "hidden md:flex" : "flex",
-					"w-full md:w-80 lg:w-96",
+					"w-full md:w-80 lg:w-96"
 				)}
 			>
 				<div className="flex h-16 items-center gap-3 px-5 border-b border-border">
@@ -119,7 +118,7 @@ export default function ChatListPage() {
 				</div>
 
 				<div className="flex-1 overflow-y-auto">
-					{filtered?.map((contact) => (
+					{filtered?.map(contact => (
 						<ContactListItem key={contact.id} contact={contact} />
 					))}
 
@@ -131,9 +130,7 @@ export default function ChatListPage() {
 								</div>
 							)}
 
-							{!isSearching && foundedUser && (
-								<FoundUserCard user={foundedUser} />
-							)}
+							{!isSearching && foundedUser && <FoundUserCard user={foundedUser} />}
 
 							{!isSearching && !foundedUser && shouldSearchGlobally && (
 								<EmptyState searchQuery={debouncedSearchQuery} />
@@ -141,20 +138,18 @@ export default function ChatListPage() {
 						</>
 					)}
 
-					{!searchQuery && filtered?.length === 0 && (
-						<EmptyState searchQuery="" />
-					)}
+					{!searchQuery && filtered?.length === 0 && <EmptyState searchQuery="" />}
 				</div>
 			</aside>
 
 			<main
 				className={cn(
 					"flex-1 flex flex-col overflow-hidden",
-					!hasOutlet ? "hidden md:flex" : "flex",
+					!hasOutlet ? "hidden md:flex" : "flex"
 				)}
 			>
 				<Outlet />
 			</main>
 		</div>
-	);
+	)
 }

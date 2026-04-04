@@ -1,4 +1,4 @@
-import { UsersRound } from "lucide-react";
+import { UsersRound } from "lucide-react"
 
 export function EmptyState({ searchQuery }: { searchQuery: string }) {
 	return (
@@ -7,18 +7,14 @@ export function EmptyState({ searchQuery }: { searchQuery: string }) {
 			{searchQuery ? (
 				<>
 					<p>No user found for "{searchQuery}".</p>
-					<p className="text-xs opacity-70">
-						Make sure you typed the exact username.
-					</p>
+					<p className="text-xs opacity-70">Make sure you typed the exact username.</p>
 				</>
 			) : (
 				<>
 					<p>No contacts yet.</p>
-					<p className="text-xs opacity-70">
-						Enter a full username to send a request.
-					</p>
+					<p className="text-xs opacity-70">Enter a full username to send a request.</p>
 				</>
 			)}
 		</div>
-	);
+	)
 }

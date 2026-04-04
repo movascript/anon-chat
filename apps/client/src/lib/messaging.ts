@@ -1,57 +1,49 @@
-import type {
-	MessageAckFrame,
-	MessageID,
-	MessageInFrame,
-	TypingInFrame,
-	UserID,
-} from "@repo/types";
-import type { Contact, Message } from "@/types";
-import { db } from "./db";
-import type { AnonSocket } from "./socket";
+import type { MessageAckFrame, MessageID, MessageInFrame, TypingInFrame, UserID } from "@repo/types"
+import type { Contact, Message } from "@/types"
+import { db } from "./db"
+import type { AnonSocket } from "./socket"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /**
  * Result of `sendMessage()`.
  */
-export type SendResult =
-	| { ok: true; message: Message }
-	| { ok: false; reason: string };
+export type SendResult = { ok: true; message: Message } | { ok: false; reason: string }
 
 /**
  * Typing event the UI can react to.
  */
 export interface TypingEvent {
-	fromUserID: UserID;
-	typing: boolean;
+	fromUserID: UserID
+	typing: boolean
 }
 
 // ─── MessagingManager ─────────────────────────────────────────────────────────
 
 export class MessagingManager {
-	private socket: AnonSocket;
-	private unsubs: Array<() => void> = [];
+	private socket: AnonSocket
+	private unsubs: Array<() => void> = []
 
 	// UI-facing reactive callbacks
-	private onMessageListeners: Array<(msg: Message) => void> = [];
-	private onAckListeners: Array<(ack: MessageAckFrame) => void> = [];
-	private onTypingListeners: Array<(evt: TypingEvent) => void> = [];
+	private onMessageListeners: Array<(msg: Message) => void> = []
+	private onAckListeners: Array<(ack: MessageAckFrame) => void> = []
+	private onTypingListeners: Array<(evt: TypingEvent) => void> = []
 
 	constructor(socket: AnonSocket) {
-		this.socket = socket;
+		this.socket = socket
 	}
 
 	// ─── Lifecycle ─────────────────────────────────────────────────────────────
 
 	/** Attach socket listeners. Call once after socket reaches "authenticated". */
 	init(): void {
-		this.attachSocketListeners();
+		this.attachSocketListeners()
 	}
 
 	/** Detach all socket listeners. Call on logout / account reset. */
 	destroy(): void {
-		for (const unsub of this.unsubs) unsub();
-		this.unsubs = [];
+		for (const unsub of this.unsubs) unsub()
+		this.unsubs = []
 	}
 
 	// ─── Sending ───────────────────────────────────────────────────────────────
@@ -70,10 +62,10 @@ export class MessagingManager {
 	 */
 	async sendMessage(toUserID: UserID, text: string): Promise<SendResult> {
 		if (!text.trim()) {
-			return { ok: false, reason: "Message text cannot be empty" };
+			return { ok: false, reason: "Message text cannot be empty" }
 		}
 
-		const messageId = crypto.randomUUID() as MessageID;
+		const messageId = crypto.randomUUID() as MessageID
 
 		const message: Message = {
 			id: messageId,
@@ -82,22 +74,22 @@ export class MessagingManager {
 			content: text.trim(),
 			status: "sending",
 			ts: Date.now(),
-		};
+		}
 
 		try {
 			// Atomic write: message row + contact snapshot
 			await db.transaction("rw", db.messages, db.contacts, async () => {
-				await db.messages.put(message);
-				await this.upsertConversationSnapshot(toUserID, message);
-			});
+				await db.messages.put(message)
+				await this.upsertConversationSnapshot(toUserID, message)
+			})
 		} catch (err) {
-			const reason = err instanceof Error ? err.message : String(err);
-			console.error("[Messaging] DB write failed:", err);
-			return { ok: false, reason };
+			const reason = err instanceof Error ? err.message : String(err)
+			console.error("[Messaging] DB write failed:", err)
+			return { ok: false, reason }
 		}
 
 		// Optimistic UI update — render before server confirms
-		this.emitMessage(message);
+		this.emitMessage(message)
 
 		// Push to server
 		this.socket.send({
@@ -106,10 +98,10 @@ export class MessagingManager {
 			toUserID,
 			content: message.content,
 			// ts: message.ts,
-		});
+		})
 
-		console.info(`[Messaging] Sent message ${messageId} to ${toUserID}`);
-		return { ok: true, message };
+		console.info(`[Messaging] Sent message ${messageId} to ${toUserID}`)
+		return { ok: true, message }
 	}
 
 	// ─── Typing Indicator ──────────────────────────────────────────────────────
@@ -119,7 +111,7 @@ export class MessagingManager {
 	 * Fire-and-forget — no ACK, no DB write.
 	 */
 	sendTyping(toUserID: UserID, isTyping: boolean): void {
-		this.socket.send({ type: "typing", toUserID, isTyping });
+		this.socket.send({ type: "typing", toUserID, isTyping })
 	}
 
 	/**
@@ -132,7 +124,7 @@ export class MessagingManager {
 	async markRead(userID: UserID): Promise<void> {
 		await db.contacts.update(userID, {
 			unreadCount: 0,
-		});
+		})
 	}
 
 	// ─── Reactive Listeners ────────────────────────────────────────────────────
@@ -153,10 +145,10 @@ export class MessagingManager {
 */
 
 	onMessage(cb: (msg: Message) => void): () => void {
-		this.onMessageListeners.push(cb);
+		this.onMessageListeners.push(cb)
 		return () => {
-			this.onMessageListeners = this.onMessageListeners.filter((f) => f !== cb);
-		};
+			this.onMessageListeners = this.onMessageListeners.filter(f => f !== cb)
+		}
 	}
 
 	/**
@@ -168,10 +160,10 @@ export class MessagingManager {
 */
 
 	onAck(cb: (ack: MessageAckFrame) => void): () => void {
-		this.onAckListeners.push(cb);
+		this.onAckListeners.push(cb)
 		return () => {
-			this.onAckListeners = this.onAckListeners.filter((f) => f !== cb);
-		};
+			this.onAckListeners = this.onAckListeners.filter(f => f !== cb)
+		}
 	}
 
 	/**
@@ -182,28 +174,22 @@ export class MessagingManager {
 */
 
 	onTyping(cb: (evt: TypingEvent) => void): () => void {
-		this.onTypingListeners.push(cb);
+		this.onTypingListeners.push(cb)
 		return () => {
-			this.onTypingListeners = this.onTypingListeners.filter((f) => f !== cb);
-		};
+			this.onTypingListeners = this.onTypingListeners.filter(f => f !== cb)
+		}
 	}
 
 	// ─── Private: Socket Event Handling ───────────────────────────────────────
 
 	private attachSocketListeners(): void {
-		const unsubMsg = this.socket.on("message_in", (frame) =>
-			this.handleIncomingMessage(frame),
-		);
+		const unsubMsg = this.socket.on("message_in", frame => this.handleIncomingMessage(frame))
 
-		const unsubAck = this.socket.on("message_ack", (frame) =>
-			this.handleAck(frame),
-		);
+		const unsubAck = this.socket.on("message_ack", frame => this.handleAck(frame))
 
-		const unsubTyping = this.socket.on("typing_in", (frame) =>
-			this.handleTypingIn(frame),
-		);
+		const unsubTyping = this.socket.on("typing_in", frame => this.handleTypingIn(frame))
 
-		this.unsubs.push(unsubMsg, unsubAck, unsubTyping);
+		this.unsubs.push(unsubMsg, unsubAck, unsubTyping)
 	}
 
 	/**
@@ -224,30 +210,28 @@ export class MessagingManager {
 			content: frame.content,
 			status: "received",
 			ts: frame.ts ?? Date.now(),
-		};
+		}
 
 		try {
 			await db.transaction("rw", db.messages, db.contacts, async () => {
 				// Idempotency: ignore duplicates (possible on reconnect)
-				const exists = await db.messages.get(frame.id);
-				if (exists) return;
+				const exists = await db.messages.get(frame.id)
+				if (exists) return
 
-				await db.messages.put(message);
+				await db.messages.put(message)
 				await this.upsertConversationSnapshot(
 					frame.fromUserID,
 					message,
-					true, // increment unread
-				);
-			});
+					true // increment unread
+				)
+			})
 		} catch (err) {
-			console.error("[Messaging] Failed to persist incoming message:", err);
-			return;
+			console.error("[Messaging] Failed to persist incoming message:", err)
+			return
 		}
 
-		this.emitMessage(message);
-		console.info(
-			`[Messaging] Received message ${frame.id} from ${frame.fromUserID}`,
-		);
+		this.emitMessage(message)
+		console.info(`[Messaging] Received message ${frame.id} from ${frame.fromUserID}`)
 	}
 
 	/**
@@ -259,25 +243,25 @@ export class MessagingManager {
 */
 
 	private async handleAck(frame: MessageAckFrame): Promise<void> {
-		const newStatus = frame.delivered ? "delivered" : "failed";
+		const newStatus = frame.delivered ? "delivered" : "failed"
 
 		try {
 			await db.messages.update(frame.id, {
 				status: newStatus,
-			});
+			})
 		} catch (err) {
-			console.error("[Messaging] Failed to update ack status:", err);
+			console.error("[Messaging] Failed to update ack status:", err)
 		}
 
 		for (const cb of this.onAckListeners) {
 			try {
-				cb(frame);
+				cb(frame)
 			} catch (err) {
-				console.error("[Messaging] onAck listener error:", err);
+				console.error("[Messaging] onAck listener error:", err)
 			}
 		}
 
-		console.info(`[Messaging] Ack for ${frame.id}: ${newStatus}`);
+		console.info(`[Messaging] Ack for ${frame.id}: ${newStatus}`)
 	}
 
 	/**
@@ -291,13 +275,13 @@ export class MessagingManager {
 		const evt: TypingEvent = {
 			fromUserID: frame.fromUserID,
 			typing: frame.isTyping,
-		};
+		}
 
 		for (const cb of this.onTypingListeners) {
 			try {
-				cb(evt);
+				cb(evt)
 			} catch (err) {
-				console.error("[Messaging] onTyping listener error:", err);
+				console.error("[Messaging] onTyping listener error:", err)
 			}
 		}
 	}
@@ -311,10 +295,10 @@ export class MessagingManager {
 	private async upsertConversationSnapshot(
 		userID: UserID,
 		message: Message,
-		incrementUnread = false,
+		incrementUnread = false
 	): Promise<void> {
-		const existing = await db.contacts.get(userID);
-		const now = Date.now();
+		const existing = await db.contacts.get(userID)
+		const now = Date.now()
 
 		if (existing) {
 			await db.contacts.update(userID, {
@@ -324,7 +308,7 @@ export class MessagingManager {
 				unreadCount: incrementUnread
 					? (existing.unreadCount ?? 0) + 1
 					: (existing.unreadCount ?? 0),
-			});
+			})
 		} else {
 			// ! this is not ok
 			// ! this should not happen at all why is there a message from someone
@@ -341,8 +325,8 @@ export class MessagingManager {
 				createdAt: now,
 				updatedAt: now,
 				// updatedAt       : now,
-			};
-			await db.contacts.put(record);
+			}
+			await db.contacts.put(record)
 		}
 	}
 
@@ -351,9 +335,9 @@ export class MessagingManager {
 	private emitMessage(msg: Message): void {
 		for (const cb of this.onMessageListeners) {
 			try {
-				cb(msg);
+				cb(msg)
 			} catch (err) {
-				console.error("[Messaging] onMessage listener error:", err);
+				console.error("[Messaging] onMessage listener error:", err)
 			}
 		}
 	}
@@ -361,7 +345,7 @@ export class MessagingManager {
 
 // ─── Module-Level Singleton ───────────────────────────────────────────────────
 
-let _instance: MessagingManager | null = null;
+let _instance: MessagingManager | null = null
 
 /**
 
@@ -389,10 +373,10 @@ let _instance: MessagingManager | null = null;
 
 export function getMessagingManager(socket: AnonSocket): MessagingManager {
 	if (!_instance) {
-		_instance = new MessagingManager(socket);
+		_instance = new MessagingManager(socket)
 	}
 
-	return _instance;
+	return _instance
 }
 
 /**
@@ -400,6 +384,6 @@ export function getMessagingManager(socket: AnonSocket): MessagingManager {
 */
 
 export function destroyMessagingManager(): void {
-	_instance?.destroy();
-	_instance = null;
+	_instance?.destroy()
+	_instance = null
 }

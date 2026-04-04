@@ -1,21 +1,16 @@
-import type {
-	OutgoingServerFrame,
-	Server2ClientFrame,
-	SocketID,
-	UserID,
-} from "@repo/types";
-import type { WebSocket } from "ws";
+import type { OutgoingServerFrame, Server2ClientFrame, SocketID, UserID } from "@repo/types"
+import type { WebSocket } from "ws"
 
 interface ConnectedClient {
-	userID: UserID;
-	username: string;
-	displayName: string;
-	publicKey: string; // JWK stringified, kept for search results
-	socket: unknown; // typed as unknown here, cast to WebSocket in store
-	connectedAt: number;
-	pendingNonce: string | null; // cleared after successful auth
-	nonceIssuedAt: number | null; // timestamp when nonce was generated
-	authenticated: boolean;
+	userID: UserID
+	username: string
+	displayName: string
+	publicKey: string // JWK stringified, kept for search results
+	socket: unknown // typed as unknown here, cast to WebSocket in store
+	connectedAt: number
+	pendingNonce: string | null // cleared after successful auth
+	nonceIssuedAt: number | null // timestamp when nonce was generated
+	authenticated: boolean
 }
 
 // ─── In-Memory Registry ───────────────────────────────────────────────────────
@@ -28,14 +23,14 @@ interface ConnectedClient {
 // Nothing here is persisted. All state is gone on server restart.
 // That is intentional per the AnonChat design.
 
-const socketMap = new Map<SocketID, ConnectedClient>(); // socketID → client
-const usernameMap = new Map<string, SocketID>(); // username → socketID
-const userIDMap = new Map<UserID, SocketID>(); // userID   → socketID
+const socketMap = new Map<SocketID, ConnectedClient>() // socketID → client
+const usernameMap = new Map<string, SocketID>() // username → socketID
+const userIDMap = new Map<UserID, SocketID>() // userID   → socketID
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function generateSocketID() {
-	return crypto.randomUUID() as SocketID;
+	return crypto.randomUUID() as SocketID
 }
 
 // ─── Registration ─────────────────────────────────────────────────────────────
@@ -46,7 +41,7 @@ function generateSocketID() {
  * and assigns it a socketID.
  */
 function registerSocket(socket: WebSocket, nonce: string): SocketID {
-	const socketID = generateSocketID();
+	const socketID = generateSocketID()
 
 	const client: ConnectedClient = {
 		userID: "" as UserID,
@@ -58,10 +53,10 @@ function registerSocket(socket: WebSocket, nonce: string): SocketID {
 		pendingNonce: nonce,
 		nonceIssuedAt: Date.now(),
 		authenticated: false,
-	};
+	}
 
-	socketMap.set(socketID, client);
-	return socketID;
+	socketMap.set(socketID, client)
+	return socketID
 }
 
 /**
@@ -77,61 +72,61 @@ function authenticateClient(
 	userID: UserID,
 	username: string,
 	displayName: string,
-	publicKey: string,
+	publicKey: string
 ): boolean {
-	const client = socketMap.get(socketID);
-	if (!client) return false;
+	const client = socketMap.get(socketID)
+	if (!client) return false
 
 	// Reject if username already active on another socket
-	const existingByUsername = usernameMap.get(username);
+	const existingByUsername = usernameMap.get(username)
 	if (existingByUsername && existingByUsername !== socketID) {
-		const existing = socketMap.get(existingByUsername);
-		if (existing?.authenticated) return false;
+		const existing = socketMap.get(existingByUsername)
+		if (existing?.authenticated) return false
 	}
 
 	// Reject if the same keypair (userID) is already active on another socket.
 	// This prevents the same identity from holding two sessions simultaneously
 	// or re-registering under a different username.
-	const existingByUserID = userIDMap.get(userID);
+	const existingByUserID = userIDMap.get(userID)
 	if (existingByUserID && existingByUserID !== socketID) {
-		const existing = socketMap.get(existingByUserID);
-		if (existing?.authenticated) return false;
+		const existing = socketMap.get(existingByUserID)
+		if (existing?.authenticated) return false
 	}
 
-	client.userID = userID;
-	client.username = username;
-	client.displayName = displayName;
-	client.publicKey = publicKey;
-	client.pendingNonce = null;
-	client.nonceIssuedAt = null; // clear timestamp after use
-	client.authenticated = true;
+	client.userID = userID
+	client.username = username
+	client.displayName = displayName
+	client.publicKey = publicKey
+	client.pendingNonce = null
+	client.nonceIssuedAt = null // clear timestamp after use
+	client.authenticated = true
 
-	usernameMap.set(username, socketID);
-	userIDMap.set(userID, socketID);
+	usernameMap.set(username, socketID)
+	userIDMap.set(userID, socketID)
 
-	return true;
+	return true
 }
 
 // ─── Lookup ───────────────────────────────────────────────────────────────────
 
 function getClientBySocketID(socketID: SocketID): ConnectedClient | undefined {
-	return socketMap.get(socketID);
+	return socketMap.get(socketID)
 }
 
 function getClientByUsername(username: string): ConnectedClient | undefined {
-	const socketID = usernameMap.get(username);
-	if (!socketID) return undefined;
-	return socketMap.get(socketID);
+	const socketID = usernameMap.get(username)
+	if (!socketID) return undefined
+	return socketMap.get(socketID)
 }
 
 function getClientByUserID(userID: UserID): ConnectedClient | undefined {
-	const socketID = userIDMap.get(userID);
-	if (!socketID) return undefined;
-	return socketMap.get(socketID);
+	const socketID = userIDMap.get(userID)
+	if (!socketID) return undefined
+	return socketMap.get(socketID)
 }
 
 function getSocketIDByUserID(userID: UserID): SocketID | undefined {
-	return userIDMap.get(userID);
+	return userIDMap.get(userID)
 }
 
 // ─── Removal ──────────────────────────────────────────────────────────────────
@@ -143,17 +138,17 @@ function getSocketIDByUserID(userID: UserID): SocketID | undefined {
  * can broadcast a presence:offline event.
  */
 function removeClient(socketID: SocketID): ConnectedClient | undefined {
-	const client = socketMap.get(socketID);
-	if (!client) return undefined;
+	const client = socketMap.get(socketID)
+	if (!client) return undefined
 
-	socketMap.delete(socketID);
+	socketMap.delete(socketID)
 
 	if (client.authenticated) {
-		usernameMap.delete(client.username);
-		userIDMap.delete(client.userID);
+		usernameMap.delete(client.username)
+		userIDMap.delete(client.userID)
 	}
 
-	return client;
+	return client
 }
 
 // ─── Sending ──────────────────────────────────────────────────────────────────
@@ -164,20 +159,20 @@ function removeClient(socketID: SocketID): ConnectedClient | undefined {
  * id, ts properties will append automatically
  */
 function sendToSocket(socketID: SocketID, frame: OutgoingServerFrame): boolean {
-	const client = socketMap.get(socketID);
-	if (!client) return false;
+	const client = socketMap.get(socketID)
+	if (!client) return false
 
-	const ws = client.socket as WebSocket;
-	if (ws.readyState !== 1) return false; // 1 = WebSocket.OPEN
+	const ws = client.socket as WebSocket
+	if (ws.readyState !== 1) return false // 1 = WebSocket.OPEN
 
 	const fullFrame: Server2ClientFrame = {
 		...frame,
 		id: crypto.randomUUID(),
 		ts: Date.now(),
-	};
+	}
 
-	ws.send(JSON.stringify(fullFrame));
-	return true;
+	ws.send(JSON.stringify(fullFrame))
+	return true
 }
 
 /**
@@ -185,9 +180,9 @@ function sendToSocket(socketID: SocketID, frame: OutgoingServerFrame): boolean {
  * Returns false if user is not online.
  */
 function sendToUserID(userID: UserID, frame: OutgoingServerFrame): boolean {
-	const socketID = userIDMap.get(userID);
-	if (!socketID) return false;
-	return sendToSocket(socketID, frame);
+	const socketID = userIDMap.get(userID)
+	if (!socketID) return false
+	return sendToSocket(socketID, frame)
 }
 
 // ─── Presence Subscribers ────────────────────────────────────────────────────
@@ -197,23 +192,17 @@ function sendToUserID(userID: UserID, frame: OutgoingServerFrame): boolean {
 //
 // Structure: subscriberMap[targetUserID] = Set<socketID of watchers>
 
-const subscriberMap = new Map<UserID, Set<SocketID>>();
+const subscriberMap = new Map<UserID, Set<SocketID>>()
 
-function subscribeToPresence(
-	watcherSocketID: SocketID,
-	targetUserID: UserID,
-): void {
+function subscribeToPresence(watcherSocketID: SocketID, targetUserID: UserID): void {
 	if (!subscriberMap.has(targetUserID)) {
-		subscriberMap.set(targetUserID, new Set());
+		subscriberMap.set(targetUserID, new Set())
 	}
-	subscriberMap.get(targetUserID)!.add(watcherSocketID);
+	subscriberMap.get(targetUserID)!.add(watcherSocketID)
 }
 
-function unsubscribeFromPresence(
-	watcherSocketID: SocketID,
-	targetUserID: UserID,
-): void {
-	subscriberMap.get(targetUserID)?.delete(watcherSocketID);
+function unsubscribeFromPresence(watcherSocketID: SocketID, targetUserID: UserID): void {
+	subscriberMap.get(targetUserID)?.delete(watcherSocketID)
 }
 
 /**
@@ -222,13 +211,13 @@ function unsubscribeFromPresence(
  */
 function removeAllSubscriptions(watcherSocketID: SocketID): void {
 	for (const [targetUserID, watchers] of subscriberMap.entries()) {
-		watchers.delete(watcherSocketID);
-		if (watchers.size === 0) subscriberMap.delete(targetUserID);
+		watchers.delete(watcherSocketID)
+		if (watchers.size === 0) subscriberMap.delete(targetUserID)
 	}
 }
 
 function getPresenceSubscribers(targetUserID: UserID): SocketID[] {
-	return Array.from(subscriberMap.get(targetUserID) ?? []);
+	return Array.from(subscriberMap.get(targetUserID) ?? [])
 }
 
 // ─── Stats (optional, useful for health endpoint) ─────────────────────────────
@@ -237,7 +226,7 @@ function getStats() {
 	return {
 		totalConnections: socketMap.size,
 		authenticatedUsers: userIDMap.size,
-	};
+	}
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
@@ -257,4 +246,4 @@ export const store = {
 	removeAllSubscriptions,
 	getPresenceSubscribers,
 	getStats,
-};
+}

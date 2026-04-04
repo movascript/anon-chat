@@ -1,24 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
 export function useTypingIndicator(contactId: string) {
-	const [isTyping, setIsTyping] = useState(false);
+	const [isTyping, setIsTyping] = useState(false)
 
 	useEffect(() => {
 		// Simulate random typing events for demo
-		const startDelay = Math.random() * 8000 + 3000;
+		const startDelay = Math.random() * 8000 + 3000
 		const startTimer = setTimeout(() => {
-			setIsTyping(true);
+			setIsTyping(true)
 			const stopTimer = setTimeout(
 				() => {
-					setIsTyping(false);
+					setIsTyping(false)
 				},
-				Math.random() * 3000 + 1500,
-			);
-			return () => clearTimeout(stopTimer);
-		}, startDelay);
+				Math.random() * 3000 + 1500
+			)
+			return () => clearTimeout(stopTimer)
+		}, startDelay)
 
-		return () => clearTimeout(startTimer);
-	}, [contactId]);
+		return () => clearTimeout(startTimer)
+	}, [contactId])
 
-	return isTyping;
+	return isTyping
 }

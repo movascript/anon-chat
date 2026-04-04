@@ -1,17 +1,17 @@
-import { Link } from "@tanstack/react-router";
-import { useAppStore } from "@/store/appStore";
-import type { Contact } from "@/types";
-import { cn } from "@/utils/className";
-import { formatTime } from "@/utils/date";
-import { Avatar } from "./Avatar";
-import { StatusIndicator } from "./StatusIndicator";
+import { Link } from "@tanstack/react-router"
+import { useAppStore } from "@/store/appStore"
+import type { Contact } from "@/types"
+import { cn } from "@/utils/className"
+import { formatTime } from "@/utils/date"
+import { Avatar } from "./Avatar"
+import { StatusIndicator } from "./StatusIndicator"
 
 interface ContactListItemProps {
-	contact: Contact;
+	contact: Contact
 }
 
 export function ContactListItem({ contact }: ContactListItemProps) {
-	const presenceMap = useAppStore((s) => s.presenceMap);
+	const presenceMap = useAppStore(s => s.presenceMap)
 	return (
 		<Link
 			to="/chat/$contactId"
@@ -32,9 +32,7 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 					<span className="font-medium text-sm text-primary-foreground truncate">
 						{contact.displayName}
 					</span>
-					<span className="text-xs text-muted shrink-0">
-						{formatTime(contact.lastMessageAt)}
-					</span>
+					<span className="text-xs text-muted shrink-0">{formatTime(contact.lastMessageAt)}</span>
 				</div>
 				<div className="flex items-center justify-between gap-2 mt-0.5">
 					<span
@@ -42,7 +40,7 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 							"text-xs truncate",
 							presenceMap.get(contact.id) // ! typing
 								? "text-accent italic"
-								: "text-secondary-foreground",
+								: "text-secondary-foreground"
 						)}
 					>
 						{presenceMap.get(contact.id) // ! typing
@@ -57,5 +55,5 @@ export function ContactListItem({ contact }: ContactListItemProps) {
 				</div>
 			</div>
 		</Link>
-	);
+	)
 }

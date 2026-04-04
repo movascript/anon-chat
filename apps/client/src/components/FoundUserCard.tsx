@@ -1,9 +1,9 @@
-import { UserPlus } from "lucide-react";
-import { useAppStore } from "@/store/appStore";
-import type { SearchedContact } from "@/types";
+import { UserPlus } from "lucide-react"
+import { useAppStore } from "@/store/appStore"
+import type { SearchedContact } from "@/types"
 
 export function FoundUserCard({ user }: { user: SearchedContact }) {
-	const sendChatRequest = useAppStore((s) => s.sendChatRequest);
+	const sendChatRequest = useAppStore(s => s.sendChatRequest)
 
 	return (
 		<div className="flex items-center gap-3 px-4 py-3 hover:bg-secondary transition-colors animate-fade-in">
@@ -13,12 +13,8 @@ export function FoundUserCard({ user }: { user: SearchedContact }) {
 				</span>
 			</div>
 			<div className="flex-1 min-w-0">
-				<p className="text-sm font-medium text-primary-foreground truncate">
-					{user.displayName}
-				</p>
-				<p className="text-xs text-secondary-foreground truncate">
-					@{user.username}
-				</p>
+				<p className="text-sm font-medium text-primary-foreground truncate">{user.displayName}</p>
+				<p className="text-xs text-secondary-foreground truncate">@{user.username}</p>
 			</div>
 			<button
 				type="button"
@@ -29,5 +25,5 @@ export function FoundUserCard({ user }: { user: SearchedContact }) {
 				<UserPlus className="w-4 h-4 text-secondary-foreground" />
 			</button>
 		</div>
-	);
+	)
 }

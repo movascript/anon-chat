@@ -10,64 +10,64 @@ import type {
 	SocketID,
 	TypingFrame,
 	UserID,
-} from "@repo/types";
-import type { WebSocket } from "ws";
-import { serverCrypto } from "./crypto";
-import { store } from "./store";
+} from "@repo/types"
+import type { WebSocket } from "ws"
+import { serverCrypto } from "./crypto"
+import { store } from "./store"
 
-const MAX_MESSAGE_LENGTH = 2_000; // characters
+const MAX_MESSAGE_LENGTH = 2_000 // characters
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────
 
 export function handleConnection(ws: WebSocket): void {
-	const nonce = serverCrypto.generateNonce();
-	const socketID = store.registerSocket(ws, nonce);
+	const nonce = serverCrypto.generateNonce()
+	const socketID = store.registerSocket(ws, nonce)
 
 	// Issue challenge immediately — client must auth before anything else
 	store.sendToSocket(socketID, {
 		type: "challenge",
 		nonce,
-	});
+	})
 
-	ws.on("message", (raw) => {
-		handleRawMessage(socketID, raw.toString());
-	});
+	ws.on("message", raw => {
+		handleRawMessage(socketID, raw.toString())
+	})
 
 	ws.on("close", () => {
-		handleDisconnect(socketID);
-	});
+		handleDisconnect(socketID)
+	})
 
 	ws.on("error", () => {
-		handleDisconnect(socketID);
-	});
+		handleDisconnect(socketID)
+	})
 }
 
 // ─── Raw Message Parser ───────────────────────────────────────────────────────
 
 function handleRawMessage(socketID: SocketID, raw: string): void {
-	let frame: Client2ServerFrame;
+	let frame: Client2ServerFrame
 
 	try {
-		frame = JSON.parse(raw);
+		frame = JSON.parse(raw)
 	} catch {
-		sendError(socketID, "Malformed JSON");
-		return;
+		sendError(socketID, "Malformed JSON")
+		return
 	}
 
 	if (!frame.type || typeof frame.type !== "string") {
-		sendError(socketID, "Missing or invalid frame type");
-		return;
+		sendError(socketID, "Missing or invalid frame type")
+		return
 	}
 
-	const client = store.getClientBySocketID(socketID);
-	if (!client) return;
+	const client = store.getClientBySocketID(socketID)
+	if (!client) return
 
 	if (!client.authenticated && frame.type !== "auth") {
-		sendError(socketID, "Not authenticated");
-		return;
+		sendError(socketID, "Not authenticated")
+		return
 	}
 
-	routeFrame(socketID, frame);
+	routeFrame(socketID, frame)
 }
 
 // ─── Frame Router ─────────────────────────────────────────────────────────────
@@ -77,41 +77,41 @@ function handleRawMessage(socketID: SocketID, raw: string): void {
 function routeFrame(socketID: SocketID, frame: Client2ServerFrame) {
 	switch (frame.type) {
 		case "auth":
-			return handleAuth(socketID, frame);
+			return handleAuth(socketID, frame)
 		case "search_user":
-			return handleSearchUser(socketID, frame);
+			return handleSearchUser(socketID, frame)
 		case "chat_request":
-			return handleChatRequest(socketID, frame);
+			return handleChatRequest(socketID, frame)
 		case "chat_accept":
-			return handleChatAccept(socketID, frame);
+			return handleChatAccept(socketID, frame)
 		case "chat_decline":
-			return handleChatDecline(socketID, frame);
+			return handleChatDecline(socketID, frame)
 		case "message":
-			return handleMessage(socketID, frame);
+			return handleMessage(socketID, frame)
 		case "typing":
-			return handleTyping(socketID, frame);
+			return handleTyping(socketID, frame)
 		default: {
-			frame satisfies never; // ensures no unhandled frame exists
-			sendError(socketID, "Unknown frame type");
+			frame satisfies never // ensures no unhandled frame exists
+			sendError(socketID, "Unknown frame type")
 		}
 	}
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-const NONCE_TTL_MS = 30_000; // 30 seconds
+const NONCE_TTL_MS = 30_000 // 30 seconds
 
 async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
-	const client = store.getClientBySocketID(socketID);
-	if (!client) return;
+	const client = store.getClientBySocketID(socketID)
+	if (!client) return
 
 	if (client.authenticated) {
-		sendError(socketID, "Already authenticated");
-		return;
+		sendError(socketID, "Already authenticated")
+		return
 	}
 
 	if (!client.pendingNonce || client.nonceIssuedAt === null) {
-		sendError(socketID, "No pending challenge");
-		return;
+		sendError(socketID, "No pending challenge")
+		return
 	}
 
 	// Reject expired nonces
@@ -119,95 +119,84 @@ async function handleAuth(socketID: SocketID, frame: AuthFrame): Promise<void> {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
 			reason: "Challenge expired — reconnect to get a fresh nonce",
-		});
-		return;
+		})
+		return
 	}
 
-	const { username, displayName, publicKey, signature } = frame;
+	const { username, displayName, publicKey, signature } = frame
 
 	// ── Username validation ───────────────────────────────────────────────────
 
 	if (!isValidUsername(username)) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
-			reason:
-				"Username must be 3–32 characters, alphanumeric and underscores only",
-		});
-		return;
+			reason: "Username must be 3–32 characters, alphanumeric and underscores only",
+		})
+		return
 	}
 
 	// ── Key import ────────────────────────────────────────────────────────────
 
-	let cryptoKey: CryptoKey;
+	let cryptoKey: CryptoKey
 
 	try {
-		cryptoKey = await serverCrypto.importPublicKey(publicKey);
+		cryptoKey = await serverCrypto.importPublicKey(publicKey)
 	} catch (err) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
 			reason: `Invalid public key: ${String(err)}`,
-		});
-		return;
+		})
+		return
 	}
 
 	// ── Signature verification ────────────────────────────────────────────────
 
-	const valid = await serverCrypto.verifySignature(
-		cryptoKey,
-		client.pendingNonce,
-		signature,
-	);
+	const valid = await serverCrypto.verifySignature(cryptoKey, client.pendingNonce, signature)
 
 	if (!valid) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
 			reason: "Signature verification failed",
-		});
-		return;
+		})
+		return
 	}
 
 	// ── Promote client ────────────────────────────────────────────────────────
 
-	const userID = await serverCrypto.deriveUserID(publicKey);
-	const success = store.authenticateClient(
-		socketID,
-		userID,
-		username,
-		displayName,
-		publicKey,
-	);
+	const userID = await serverCrypto.deriveUserID(publicKey)
+	const success = store.authenticateClient(socketID, userID, username, displayName, publicKey)
 
 	if (!success) {
 		store.sendToSocket(socketID, {
 			type: "auth_error",
 			reason: "Username already taken",
-		});
-		return;
+		})
+		return
 	}
 
 	store.sendToSocket(socketID, {
 		type: "auth_success",
 		username,
 		userID,
-	});
+	})
 
 	// Reconnecting user — notify any existing subscribers they are back online
-	broadcastPresence(userID, username, true);
+	broadcastPresence(userID, username, true)
 }
 
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
-	const target = store.getClientByUsername(frame.username);
-	const senderUsername = store.getClientBySocketID(socketID)?.username;
+	const target = store.getClientByUsername(frame.username)
+	const senderUsername = store.getClientBySocketID(socketID)?.username
 
 	if (!target || !target.authenticated || senderUsername === frame.username) {
 		store.sendToSocket(socketID, {
 			type: "search_result",
 			username: frame.username,
 			found: false,
-		});
-		return;
+		})
+		return
 	}
 
 	store.sendToSocket(socketID, {
@@ -218,25 +207,25 @@ function handleSearchUser(socketID: SocketID, frame: SearchUserFrame): void {
 		online: true,
 		userID: target.userID,
 		publicKey: target.publicKey,
-	});
+	})
 }
 
 // ─── Chat Request ─────────────────────────────────────────────────────────────
 
 function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
-	const sender = store.getClientBySocketID(socketID);
+	const sender = store.getClientBySocketID(socketID)
 
-	if (!sender) return;
+	if (!sender) return
 
-	const target = store.getClientByUserID(frame.toUserID);
+	const target = store.getClientByUserID(frame.toUserID)
 
 	if (!target || !target.authenticated) {
-		sendError(socketID, "user is offline!");
-		return;
+		sendError(socketID, "user is offline!")
+		return
 	}
 
 	// Subscribe sender to target's presence
-	store.subscribeToPresence(socketID, frame.toUserID);
+	store.subscribeToPresence(socketID, frame.toUserID)
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_request_in",
@@ -244,64 +233,61 @@ function handleChatRequest(socketID: SocketID, frame: ChatRequestFrame): void {
 		fromUsername: sender.username,
 		fromDisplayName: sender.displayName,
 		fromPublicKey: sender.publicKey,
-	});
+	})
 }
 
 // ─── Chat Accept / Decline ────────────────────────────────────────────────────
 
 function handleChatAccept(socketID: SocketID, frame: ChatAcceptFrame): void {
-	const acceptor = store.getClientBySocketID(socketID);
-	if (!acceptor) return;
+	const acceptor = store.getClientBySocketID(socketID)
+	if (!acceptor) return
 
 	// Subscribe both sides to each other's presence
-	store.subscribeToPresence(socketID, frame.toUserID);
+	store.subscribeToPresence(socketID, frame.toUserID)
 
-	const targetSocketID = store.getSocketIDByUserID(frame.toUserID);
+	const targetSocketID = store.getSocketIDByUserID(frame.toUserID)
 	if (targetSocketID) {
-		store.subscribeToPresence(targetSocketID, acceptor.userID);
+		store.subscribeToPresence(targetSocketID, acceptor.userID)
 	}
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
 		fromUserID: acceptor.userID,
 		accepted: true,
-	});
+	})
 }
 
 function handleChatDecline(socketID: SocketID, frame: ChatDeclineFrame): void {
-	const decliner = store.getClientBySocketID(socketID);
-	if (!decliner) return;
+	const decliner = store.getClientBySocketID(socketID)
+	if (!decliner) return
 
 	// Remove the requester's presence subscription — they were auto-subscribed
 	// in handleChatRequest and should not keep receiving presence events
 	// for someone who declined them.
-	const requesterSocketID = store.getSocketIDByUserID(frame.toUserID);
+	const requesterSocketID = store.getSocketIDByUserID(frame.toUserID)
 	if (requesterSocketID) {
-		store.unsubscribeFromPresence(requesterSocketID, decliner.userID);
+		store.unsubscribeFromPresence(requesterSocketID, decliner.userID)
 	}
 
 	store.sendToUserID(frame.toUserID, {
 		type: "chat_response",
 		fromUserID: decliner.userID,
 		accepted: false,
-	});
+	})
 }
 
 // ─── Message ──────────────────────────────────────────────────────────────────
 
 function handleMessage(socketID: SocketID, frame: MessageFrame): void {
-	const sender = store.getClientBySocketID(socketID);
-	if (!sender) return;
+	const sender = store.getClientBySocketID(socketID)
+	if (!sender) return
 
-	if (
-		typeof frame.content !== "string" ||
-		frame.content.length > MAX_MESSAGE_LENGTH
-	) {
+	if (typeof frame.content !== "string" || frame.content.length > MAX_MESSAGE_LENGTH) {
 		sendError(
 			socketID,
-			`Message content exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
-		);
-		return;
+			`Message content exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`
+		)
+		return
 	}
 
 	const delivered = store.sendToUserID(frame.toUserID, {
@@ -310,65 +296,61 @@ function handleMessage(socketID: SocketID, frame: MessageFrame): void {
 		fromUsername: sender.username,
 		messageId: frame.messageId,
 		content: frame.content,
-	});
+	})
 
 	store.sendToSocket(socketID, {
 		type: "message_ack",
 		messageId: frame.messageId,
 		delivered,
 		reason: delivered ? undefined : "offline",
-	});
+	})
 }
 
 // ─── Typing ───────────────────────────────────────────────────────────────────
 
 function handleTyping(socketID: SocketID, frame: TypingFrame): void {
-	const sender = store.getClientBySocketID(socketID);
-	if (!sender) return;
+	const sender = store.getClientBySocketID(socketID)
+	if (!sender) return
 
 	store.sendToUserID(frame.toUserID, {
 		type: "typing_in",
 		fromUserID: sender.userID,
 		isTyping: frame.isTyping,
-	});
+	})
 }
 
 // ─── Disconnect ───────────────────────────────────────────────────────────────
 
 function handleDisconnect(socketID: SocketID): void {
-	const removed = store.removeClient(socketID);
-	if (!removed || !removed.authenticated) return;
+	const removed = store.removeClient(socketID)
+	if (!removed || !removed.authenticated) return
 
-	store.removeAllSubscriptions(socketID);
-	broadcastPresence(removed.userID, removed.username, false);
+	store.removeAllSubscriptions(socketID)
+	broadcastPresence(removed.userID, removed.username, false)
 }
 
 // ─── Presence Broadcast ───────────────────────────────────────────────────────
 
-function broadcastPresence(
-	userID: UserID,
-	username: string,
-	online: boolean,
-): void {
-	const subscribers = store.getPresenceSubscribers(userID);
-	if (subscribers.length === 0) return;
+function broadcastPresence(userID: UserID, username: string, online: boolean): void {
+	const subscribers = store.getPresenceSubscribers(userID)
+	if (subscribers.length === 0) return
 
 	const frame: OutgoingServerFrame = {
 		type: "presence",
 		userID,
 		username,
 		online,
-	};
+	}
 
 	for (const watcherSocketID of subscribers) {
-		store.sendToSocket(watcherSocketID, frame);
+		store.sendToSocket(watcherSocketID, frame)
 	}
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 function isValidUsername(username: string): boolean {
-	return /^[a-zA-Z0-9_]{3,32}$/.test(username);
+	return /^[a-zA-Z0-9_]{3,32}$/.test(username)
 }
 
 /**
@@ -380,5 +362,5 @@ function sendError(socketID: SocketID, reason: string): void {
 	store.sendToSocket(socketID, {
 		type: "error",
 		reason,
-	});
+	})
 }

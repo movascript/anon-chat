@@ -1,5 +1,5 @@
 export function AppInfo() {
-	const ua = navigator.userAgent;
+	const ua = navigator.userAgent
 	const browser = ua.includes("Chrome")
 		? "Chrome"
 		: ua.includes("Firefox")
@@ -8,7 +8,7 @@ export function AppInfo() {
 				? "Safari"
 				: ua.includes("Edge")
 					? "Edge"
-					: "Unknown Browser";
+					: "Unknown Browser"
 
 	const os = ua.includes("Windows")
 		? "Windows"
@@ -20,7 +20,7 @@ export function AppInfo() {
 					? "Linux"
 					: ua.includes("Mac")
 						? "macOS"
-						: "Unknown OS";
+						: "Unknown OS"
 
 	return (
 		<div className="px-4 pb-8 flex flex-col items-center gap-1">
@@ -29,5 +29,5 @@ export function AppInfo() {
 				{browser} on {os}
 			</p>
 		</div>
-	);
+	)
 }

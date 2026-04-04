@@ -1,25 +1,25 @@
-import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { Toaster, type ToasterProps } from "sonner";
-import ErrorFallback from "@/components/ErrorFallback";
-import { useAppStore } from "@/store/appStore";
-import { useTheme } from "@/store/theme";
+import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router"
+import { useEffect } from "react"
+import { ErrorBoundary } from "react-error-boundary"
+import { Toaster, type ToasterProps } from "sonner"
+import ErrorFallback from "@/components/ErrorFallback"
+import { useAppStore } from "@/store/appStore"
+import { useTheme } from "@/store/theme"
 export const Route = createRootRoute({
 	component: Root,
-});
+})
 
 function Root() {
-	const hydrated = useAppStore((s) => s._hydrated);
-	const identity = useAppStore((s) => s.identity);
-	const syncStore = useAppStore((s) => s.syncStore);
-	const navigate = useNavigate();
-	const { theme = "system" } = useTheme();
+	const hydrated = useAppStore(s => s._hydrated)
+	const identity = useAppStore(s => s.identity)
+	const syncStore = useAppStore(s => s.syncStore)
+	const navigate = useNavigate()
+	const { theme = "system" } = useTheme()
 
 	useEffect(() => {
-		if (!hydrated) syncStore();
-		else if (!identity) navigate({ to: "/login" });
-	}, [navigate, syncStore, hydrated, identity]);
+		if (!hydrated) syncStore()
+		else if (!identity) navigate({ to: "/login" })
+	}, [navigate, syncStore, hydrated, identity])
 
 	return (
 		<>
@@ -27,10 +27,7 @@ function Root() {
 				{hydrated ? <Outlet /> : null}
 			</ErrorBoundary>
 
-			<Toaster
-				theme={theme as ToasterProps["theme"]}
-				className="toaster group"
-			/>
+			<Toaster theme={theme as ToasterProps["theme"]} className="toaster group" />
 
 			{/* <TanStackDevtools
 				config={{
@@ -48,5 +45,5 @@ function Root() {
 				]}
 			/> */}
 		</>
-	);
+	)
 }

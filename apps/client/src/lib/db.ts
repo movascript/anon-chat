@@ -1,22 +1,16 @@
-import type { MessageID, UserID } from "@repo/types";
-import Dexie, { type Table } from "dexie";
-import type {
-	Contact,
-	ContactStatus,
-	Identity,
-	Message,
-	MessageStatus,
-} from "@/types";
+import type { MessageID, UserID } from "@repo/types"
+import Dexie, { type Table } from "dexie"
+import type { Contact, ContactStatus, Identity, Message, MessageStatus } from "@/types"
 
 // ─── Dexie Subclass ───────────────────────────────────────────────────────────
 
 class AnonChatDB extends Dexie {
-	identity!: Table<Identity, number>;
-	contacts!: Table<Contact, string>;
-	messages!: Table<Message, string>;
+	identity!: Table<Identity, number>
+	contacts!: Table<Contact, string>
+	messages!: Table<Message, string>
 
 	constructor() {
-		super("AnonChat");
+		super("AnonChat")
 
 		this.version(1).stores({
 			// always fetched by id:1
@@ -29,13 +23,13 @@ class AnonChatDB extends Dexie {
 			// primary key = messageId
 			// compound index enables efficient per-peer time-ordered queries
 			messages: "id, userID, ts, [userID+ts]",
-		});
+		})
 	}
 }
 
 // ─── Singleton Instance ───────────────────────────────────────────────────────
 
-export const db = new AnonChatDB();
+export const db = new AnonChatDB()
 
 // ─── Identity Helpers ─────────────────────────────────────────────────────────
 
@@ -43,7 +37,7 @@ export const db = new AnonChatDB();
  * Returns the stored identity, or null on first launch.
  */
 export async function getIdentity() {
-	return (await db.identity.get(1)) ?? null;
+	return (await db.identity.get(1)) ?? null
 }
 
 /**
@@ -51,11 +45,11 @@ export async function getIdentity() {
  * Throws if one already exists — call `clearIdentity()` first if re-keying.
  */
 export async function saveIdentity(record: Identity) {
-	const existing = await db.identity.get(1);
+	const existing = await db.identity.get(1)
 	if (existing) {
-		throw new Error("Identity already exists — call clearIdentity() first");
+		throw new Error("Identity already exists — call clearIdentity() first")
 	}
-	await db.identity.put(record);
+	await db.identity.put(record)
 }
 
 /**
@@ -63,30 +57,24 @@ export async function saveIdentity(record: Identity) {
  * Only called during a deliberate "reset account" flow.
  */
 export async function clearIdentity() {
-	await db.transaction(
-		"rw",
-		db.identity,
-		db.contacts,
-		db.messages,
-		async () => {
-			await db.identity.clear();
-			await db.contacts.clear();
-			await db.messages.clear();
-		},
-	);
+	await db.transaction("rw", db.identity, db.contacts, db.messages, async () => {
+		await db.identity.clear()
+		await db.contacts.clear()
+		await db.messages.clear()
+	})
 }
 
 // ─── Contact Helpers ──────────────────────────────────────────────────────────
 
 export async function getContact(userID: UserID) {
-	return (await db.contacts.get(userID)) ?? null;
+	return (await db.contacts.get(userID)) ?? null
 }
 
 /**
  * All contacts ordered by most recently active.
  */
 export async function getAllContacts() {
-	return db.contacts.orderBy("updatedAt").reverse().toArray();
+	return db.contacts.orderBy("updatedAt").reverse().toArray()
 }
 
 /**
@@ -97,7 +85,7 @@ export async function getAcceptedContacts() {
 		.where("status")
 		.equals("accepted")
 		.sortBy("lastMessageAt")
-		.then((rows) => rows.reverse());
+		.then(rows => rows.reverse())
 }
 
 /**
@@ -105,10 +93,10 @@ export async function getAcceptedContacts() {
  * `updatedAt` is always refreshed unless explicitly supplied.
  */
 export async function upsertContact(
-	contact: Omit<Contact, "createdAt" | "updatedAt">,
+	contact: Omit<Contact, "createdAt" | "updatedAt">
 ): Promise<void> {
-	const now = Date.now();
-	const existing = await db.contacts.get(contact.id);
+	const now = Date.now()
+	const existing = await db.contacts.get(contact.id)
 
 	const record: Contact = {
 		id: contact.id,
@@ -125,16 +113,13 @@ export async function upsertContact(
 		// Timestamps
 		createdAt: existing?.createdAt ?? now,
 		updatedAt: now,
-	};
+	}
 
-	await db.contacts.put(record);
+	await db.contacts.put(record)
 }
 
-export async function updateContactStatus(
-	userID: UserID,
-	status: ContactStatus,
-) {
-	await db.contacts.update(userID, { status, updatedAt: Date.now() });
+export async function updateContactStatus(userID: UserID, status: ContactStatus) {
+	await db.contacts.update(userID, { status, updatedAt: Date.now() })
 }
 
 /**
@@ -144,35 +129,35 @@ export async function updateContactStatus(
 export async function updateContactLastMessage(
 	userID: UserID,
 	lastMessage: string,
-	lastMessageAt: number,
+	lastMessageAt: number
 ) {
 	await db.contacts.update(userID, {
 		lastMessage,
 		lastMessageAt,
 		updatedAt: Date.now(),
-	});
+	})
 }
 
 export async function incrementUnread(userID: UserID) {
-	const contact = await db.contacts.get(userID);
-	if (!contact) return;
+	const contact = await db.contacts.get(userID)
+	if (!contact) return
 	await db.contacts.update(userID, {
 		unreadCount: contact.unreadCount + 1,
 		updatedAt: Date.now(),
-	});
+	})
 }
 
 export async function clearUnread(userID: UserID) {
 	await db.contacts.update(userID, {
 		unreadCount: 0,
 		updatedAt: Date.now(),
-	});
+	})
 }
 
 // ─── Message Helpers ──────────────────────────────────────────────────────────
 
 export async function getMessage(id: MessageID) {
-	return (await db.messages.get(id)) ?? null;
+	return (await db.messages.get(id)) ?? null
 }
 
 /**
@@ -184,21 +169,18 @@ export async function getMessages(userID: UserID) {
 	return db.messages
 		.where("[userID+ts]")
 		.between([userID, Dexie.minKey], [userID, Dexie.maxKey])
-		.sortBy("ts");
+		.sortBy("ts")
 }
 
 export async function saveMessage(message: Message) {
-	await db.messages.put(message);
+	await db.messages.put(message)
 }
 
 /**
  * Called when the server ack arrives.
  */
-export async function updateMessageStatus(
-	id: MessageID,
-	status: MessageStatus,
-) {
-	await db.messages.update(id, { status });
+export async function updateMessageStatus(id: MessageID, status: MessageStatus) {
+	await db.messages.update(id, { status })
 }
 
 /**
@@ -207,19 +189,19 @@ export async function updateMessageStatus(
  */
 export async function saveMessageAndSync(
 	message: Message,
-	options: { incrementUnread?: boolean } = {},
+	options: { incrementUnread?: boolean } = {}
 ) {
 	await db.transaction("rw", db.messages, db.contacts, async () => {
-		await db.messages.put(message);
-		await updateContactLastMessage(message.userID, message.content, message.ts);
+		await db.messages.put(message)
+		await updateContactLastMessage(message.userID, message.content, message.ts)
 		if (options.incrementUnread) {
-			const contact = await db.contacts.get(message.userID);
+			const contact = await db.contacts.get(message.userID)
 			if (contact) {
 				await db.contacts.update(message.userID, {
 					unreadCount: contact.unreadCount + 1,
 					updatedAt: Date.now(),
-				});
+				})
 			}
 		}
-	});
+	})
 }

@@ -1,8 +1,8 @@
-type Brand<T, B> = T & { __brand: B };
+type Brand<T, B> = T & { __brand: B }
 
-export type SocketID = Brand<string, "SocketID">;
-export type UserID = Brand<string, "UserID">;
-export type MessageID = Brand<string, "MessageID">;
+export type SocketID = Brand<string, "SocketID">
+export type UserID = Brand<string, "UserID">
+export type MessageID = Brand<string, "MessageID">
 
 export type Client2ServerFrameType =
 	| "auth"
@@ -11,7 +11,7 @@ export type Client2ServerFrameType =
 	| "chat_request"
 	| "chat_accept"
 	| "chat_decline"
-	| "message";
+	| "message"
 
 export type Server2ClientFrameType =
 	| "challenge"
@@ -24,154 +24,154 @@ export type Server2ClientFrameType =
 	| "message_in"
 	| "message_ack"
 	| "chat_response"
-	| "error";
+	| "error"
 
-export type FrameType = Client2ServerFrameType | Server2ClientFrameType;
+export type FrameType = Client2ServerFrameType | Server2ClientFrameType
 
 // ─── Base ────────────────────────────────────────────────────────────────────
 
 export interface WSFrame {
-	type: FrameType;
-	id: string;
-	ts: number;
+	type: FrameType
+	id: string
+	ts: number
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface ChallengeFrame extends WSFrame {
-	type: "challenge";
-	nonce: string;
+	type: "challenge"
+	nonce: string
 }
 
 export interface AuthFrame extends WSFrame {
-	type: "auth";
-	username: string;
-	displayName: string;
-	publicKey: string; // JWK stringified
-	signature: string; // base64 encoded signature of nonce
+	type: "auth"
+	username: string
+	displayName: string
+	publicKey: string // JWK stringified
+	signature: string // base64 encoded signature of nonce
 }
 
 export interface AuthSuccessFrame extends WSFrame {
-	type: "auth_success";
-	username: string;
-	userID: UserID;
+	type: "auth_success"
+	username: string
+	userID: UserID
 }
 
 export interface AuthErrorFrame extends WSFrame {
-	type: "auth_error";
-	reason: string;
+	type: "auth_error"
+	reason: string
 }
 
 // ─── Search ──────────────────────────────────────────────────────────────────
 
 export interface SearchUserFrame extends WSFrame {
-	type: "search_user";
-	username: string;
+	type: "search_user"
+	username: string
 }
 
 export type SearchResultFrame = WSFrame & {
-	type: "search_result";
-	username: string;
+	type: "search_result"
+	username: string
 } & (
 		| {
-				found: true;
-				online: boolean;
-				displayName: string;
-				userID: UserID;
-				publicKey: string;
+				found: true
+				online: boolean
+				displayName: string
+				userID: UserID
+				publicKey: string
 		  }
 		| {
-				found: false;
-				online?: never;
-				displayName?: never;
-				userID?: never;
-				publicKey?: never;
+				found: false
+				online?: never
+				displayName?: never
+				userID?: never
+				publicKey?: never
 		  }
-	);
+	)
 
 // ─── Chat Request ─────────────────────────────────────────────────────────────
 
 export interface ChatRequestFrame extends WSFrame {
-	type: "chat_request";
-	toUserID: UserID;
+	type: "chat_request"
+	toUserID: UserID
 }
 
 export interface ChatRequestInFrame extends WSFrame {
-	type: "chat_request_in";
-	fromUserID: UserID;
-	fromUsername: string;
-	fromDisplayName: string;
-	fromPublicKey: string;
+	type: "chat_request_in"
+	fromUserID: UserID
+	fromUsername: string
+	fromDisplayName: string
+	fromPublicKey: string
 }
 
 export interface ChatAcceptFrame extends WSFrame {
-	type: "chat_accept";
-	toUserID: UserID;
+	type: "chat_accept"
+	toUserID: UserID
 }
 
 export interface ChatDeclineFrame extends WSFrame {
-	type: "chat_decline";
-	toUserID: UserID;
+	type: "chat_decline"
+	toUserID: UserID
 }
 
 export interface ChatResponseFrame extends WSFrame {
-	type: "chat_response";
-	fromUserID: UserID;
-	accepted: boolean;
+	type: "chat_response"
+	fromUserID: UserID
+	accepted: boolean
 }
 
 // ─── Messaging ───────────────────────────────────────────────────────────────
 
 export interface MessageFrame extends WSFrame {
-	type: "message";
-	toUserID: UserID;
-	messageId: MessageID;
-	content: string;
+	type: "message"
+	toUserID: UserID
+	messageId: MessageID
+	content: string
 }
 
 export interface MessageInFrame extends WSFrame {
-	type: "message_in";
-	fromUserID: UserID;
-	fromUsername: string;
-	messageId: MessageID;
-	content: string;
+	type: "message_in"
+	fromUserID: UserID
+	fromUsername: string
+	messageId: MessageID
+	content: string
 }
 
 export interface MessageAckFrame extends WSFrame {
-	type: "message_ack";
-	messageId: MessageID;
-	delivered: boolean;
-	reason?: "offline" | "not_found";
+	type: "message_ack"
+	messageId: MessageID
+	delivered: boolean
+	reason?: "offline" | "not_found"
 }
 
 // ─── Presence ────────────────────────────────────────────────────────────────
 
 export interface PresenceFrame extends WSFrame {
-	type: "presence";
-	userID: UserID;
-	username: string;
-	online: boolean;
+	type: "presence"
+	userID: UserID
+	username: string
+	online: boolean
 }
 
 // ─── Typing ──────────────────────────────────────────────────────────────────
 
 export interface TypingFrame extends WSFrame {
-	type: "typing";
-	toUserID: UserID;
-	isTyping: boolean;
+	type: "typing"
+	toUserID: UserID
+	isTyping: boolean
 }
 
 export interface TypingInFrame extends WSFrame {
-	type: "typing_in";
-	fromUserID: UserID;
-	isTyping: boolean;
+	type: "typing_in"
+	fromUserID: UserID
+	isTyping: boolean
 }
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 export interface ErrorFrame extends WSFrame {
-	type: "error";
-	reason: string;
+	type: "error"
+	reason: string
 }
 
 // ─── Union of all valid client → server ────────────────────
@@ -183,7 +183,7 @@ export type Client2ServerFrame =
 	| ChatAcceptFrame
 	| ChatDeclineFrame
 	| MessageFrame
-	| TypingFrame;
+	| TypingFrame
 
 // ─── Union of all valid server → client ────────────────────
 
@@ -198,17 +198,9 @@ export type Server2ClientFrame =
 	| MessageAckFrame
 	| PresenceFrame
 	| TypingInFrame
-	| ErrorFrame;
+	| ErrorFrame
 
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-	? Omit<T, K>
-	: never;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 
-export type OutgoingClientFrame = DistributiveOmit<
-	Client2ServerFrame,
-	"id" | "ts"
->;
-export type OutgoingServerFrame = DistributiveOmit<
-	Server2ClientFrame,
-	"id" | "ts"
->;
+export type OutgoingClientFrame = DistributiveOmit<Client2ServerFrame, "id" | "ts">
+export type OutgoingServerFrame = DistributiveOmit<Server2ClientFrame, "id" | "ts">

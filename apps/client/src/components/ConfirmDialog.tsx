@@ -1,15 +1,15 @@
-import { Drawer } from "vaul";
-import { cn } from "@/utils/className";
+import { Drawer } from "vaul"
+import { cn } from "@/utils/className"
 
 interface ConfirmDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	title: string;
-	description: string;
-	confirmText: string;
-	cancelText?: string;
-	onConfirm: () => void;
-	variant?: "danger" | "default";
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	title: string
+	description: string
+	confirmText: string
+	cancelText?: string
+	onConfirm: () => void
+	variant?: "danger" | "default"
 }
 
 export function ConfirmDialog({
@@ -30,12 +30,8 @@ export function ConfirmDialog({
 					<div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-tertiary mt-4 mb-6" />
 
 					<div className="px-6 pb-8">
-						<h3 className="text-lg font-semibold text-primary-foreground mb-2">
-							{title}
-						</h3>
-						<p className="text-sm text-secondary-foreground mb-6">
-							{description}
-						</p>
+						<h3 className="text-lg font-semibold text-primary-foreground mb-2">{title}</h3>
+						<p className="text-sm text-secondary-foreground mb-6">{description}</p>
 
 						<div className="flex gap-3">
 							<button
@@ -48,14 +44,14 @@ export function ConfirmDialog({
 							<button
 								type="button"
 								onClick={() => {
-									onConfirm();
-									onOpenChange(false);
+									onConfirm()
+									onOpenChange(false)
 								}}
 								className={cn(
 									"flex-1 py-3 rounded-xl text-sm font-semibold transition-colors",
 									variant === "danger"
 										? "bg-red-500 hover:bg-red-600 text-white"
-										: "bg-accent hover:bg-accent-hover text-white",
+										: "bg-accent hover:bg-accent-hover text-white"
 								)}
 							>
 								{confirmText}
@@ -65,5 +61,5 @@ export function ConfirmDialog({
 				</Drawer.Content>
 			</Drawer.Portal>
 		</Drawer.Root>
-	);
+	)
 }

@@ -1,21 +1,14 @@
-import type { FallbackProps } from "react-error-boundary";
+import type { FallbackProps } from "react-error-boundary"
 
 // ! not an ideal ui, just for now
 
-export default function ErrorFallback({
-	error,
-	resetErrorBoundary,
-}: FallbackProps) {
+export default function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 	return (
 		<div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background p-6 text-center">
 			<div className="flex flex-col items-center gap-2">
 				<span className="text-5xl">⚠️</span>
-				<h1 className="text-xl font-semibold text-foreground">
-					Something went wrong
-				</h1>
-				<p className="max-w-sm text-sm text-muted-foreground">
-					An unexpected error occurred.
-				</p>
+				<h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
+				<p className="max-w-sm text-sm text-muted-foreground">An unexpected error occurred.</p>
 			</div>
 
 			<div className="flex gap-3">
@@ -35,5 +28,5 @@ export default function ErrorFallback({
 				</button>
 			</div>
 		</div>
-	);
+	)
 }

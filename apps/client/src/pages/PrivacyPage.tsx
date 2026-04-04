@@ -1,8 +1,8 @@
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router"
+import { ArrowLeft } from "lucide-react"
 
 export default function PrivacyPage() {
-	const navigate = useNavigate();
+	const navigate = useNavigate()
 
 	return (
 		<div className="h-screen bg-primary animate-fade-in overflow-auto">
@@ -18,9 +18,7 @@ export default function PrivacyPage() {
 
 				<div className="space-y-8 text-secondary-foreground">
 					<div>
-						<h1 className="text-4xl font-bold text-primary-foreground mb-3">
-							Privacy Policy
-						</h1>
+						<h1 className="text-4xl font-bold text-primary-foreground mb-3">Privacy Policy</h1>
 						<p className="text-sm text-muted">Last updated: March 18, 2026</p>
 					</div>
 
@@ -29,10 +27,9 @@ export default function PrivacyPage() {
 							Our Commitment to Privacy
 						</h2>
 						<p>
-							AnonChat is built on the principle of privacy-first communication.
-							We believe your conversations should remain yours alone. Our
-							architecture is designed to ensure that even we cannot access your
-							messages.
+							AnonChat is built on the principle of privacy-first communication. We believe your
+							conversations should remain yours alone. Our architecture is designed to ensure that
+							even we cannot access your messages.
 						</p>
 					</section>
 
@@ -41,9 +38,9 @@ export default function PrivacyPage() {
 							Zero-Knowledge Architecture
 						</h2>
 						<p className="mb-3">
-							AnonChat uses WebSocket connections with end-to-end encryption.
-							Our server acts purely as a relay, passing encrypted messages
-							between users without ever having the ability to decrypt them.
+							AnonChat uses WebSocket connections with end-to-end encryption. Our server acts purely
+							as a relay, passing encrypted messages between users without ever having the ability
+							to decrypt them.
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>Messages are encrypted on your device before transmission</li>
@@ -58,9 +55,7 @@ export default function PrivacyPage() {
 							What We Don't Collect
 						</h2>
 						<ul className="list-disc list-inside space-y-2 ml-2">
-							<li>
-								No message content - messages are never stored on our servers
-							</li>
+							<li>No message content - messages are never stored on our servers</li>
 							<li>No phone numbers or email addresses required</li>
 							<li>No tracking cookies or third-party analytics</li>
 							<li>No conversation metadata or timestamps</li>
@@ -74,29 +69,23 @@ export default function PrivacyPage() {
 							What We Temporarily Process
 						</h2>
 						<p className="mb-3">
-							To facilitate message delivery, our relay server temporarily
-							handles:
+							To facilitate message delivery, our relay server temporarily handles:
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>Encrypted message packets (unreadable to us)</li>
-							<li>
-								Routing information to deliver messages to the correct recipient
-							</li>
+							<li>Routing information to deliver messages to the correct recipient</li>
 							<li>Active connection status (online/offline)</li>
 						</ul>
 						<p className="mt-3">
-							This data exists only in memory during transmission and is never
-							written to disk or logged.
+							This data exists only in memory during transmission and is never written to disk or
+							logged.
 						</p>
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Data You Control
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Data You Control</h2>
 						<p className="mb-3">
-							All persistent data is stored locally on your device using browser
-							storage:
+							All persistent data is stored locally on your device using browser storage:
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>Your username and display name</li>
@@ -106,9 +95,8 @@ export default function PrivacyPage() {
 							<li>App preferences and settings</li>
 						</ul>
 						<p className="mt-3">
-							You have complete control over this data. Logging out or clearing
-							browser storage permanently deletes everything. No account
-							recovery is possible - this is by design.
+							You have complete control over this data. Logging out or clearing browser storage
+							permanently deletes everything. No account recovery is possible - this is by design.
 						</p>
 					</section>
 
@@ -116,13 +104,9 @@ export default function PrivacyPage() {
 						<h2 className="text-2xl font-semibold text-primary-foreground">
 							Security & Encryption
 						</h2>
-						<p className="mb-3">
-							AnonChat implements industry-standard end-to-end encryption:
-						</p>
+						<p className="mb-3">AnonChat implements industry-standard end-to-end encryption:</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
-							<li>
-								All messages are encrypted using modern cryptographic algorithms
-							</li>
+							<li>All messages are encrypted using modern cryptographic algorithms</li>
 							<li>Each conversation uses unique encryption keys</li>
 							<li>Forward secrecy ensures past messages remain secure</li>
 							<li>Only you and your intended recipient can decrypt messages</li>
@@ -134,8 +118,8 @@ export default function PrivacyPage() {
 							Open Source & Transparency
 						</h2>
 						<p className="mb-3">
-							AnonChat is fully open source. Our code is publicly available for
-							security audits and community review. You can:
+							AnonChat is fully open source. Our code is publicly available for security audits and
+							community review. You can:
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>Review our encryption implementation</li>
@@ -159,12 +143,9 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Contributing
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Contributing</h2>
 						<p className="mb-3">
-							We welcome contributions from the community. You can help improve
-							AnonChat by:
+							We welcome contributions from the community. You can help improve AnonChat by:
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>Reporting security vulnerabilities responsibly</li>
@@ -188,24 +169,19 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Third-Party Services
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Third-Party Services</h2>
 						<p>
-							AnonChat does not integrate with any third-party analytics,
-							advertising, or tracking services. We do not share data with
-							external parties because we don't collect any data to share.
+							AnonChat does not integrate with any third-party analytics, advertising, or tracking
+							services. We do not share data with external parties because we don't collect any data
+							to share.
 						</p>
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Your Rights
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Your Rights</h2>
 						<p className="mb-3">
-							Since we don't collect or store personal data, traditional data
-							rights (access, deletion, portability) don't apply in the
-							conventional sense. However:
+							Since we don't collect or store personal data, traditional data rights (access,
+							deletion, portability) don't apply in the conventional sense. However:
 						</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>You own all data stored on your device</li>
@@ -216,21 +192,16 @@ export default function PrivacyPage() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Policy Updates
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Policy Updates</h2>
 						<p>
-							We may update this privacy policy to reflect changes in our
-							practices or legal requirements. Any changes will be reflected in
-							the "Last updated" date above. Continued use of AnonChat after
-							updates constitutes acceptance of the revised policy.
+							We may update this privacy policy to reflect changes in our practices or legal
+							requirements. Any changes will be reflected in the "Last updated" date above.
+							Continued use of AnonChat after updates constitutes acceptance of the revised policy.
 						</p>
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-2xl font-semibold text-primary-foreground">
-							Contact & Support
-						</h2>
+						<h2 className="text-2xl font-semibold text-primary-foreground">Contact & Support</h2>
 						<p className="mb-3">Questions about privacy or security?</p>
 						<ul className="list-disc list-inside space-y-2 ml-2">
 							<li>
@@ -247,10 +218,7 @@ export default function PrivacyPage() {
 							<li>Join our community discussions</li>
 							<li>
 								Report security vulnerabilities to{" "}
-								<a
-									href="mailto:security@anonchat.example"
-									className="text-accent hover:underline"
-								>
+								<a href="mailto:security@anonchat.example" className="text-accent hover:underline">
 									security@anonchat.example
 								</a>
 							</li>
@@ -259,13 +227,12 @@ export default function PrivacyPage() {
 
 					<div className="pt-6 pb-12 border-t border-secondary-foreground/20">
 						<p className="text-sm text-muted">
-							AnonChat is committed to protecting your privacy through
-							transparent practices and open-source technology. Your trust is
-							our priority.
+							AnonChat is committed to protecting your privacy through transparent practices and
+							open-source technology. Your trust is our priority.
 						</p>
 					</div>
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

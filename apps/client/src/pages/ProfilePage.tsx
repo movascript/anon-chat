@@ -1,20 +1,12 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
-import {
-	Ban,
-	Clock,
-	Delete,
-	MessageCircle,
-	Trash2,
-	UserCheck,
-	UserX,
-} from "lucide-react";
-import { useState } from "react";
-import { Avatar } from "@/components/Avatar";
-import { InlineConfirmDialog } from "@/components/InlineConfirmDialog";
-import { NavigationHeader } from "@/components/NavigationHeader";
-import { StatusIndicator } from "@/components/StatusIndicator";
-import { useAppStore } from "@/store/appStore";
-import type { ContactStatus } from "@/types";
+import { useNavigate, useParams } from "@tanstack/react-router"
+import { Ban, Clock, Delete, MessageCircle, Trash2, UserCheck, UserX } from "lucide-react"
+import { useState } from "react"
+import { Avatar } from "@/components/Avatar"
+import { InlineConfirmDialog } from "@/components/InlineConfirmDialog"
+import { NavigationHeader } from "@/components/NavigationHeader"
+import { StatusIndicator } from "@/components/StatusIndicator"
+import { useAppStore } from "@/store/appStore"
+import type { ContactStatus } from "@/types"
 
 const CONTACT_STATUS_INFO: Record<
 	ContactStatus,
@@ -50,34 +42,32 @@ const CONTACT_STATUS_INFO: Record<
 		label: "deleted",
 		className: "text-red-500",
 	},
-};
+}
 
 export default function ProfilePage() {
-	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" });
-	const navigate = useNavigate();
-	const getContact = useAppStore((s) => s.getContact);
-	const presenceMap = useAppStore((s) => s.presenceMap);
-	const contact = getContact(contactId ?? "");
+	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" })
+	const navigate = useNavigate()
+	const getContact = useAppStore(s => s.getContact)
+	const presenceMap = useAppStore(s => s.presenceMap)
+	const contact = getContact(contactId ?? "")
 
-	const [showBlockConfirm, setShowBlockConfirm] = useState(false);
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showBlockConfirm, setShowBlockConfirm] = useState(false)
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
 	if (!contact) {
 		return (
 			<div className="flex flex-col h-full bg-primary">
 				<NavigationHeader title="Contact" showBack />
 				<div className="flex-1 flex items-center justify-center">
-					<p className="text-sm text-secondary-foreground">
-						Contact not found.
-					</p>
+					<p className="text-sm text-secondary-foreground">Contact not found.</p>
 				</div>
 			</div>
-		);
+		)
 	}
 
-	const statusInfo = CONTACT_STATUS_INFO[contact.status];
-	const StatusIcon = statusInfo.icon;
-	const isAccepted = contact.status === "accepted";
+	const statusInfo = CONTACT_STATUS_INFO[contact.status]
+	const StatusIcon = statusInfo.icon
+	const isAccepted = contact.status === "accepted"
 
 	return (
 		<div className="flex flex-col animate-fade-in h-full bg-primary">
@@ -89,18 +79,11 @@ export default function ProfilePage() {
 					<div className="relative">
 						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
 						<div className="absolute -bottom-1 -right-1">
-							<StatusIndicator
-								isOnline={presenceMap.get(contact.id)}
-								size="md"
-							/>
+							<StatusIndicator isOnline={presenceMap.get(contact.id)} size="md" />
 						</div>
 					</div>
-					<h2 className="mt-4 text-xl font-bold text-primary-foreground">
-						{contact.displayName}
-					</h2>
-					<p className="text-sm text-secondary-foreground mt-0.5">
-						@{contact.username}
-					</p>
+					<h2 className="mt-4 text-xl font-bold text-primary-foreground">{contact.displayName}</h2>
+					<p className="text-sm text-secondary-foreground mt-0.5">@{contact.username}</p>
 					<p
 						className={`text-xs mt-2 font-medium ${
 							presenceMap.get(contact.id) ? "text-accent" : "text-muted"
@@ -139,12 +122,10 @@ export default function ProfilePage() {
 						<p className="text-xs text-center text-secondary-foreground mt-2">
 							{contact.status === "pending_out" &&
 								"Messaging will be available once they accept your request."}
-							{contact.status === "pending_in" &&
-								"Accept the contact request to start messaging."}
+							{contact.status === "pending_in" && "Accept the contact request to start messaging."}
 							{contact.status === "declined" &&
 								"This request was declined. Messaging is unavailable."}
-							{contact.status === "blocked" &&
-								"Unblock this contact to start messaging."}
+							{contact.status === "blocked" && "Unblock this contact to start messaging."}
 						</p>
 					)}
 				</div>
@@ -170,8 +151,8 @@ export default function ProfilePage() {
 						confirmText="Block"
 						onCancel={() => setShowBlockConfirm(false)}
 						onConfirm={() => {
-							setShowBlockConfirm(false);
-							navigate({ to: "/" });
+							setShowBlockConfirm(false)
+							navigate({ to: "/" })
 						}}
 					/>
 
@@ -194,12 +175,12 @@ export default function ProfilePage() {
 						confirmText="Delete"
 						onCancel={() => setShowDeleteConfirm(false)}
 						onConfirm={() => {
-							setShowDeleteConfirm(false);
-							navigate({ to: "/" });
+							setShowDeleteConfirm(false)
+							navigate({ to: "/" })
 						}}
 					/>
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

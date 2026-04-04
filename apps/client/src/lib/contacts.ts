@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./db"
 
 // ─── In-Memory Presence Cache ─────────────────────────────────────────────────
 
@@ -12,7 +12,7 @@ import { db } from "./db";
 
 export class ContactsManager {
 	async init(): Promise<void> {
-		await this.resubscribePresence();
+		await this.resubscribePresence()
 	}
 
 	/**
@@ -36,17 +36,12 @@ export class ContactsManager {
 */
 
 	private async resubscribePresence(): Promise<void> {
-		const accepted = await db.contacts
-			.where("status")
-			.equals("accepted")
-			.toArray();
+		const accepted = await db.contacts.where("status").equals("accepted").toArray()
 
-		const ids = accepted.map((c) => c.id);
+		const ids = accepted.map(c => c.id)
 		if (ids.length > 0) {
 			// ! this.subscribePresence(ids);
-			console.info(
-				`[Contacts] Re-subscribed presence for ${ids.length} contact(s)`,
-			);
+			console.info(`[Contacts] Re-subscribed presence for ${ids.length} contact(s)`)
 		}
 	}
 }

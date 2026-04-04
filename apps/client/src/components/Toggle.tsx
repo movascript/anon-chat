@@ -1,25 +1,22 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/utils/className";
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/utils/className"
 
-const toggleVariants = cva(
-	"relative rounded-full transition-colors duration-200 shrink-0",
-	{
-		variants: {
-			size: {
-				sm: "w-9 h-5",
-				md: "w-11 h-6",
-			},
-			checked: {
-				true: "bg-accent",
-				false: "bg-tertiary",
-			},
+const toggleVariants = cva("relative rounded-full transition-colors duration-200 shrink-0", {
+	variants: {
+		size: {
+			sm: "w-9 h-5",
+			md: "w-11 h-6",
 		},
-		defaultVariants: {
-			size: "md",
-			checked: false,
+		checked: {
+			true: "bg-accent",
+			false: "bg-tertiary",
 		},
 	},
-);
+	defaultVariants: {
+		size: "md",
+		checked: false,
+	},
+})
 
 const thumbVariants = cva(
 	"absolute top-0.5 bg-white rounded-full shadow transition-transform duration-200",
@@ -50,29 +47,23 @@ const thumbVariants = cva(
 			size: "md",
 			checked: false,
 		},
-	},
-);
+	}
+)
 
 interface ToggleProps extends VariantProps<typeof toggleVariants> {
-	checked: boolean;
-	onChange: () => void;
-	label: string;
-	buttonLess?: boolean; // prevents hydrartion error when used inside settings row
+	checked: boolean
+	onChange: () => void
+	label: string
+	buttonLess?: boolean // prevents hydrartion error when used inside settings row
 }
 
-export function Toggle({
-	checked,
-	onChange,
-	label,
-	size,
-	buttonLess,
-}: ToggleProps) {
+export function Toggle({ checked, onChange, label, size, buttonLess }: ToggleProps) {
 	if (buttonLess) {
 		return (
 			<div className={cn(toggleVariants({ checked, size }))}>
 				<span className={cn(thumbVariants({ checked, size }))} />
 			</div>
-		);
+		)
 	}
 	return (
 		<button
@@ -85,5 +76,5 @@ export function Toggle({
 		>
 			<span className={cn(thumbVariants({ checked, size }))} />
 		</button>
-	);
+	)
 }

@@ -1,16 +1,16 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
 interface InlineConfirmDialogProps {
-	show: boolean;
-	title: string;
-	description?: string;
-	confirmText?: string;
-	cancelText?: string;
-	onConfirm: () => void;
-	onCancel: () => void;
-	variant?: "default" | "danger";
-	icon?: ReactNode;
-	className?: string;
+	show: boolean
+	title: string
+	description?: string
+	confirmText?: string
+	cancelText?: string
+	onConfirm: () => void
+	onCancel: () => void
+	variant?: "default" | "danger"
+	icon?: ReactNode
+	className?: string
 }
 
 export function InlineConfirmDialog({
@@ -25,7 +25,7 @@ export function InlineConfirmDialog({
 	icon,
 	className = "",
 }: InlineConfirmDialogProps) {
-	const isDanger = variant === "danger";
+	const isDanger = variant === "danger"
 
 	return (
 		<div className={className}>
@@ -39,13 +39,9 @@ export function InlineConfirmDialog({
 						<div className="flex items-start gap-3">
 							{icon && <div className="shrink-0 mt-0.5">{icon}</div>}
 							<div className="flex-1 min-w-0">
-								<p className="text-sm font-medium text-primary-foreground">
-									{title}
-								</p>
+								<p className="text-sm font-medium text-primary-foreground">{title}</p>
 								{description && (
-									<p className="text-xs text-secondary-foreground mt-0.5">
-										{description}
-									</p>
+									<p className="text-xs text-secondary-foreground mt-0.5">{description}</p>
 								)}
 							</div>
 						</div>
@@ -74,5 +70,5 @@ export function InlineConfirmDialog({
 				</div>
 			) : null}
 		</div>
-	);
+	)
 }

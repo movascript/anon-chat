@@ -1,17 +1,17 @@
-import type { MessageID, UserID } from "@repo/types";
+import type { MessageID, UserID } from "@repo/types"
 
 /**
  * The local identity — created once on first launch, never leaves the device.
  * `id` is always 1 (singleton row).
  */
 export interface Identity {
-	id: 1;
-	userID: UserID; // SHA-256 of publicKeyJwk (matches server derivation)
-	displayName: string;
-	username: string;
-	publicKey: JsonWebKey;
-	privateKey: JsonWebKey; // NEVER sent to server
-	createdAt: number;
+	id: 1
+	userID: UserID // SHA-256 of publicKeyJwk (matches server derivation)
+	displayName: string
+	username: string
+	publicKey: JsonWebKey
+	privateKey: JsonWebKey // NEVER sent to server
+	createdAt: number
 }
 
 /**
@@ -28,7 +28,7 @@ export type ContactStatus =
 	| "accepted"
 	| "declined"
 	| "blocked"
-	| "deleted";
+	| "deleted"
 
 /**
  * One record per known peer.
@@ -36,16 +36,16 @@ export type ContactStatus =
  * Primary key is their `userID`.
  */
 export interface Contact {
-	id: UserID; // userID — primary key
-	username: string;
-	displayName: string;
-	publicKey: JsonWebKey;
-	status: ContactStatus;
-	lastMessage: string | null; // preview text (empty string before any message)
-	lastMessageAt: number | null; // ms timestamp (0 before any message)
-	unreadCount: number;
-	createdAt: number;
-	updatedAt: number;
+	id: UserID // userID — primary key
+	username: string
+	displayName: string
+	publicKey: JsonWebKey
+	status: ContactStatus
+	lastMessage: string | null // preview text (empty string before any message)
+	lastMessageAt: number | null // ms timestamp (0 before any message)
+	unreadCount: number
+	createdAt: number
+	updatedAt: number
 }
 
 /**
@@ -55,24 +55,24 @@ export interface Contact {
  *   failed    — server returned delivered:false or timeout
  *   received  — inbound message from peer
  */
-export type MessageStatus = "sending" | "delivered" | "failed" | "received";
+export type MessageStatus = "sending" | "delivered" | "failed" | "received"
 
 /**
  * For outbound messages, `senderUserID` is our own userID.
  * For inbound messages, `senderUserID` is the peer's userID.
  */
 export interface Message {
-	id: MessageID; // matches frame.messageId
-	userID: UserID; // foreign key → Contact.id
-	sentByMe: boolean; // determiness who actually sent the message in the chat
-	content: string;
-	status: MessageStatus;
-	ts: number;
+	id: MessageID // matches frame.messageId
+	userID: UserID // foreign key → Contact.id
+	sentByMe: boolean // determiness who actually sent the message in the chat
+	content: string
+	status: MessageStatus
+	ts: number
 }
 
 export type SearchedContact = {
-	username: string;
-	displayName: string;
-	userID: UserID;
-	publicKey: JsonWebKey;
-};
+	username: string
+	displayName: string
+	userID: UserID
+	publicKey: JsonWebKey
+}

@@ -1,13 +1,13 @@
-import { Copy, Reply } from "lucide-react";
-import { Drawer } from "vaul";
-import type { Message } from "@/types";
+import { Copy, Reply } from "lucide-react"
+import { Drawer } from "vaul"
+import type { Message } from "@/types"
 
 interface MessageActionDialogProps {
-	message: Message;
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	onCopy: () => void;
-	onReply: () => void;
+	message: Message
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	onCopy: () => void
+	onReply: () => void
 }
 
 export function MessageActionDialog({
@@ -29,34 +29,30 @@ export function MessageActionDialog({
 							<button
 								type="button"
 								onClick={() => {
-									onCopy();
-									onOpenChange(false);
+									onCopy()
+									onOpenChange(false)
 								}}
 								className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-secondary active:bg-tertiary transition-colors"
 							>
 								<Copy className="w-5 h-5 text-secondary-foreground" />
-								<span className="text-sm font-medium text-primary-foreground">
-									Copy Message
-								</span>
+								<span className="text-sm font-medium text-primary-foreground">Copy Message</span>
 							</button>
 
 							<button
 								type="button"
 								onClick={() => {
-									onReply();
-									onOpenChange(false);
+									onReply()
+									onOpenChange(false)
 								}}
 								className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-secondary active:bg-tertiary transition-colors"
 							>
 								<Reply className="w-5 h-5 text-secondary-foreground" />
-								<span className="text-sm font-medium text-primary-foreground">
-									Reply
-								</span>
+								<span className="text-sm font-medium text-primary-foreground">Reply</span>
 							</button>
 						</div>
 					</div>
 				</Drawer.Content>
 			</Drawer.Portal>
 		</Drawer.Root>
-	);
+	)
 }
