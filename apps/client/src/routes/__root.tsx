@@ -27,7 +27,7 @@ function Root() {
 				{hydrated ? <Outlet /> : null}
 			</ErrorBoundary>
 
-			<Toaster theme={theme as ToasterProps["theme"]} className="toaster group" />
+			<Toaster theme={theme as ToasterProps["theme"]} className="toaster group" richColors />
 
 			{/* <TanStackDevtools
 				config={{
