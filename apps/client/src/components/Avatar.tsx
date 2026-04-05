@@ -1,7 +1,15 @@
+import type { UserID } from "@repo/types"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/utils/className"
 
-// todo: the avatar color should be deterministic by the user id
+function generatColor(identifier: string): string {
+	let hash = 0
+	for (let i = 0; i < identifier.length; i++) {
+		hash = identifier.charCodeAt(i) + ((hash << 5) - hash)
+	}
+	const hue = Math.abs(hash) % 360
+	return `hsl(${hue}, 65%, 45%)`
+}
 
 const avatarVariants = cva(
 	"flex shrink-0 items-center justify-center rounded-full font-semibold text-white",
@@ -21,20 +29,23 @@ const avatarVariants = cva(
 )
 
 interface AvatarProps extends VariantProps<typeof avatarVariants> {
+	userId: UserID
 	name: string
-	color: string
 	className?: string
 }
 
-export function Avatar({ name, color, size, className }: AvatarProps) {
+export function Avatar({ userId, name, size, className }: AvatarProps) {
+	// Extract up to 2 initials from the name
 	const initials = name
 		.split(" ")
 		.slice(0, 2)
 		.map(w => w[0]?.toUpperCase() ?? "")
 		.join("")
 
+	const backgroundColor = generatColor(userId)
+
 	return (
-		<div className={cn(avatarVariants({ size }), className)} style={{ backgroundColor: color }}>
+		<div className={cn(avatarVariants({ size }), className)} style={{ backgroundColor }}>
 			{initials}
 		</div>
 	)

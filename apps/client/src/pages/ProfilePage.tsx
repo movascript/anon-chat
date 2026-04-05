@@ -5,7 +5,7 @@ import { Avatar } from "@/components/Avatar"
 import { InlineConfirmDialog } from "@/components/InlineConfirmDialog"
 import { NavigationHeader } from "@/components/NavigationHeader"
 import { StatusIndicator } from "@/components/StatusIndicator"
-import { useAppStore } from "@/store/appStore"
+import * as Contacts from "@/lib/contacts"
 import type { ContactStatus } from "@/types"
 
 const CONTACT_STATUS_INFO: Record<
@@ -47,8 +47,7 @@ const CONTACT_STATUS_INFO: Record<
 export default function ProfilePage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/profile" })
 	const navigate = useNavigate()
-	const getContact = useAppStore(s => s.getContact)
-	const contact = getContact(contactId ?? "")
+	const contact = Contacts.getContact(contactId ?? "")
 
 	const [showBlockConfirm, setShowBlockConfirm] = useState(false)
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -76,7 +75,7 @@ export default function ProfilePage() {
 				{/* Hero */}
 				<div className="flex flex-col items-center border-border border-b bg-secondary px-4 py-8">
 					<div className="relative">
-						<Avatar name={contact.displayName} color="#ffeeaa" size="xl" />
+						<Avatar userId={contact.id} name={contact.displayName} size="xl" />
 						<div className="absolute -right-1 -bottom-1">
 							<StatusIndicator isOnline={contact.online} size="md" />
 						</div>

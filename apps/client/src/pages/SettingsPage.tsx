@@ -59,9 +59,9 @@ export default function SettingsPage() {
 	const [lastSeenVisible, setLastSeenVisible] = useState(true)
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
-	const user = identity ?? {
-		displayName: "User",
-		username: "user",
+	if (!identity) {
+		console.log("how the hell could you reach to this page without identity")
+		return null
 	}
 
 	const handleOnlineToggle = () => {
@@ -82,12 +82,7 @@ export default function SettingsPage() {
 			<div className="flex-1 overflow-y-auto">
 				<div className="flex flex-col items-center border-border border-b bg-secondary px-4 py-8">
 					<div className="relative">
-						<Avatar
-							name={user.displayName}
-							// color={user.avatarColor}
-							color="#3b82f6" // ! should be changed
-							size="xl"
-						/>
+						<Avatar name={identity.displayName} userId={identity.userID} size="xl" />
 						<button
 							type="button"
 							onClick={() => toast.info("Not Implemented")}
@@ -97,8 +92,8 @@ export default function SettingsPage() {
 							<Camera className="h-4 w-4" strokeWidth={2.5} />
 						</button>
 					</div>
-					<h2 className="mt-4 font-bold text-primary-foreground text-xl">{user.displayName}</h2>
-					<p className="mt-0.5 text-secondary-foreground text-sm">@{user.username}</p>
+					<h2 className="mt-4 font-bold text-primary-foreground text-xl">{identity.displayName}</h2>
+					<p className="mt-0.5 text-secondary-foreground text-sm">@{identity.username}</p>
 					<div className="mt-3 flex items-center gap-2 rounded-full border border-border bg-primary px-4 py-1.5">
 						<span
 							className="h-2 w-2 rounded-full transition-colors duration-300"

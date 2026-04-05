@@ -15,7 +15,7 @@ export function ContactListItem({ contact }: { contact: RuntimeContact }) {
 			inactiveProps={{ className: "hover:bg-secondary active:bg-tertiary" }}
 		>
 			<div className="relative shrink-0">
-				<Avatar name={contact.displayName} color="red" size="md" />
+				<Avatar userId={contact.id} name={contact.displayName} size="md" />
 				<div className="absolute -right-0.5 -bottom-0.5">
 					<StatusIndicator isOnline={contact.online} />
 				</div>

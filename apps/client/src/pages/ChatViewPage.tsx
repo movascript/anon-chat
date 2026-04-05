@@ -7,8 +7,8 @@ import InputBox from "@/components/InputBox"
 import { MessageBubble } from "@/components/MessageBubble"
 import { StatusIndicator } from "@/components/StatusIndicator"
 import { TypingIndicator } from "@/components/TypingIndicator"
+import * as Contacts from "@/lib/contacts"
 import { getMessages } from "@/lib/db"
-import { useAppStore } from "@/store/appStore"
 import type { Contact, Message } from "@/types"
 import { formatDateSeparator, isSameDay } from "@/utils/date"
 
@@ -18,9 +18,6 @@ interface StatusViewProps {
 }
 
 function PendingInView({ contact, onNavigate }: StatusViewProps) {
-	const acceptChatRequest = useAppStore(s => s.acceptChatRequest)
-	const declineChatRequest = useAppStore(s => s.declineChatRequest)
-
 	return (
 		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
 			<UserCheck className="h-12 w-12 text-muted" strokeWidth={1.5} />
@@ -31,7 +28,7 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 				<button
 					type="button"
 					onClick={() => {
-						acceptChatRequest(contact.id)
+						Contacts.acceptChatRequest(contact.id)
 						onNavigate()
 					}}
 					className="w-full rounded-xl bg-accent py-2.5 font-semibold text-sm text-white transition-all duration-200 hover:bg-accent-hover"
@@ -42,7 +39,7 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 					<button
 						type="button"
 						onClick={() => {
-							declineChatRequest(contact.id)
+							Contacts.declineChatRequest(contact.id)
 							onNavigate()
 						}}
 						className="flex-1 rounded-xl border border-red-200 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
@@ -52,7 +49,7 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 					<button
 						type="button"
 						onClick={() => {
-							declineChatRequest(contact.id, true)
+							Contacts.declineChatRequest(contact.id, true)
 							onNavigate()
 						}}
 						className="flex-1 rounded-xl bg-red-50 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50"
@@ -66,8 +63,6 @@ function PendingInView({ contact, onNavigate }: StatusViewProps) {
 }
 
 function BlockedView({ contact, onNavigate }: StatusViewProps) {
-	const unblockContact = useAppStore(s => s.unblockContact)
-
 	return (
 		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
 			<Ban className="h-12 w-12 text-muted" strokeWidth={1.5} />
@@ -75,7 +70,7 @@ function BlockedView({ contact, onNavigate }: StatusViewProps) {
 			<button
 				type="button"
 				onClick={() => {
-					unblockContact(contact.id)
+					Contacts.unblockContact(contact.id)
 					onNavigate()
 				}}
 				className="w-full max-w-xs rounded-xl bg-accent py-2.5 font-semibold text-sm text-white transition-all duration-200 hover:bg-accent-hover"
@@ -87,8 +82,6 @@ function BlockedView({ contact, onNavigate }: StatusViewProps) {
 }
 
 function DeclinedView({ contact, onNavigate }: StatusViewProps) {
-	const deleteContact = useAppStore(s => s.deleteContact)
-
 	return (
 		<div className="flex h-full flex-1 animate-fade-in flex-col items-center justify-center gap-4 px-4">
 			<UserX className="h-12 w-12 text-muted" strokeWidth={1.5} />
@@ -96,7 +89,7 @@ function DeclinedView({ contact, onNavigate }: StatusViewProps) {
 			<button
 				type="button"
 				onClick={() => {
-					deleteContact(contact.id)
+					Contacts.deleteContact(contact.id)
 					onNavigate()
 				}}
 				className="w-full max-w-xs rounded-xl border border-red-200 py-2.5 font-semibold text-red-500 text-sm transition-all duration-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
@@ -122,10 +115,8 @@ type ListItem = { kind: "date"; label: string; key: string } | { kind: "msg"; me
 export function ChatViewPage() {
 	const { contactId } = useParams({ from: "/_app/chat/$contactId/" })
 	const navigate = useNavigate()
-	const getContact = useAppStore(s => s.getContact)
-	const markAsRead = useAppStore(s => s.markAsRead)
 
-	const contact = getContact(contactId)
+	const contact = Contacts.getContact(contactId)
 
 	const [rawMessages, setRawMessages] = useState<Message[]>([])
 
@@ -136,8 +127,8 @@ export function ChatViewPage() {
 	}, [contactId, contact?.status])
 
 	useEffect(() => {
-		if (contactId && contact?.status === "accepted") markAsRead(contactId)
-	}, [contactId, contact?.status, markAsRead])
+		if (contactId && contact?.status === "accepted") Contacts.markAsRead(contactId)
+	}, [contactId, contact?.status])
 
 	const listItems: ListItem[] = useMemo(() => {
 		const items: ListItem[] = []
@@ -188,7 +179,7 @@ export function ChatViewPage() {
 					className="flex min-w-0 flex-1 items-center gap-3 transition-opacity duration-200 hover:opacity-80"
 				>
 					<div className="relative shrink-0">
-						<Avatar name={contact.displayName} color="red" size="md" />
+						<Avatar userId={contact.id} name={contact.displayName} size="md" />
 						<div className="absolute -right-0.5 -bottom-0.5">
 							<StatusIndicator isOnline={contact.online} />
 						</div>
