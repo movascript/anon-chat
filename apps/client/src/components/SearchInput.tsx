@@ -15,13 +15,13 @@ export function SearchInput({ value, onChange, placeholder = "Search…" }: Sear
 				value={value}
 				onChange={e => onChange(e.target.value)}
 				placeholder={placeholder}
-				className="w-full rounded-xl border border-transparent bg-input-bg py-2 pr-8 pl-9 text-primary-foreground text-sm transition-all duration-200 placeholder:text-muted focus:border-accent focus:outline-none"
+				className="w-full rounded-xl border border-transparent bg-input-bg py-2 pr-8 pl-9 text-primary-foreground text-sm transition-[border-color] duration-200 placeholder:text-muted focus:border-accent focus:outline-none"
 			/>
 			{value && (
 				<button
 					type="button"
 					onClick={() => onChange("")}
-					className="absolute right-2 rounded-full p-1 transition-all duration-200 hover:bg-tertiary"
+					className="absolute right-2 rounded-full p-1"
 				>
 					<X className="h-3 w-3 text-muted" />
 				</button>

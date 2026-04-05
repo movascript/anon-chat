@@ -23,9 +23,7 @@ export function ContactListItem({ contact }: { contact: RuntimeContact }) {
 
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center justify-between gap-2">
-					<span className="truncate font-medium text-primary-foreground text-sm">
-						{contact.displayName}
-					</span>
+					<span className="truncate text-primary-foreground text-sm">{contact.displayName}</span>
 					<span className="shrink-0 text-muted text-xs">{formatTime(contact.lastMessageAt)}</span>
 				</div>
 				<div className="mt-0.5 flex items-center justify-between gap-2">
@@ -35,7 +33,7 @@ export function ContactListItem({ contact }: { contact: RuntimeContact }) {
 							contact.isTyping ? "text-accent italic" : "text-secondary-foreground"
 						)}
 					>
-						{contact.isTyping ? "typing…" : (contact.lastMessage ?? "No messages yet")}
+						{contact.isTyping ? "typing…" : contact.lastMessage || "No messages yet"}
 					</span>
 					{contact.unreadCount > 0 && (
 						<span className="flex h-4.5 min-w-4.5 shrink-0 items-center justify-center rounded-full bg-accent px-1 font-bold text-[10px] text-white">

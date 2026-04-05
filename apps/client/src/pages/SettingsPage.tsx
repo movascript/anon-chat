@@ -38,7 +38,7 @@ function SettingRow({ label, sublabel, right, onClick }: SettingRowProps) {
 			className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-all duration-200 hover:bg-secondary active:bg-tertiary disabled:cursor-default"
 		>
 			<div className="min-w-0 flex-1">
-				<p className="font-medium text-primary-foreground text-sm">{label}</p>
+				<p className="text-primary-foreground text-sm">{label}</p>
 				{sublabel && <p className="mt-0.5 text-secondary-foreground text-xs">{sublabel}</p>}
 			</div>
 			{right ?? (onClick && <ChevronRight className="h-4 w-4 shrink-0 text-muted" />)}
